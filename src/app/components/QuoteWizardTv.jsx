@@ -103,14 +103,14 @@ export default function QuoteWizardTv() {
         {submitted ? (
           <motion.div initial="hidden" animate="visible" transition={{ duration: 0.5 }} className="text-center">
             <h2 className="text-2xl font-bold text-green-600 mb-4">Thank you!</h2>
-            <p className="text-gray-700">We received your request and will contact you soon.</p>
+            <p className="text-black">We received your request and will contact you soon.</p>
           </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="step1" initial="hidden" animate="visible" exit="hidden" variants={variants} transition={{ duration: 0.5 }} className="bg-gray-100 rounded-xl p-6 text-center">
                 <h2 className="text-3xl font-bold text-black mb-4">Get a Free Quote</h2>
-                <p className="text-gray-600 mb-6">Let us know about your TV installation needs.</p>
+                <p className="text-black mb-6">Let us know about your TV installation needs.</p>
                 <button onClick={() => setStep(2)} className="bg-[#e50914] text-white px-6 py-3 rounded-full hover:scale-105 transition-transform">Start</button>
               </motion.div>
             )}
@@ -150,7 +150,7 @@ export default function QuoteWizardTv() {
                 <button type="button" onClick={addAnotherTv} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Another TV</button>
                 <div className="bg-gray-100 p-4 rounded">
                   <h4 className="font-semibold">Current Total Estimate: ${totalTvCost.toFixed(2)}</h4>
-                  <p className="text-sm text-gray-500">(Calculated per TV options selected. Prices may vary depending on TV type. Frame TVs may have an extra charge.)</p>
+                  <p className="text-sm text-black">(Calculated per TV options selected. Prices may vary depending on TV type. Frame TVs may have an extra charge.)</p>
                 </div>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setStep(1)} className="text-sm text-blue-500 underline">Back</button>
@@ -165,7 +165,7 @@ export default function QuoteWizardTv() {
                 <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full border rounded p-2" required />
                 <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full border rounded p-2" required />
                 <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full border rounded p-2" required />
-                <label className="block text-gray-700">Preferred Installation Date</label>
+                <label className="block text-black">Preferred Installation Date</label>
                 <input type="date" name="preferredDate" value={formData.preferredDate} onChange={handleChange} className="w-full border rounded p-2 mt-1" required />
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setStep(2)} className="text-sm text-blue-500 underline">Back</button>
