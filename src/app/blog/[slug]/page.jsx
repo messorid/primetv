@@ -18,7 +18,7 @@ export default function BlogPost({ params }) {
   const { content, data } = getPostBySlug(params.slug)
 
   return (
-    <main className="py-20 bg-blanco text-foreground">
+    <main className="py-20 bg-blanco  text-black bg-white dark:bg-white">
       <div className="w-[90%] max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">{data.title}</h1>
         <p className="text-sm text-neutral-500 mb-6">{new Date(data.date).toLocaleDateString()}</p>
