@@ -11,7 +11,7 @@ export default function BlogPage() {
   const posts = getAllPosts()
 
   return (
-    <main className="py-20 bg-blanco text-foreground">
+    <main className="py-20 bg-blanco text-black bg-white dark:bg-white">
       <div className="w-[90%] max-w-6xl mx-auto text-center">
         <h1 className="text-4xl font-semibold mb-10">PrimeTv Blog</h1>
         <p className="mb-14 text-neutral-600 max-w-xl mx-auto">
