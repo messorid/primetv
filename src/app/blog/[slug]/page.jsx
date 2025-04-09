@@ -6,7 +6,7 @@ export async function generateMetadata({ params }) {
   const { data } = getPostBySlug(params.slug)
 
   return {
-    title: `${data.title} | Dra. Ana Colmenárez`,
+    title: `${data.title} | PrimeTV Nashville`,
     description: data.description,
     openGraph: {
       images: [data.image],
