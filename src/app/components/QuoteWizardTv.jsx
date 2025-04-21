@@ -20,6 +20,13 @@ export default function QuoteWizardTv() {
     preferredDate: ''
   })
 
+  /* ──────── NUEVO: eliminar un TV ──────── */
+  const removeTv = (index) => {
+    if (tvDetails.length === 1) return        // Garantiza que quede 1 TV
+    setTvDetails(prev => prev.filter((_, i) => i !== index))
+  }
+  /* ─────────────────────────────────────── */
+
   const handleTvChange = (index, e) => {
     const { name, value } = e.target
     const newTvDetails = [...tvDetails]
@@ -55,12 +62,7 @@ export default function QuoteWizardTv() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    const payload = {
-      tvDetails,
-      totalCost: totalTvCost,
-      ...formData
-    }
+    const payload = { tvDetails, totalCost: totalTvCost, ...formData }
 
     try {
       const emailRes = await fetch('/api/send-email', {
@@ -68,15 +70,12 @@ export default function QuoteWizardTv() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-
-      const dbRes = await fetch('/api/leads', {
+      await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-
       if (!emailRes.ok) throw new Error('Email failed')
-
       toast.success('Quote sent successfully!')
       setSubmitted(true)
     } catch (error) {
@@ -117,8 +116,21 @@ export default function QuoteWizardTv() {
             {step === 2 && (
               <motion.form key="step2" initial="hidden" animate="visible" exit="hidden" variants={variants} transition={{ duration: 0.5 }} className="space-y-5" onSubmit={(e) => { e.preventDefault(); setStep(3) }}>
                 <h3 className="text-xl font-semibold text-black">TV Details</h3>
+
                 {tvDetails.map((tv, index) => (
-                  <div key={index} className="border p-4 rounded-lg space-y-3 mb-4">
+                  <div key={index} className="relative border p-4 rounded-lg space-y-3 mb-4">
+                    {/* Botón para eliminar ─ aparece solo si hay >1 TV */}
+                    {tvDetails.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTv(index)}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700"
+                        aria-label="Remove TV"
+                      >
+                        ✕
+                      </button>
+                    )}
+
                     <select name="tvType" value={tv.tvType} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select TV Type</option>
                       <option value="SmartTV">SmartTV</option>
@@ -126,11 +138,13 @@ export default function QuoteWizardTv() {
                       <option value="FrameTv">FrameTv</option>
                       <option value="Other">Other</option>
                     </select>
+
                     <select name="tvSize" value={tv.tvSize} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select TV Size</option>
                       <option value="<55">Less than 55 inches ($99)</option>
                       <option value=">=55">55 inches or larger ($120)</option>
                     </select>
+
                     <select name="wallType" value={tv.wallType} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select Wall Type</option>
                       <option value="Drywall">Drywall</option>
@@ -138,19 +152,24 @@ export default function QuoteWizardTv() {
                       <option value="Concrete">Concrete (+$25)</option>
                       <option value="Other">Other</option>
                     </select>
+
                     <select name="hideCables" value={tv.hideCables} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Hide Cables?</option>
                       <option value="Yes">Yes (+$60)</option>
                       <option value="No">No</option>
                     </select>
+
                     <textarea name="comments" value={tv.comments} onChange={(e) => handleTvChange(index, e)} placeholder="Additional Comments (optional)" className="w-full border rounded p-2 mt-1 text-black" rows="2" />
                   </div>
                 ))}
+
                 <button type="button" onClick={addAnotherTv} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Another TV</button>
+
                 <div className="bg-gray-100 p-4 rounded">
                   <h4 className="font-semibold text-black">Current Total Estimate: ${totalTvCost.toFixed(2)}</h4>
                   <p className="text-sm text-black">(Calculated per TV options selected. Prices may vary depending on TV type. Frame TVs may have an extra charge.)</p>
                 </div>
+
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setStep(1)} className="text-sm text-blue-500 underline">Back</button>
                   <button type="submit" className="bg-[#e50914] text-white px-4 py-2 rounded hover:bg-red-600">Next</button>
