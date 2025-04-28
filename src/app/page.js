@@ -7,7 +7,7 @@ import PricingSection from "./components/PricingSection";
 import QuoteWizardTv from "./components/QuoteWizardTv";
 import ServicesSection from "./components/ServicesSection";
 import StatsSection from "./components/StatsSection";
-
+import Head from 'next/head';
 export const metadata = {
   title: "PrimeTvNashville | Professional TV Mounting in Nashville TN",
   description:
@@ -43,6 +43,10 @@ export const viewport = {
 export default function HomePage() {
   return (
     <>
+             <Head>
+             <meta name="google-site-verification" content="E_DbrqHnpwKIHqd4_aVA1ohaNJGsYZ7XDZaHCbY_OOk" />
+         </Head>
+    
       <HeroSection/>
       <StatsSection/>
       <QuoteWizardTv/>

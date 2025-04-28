@@ -12,12 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+
 
 body {
   background: var(--background);
@@ -43,7 +38,7 @@ body {
     background-color: white !important;
   }
 
-  h1, h2, h3, h4, h5, h6, p, label {
+  /* h1, h2, h3, h4, h5, h6, p, label {
     color: black !important;
-  }
+  } */
 }
