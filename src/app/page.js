@@ -43,10 +43,7 @@ export const viewport = {
 export default function HomePage() {
   return (
     <>
-             <Head>
-             <meta name="google-site-verification" content="E_DbrqHnpwKIHqd4_aVA1ohaNJGsYZ7XDZaHCbY_OOk" />
-         </Head>
-    
+   
       <HeroSection/>
       <StatsSection/>
       <QuoteWizardTv/>
