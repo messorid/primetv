@@ -63,19 +63,38 @@ export default function QuoteWizardTv() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const payload = { tvDetails, totalCost: totalTvCost, ...formData }
-
+  
     try {
+      // 1) Envías el e-mail
       const emailRes = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      await fetch('/api/leads', {
+  
+      // 2) Guardas el lead en tu BD
+      const leadRes = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      if (!emailRes.ok) throw new Error('Email failed')
+  
+      // 3) Envías el evento “Lead” a Facebook Conversions API
+      await fetch('/api/fb-conversions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:     formData.email,
+          phone:     formData.phone,
+          eventName: 'Lead',
+          value:     totalTvCost,
+          currency:  'USD',
+          test_event_code: 'TEST89190'
+        })
+      })
+  
+      if (!emailRes.ok || !leadRes.ok) throw new Error('Submission failed')
+  
       toast.success('Quote sent successfully!')
       setSubmitted(true)
     } catch (error) {
@@ -83,6 +102,7 @@ export default function QuoteWizardTv() {
       toast.error('Error sending your quote. Please try again.')
     }
   }
+  
 
   useEffect(() => {
     if (formRef.current) {

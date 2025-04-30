@@ -37,7 +37,7 @@ export default function Layout({ children }) {
 
             gtag('config', 'G-QJMH27JB3N');
           `}
-          <meta name="google-site-verification" content="E_DbrqHnpwKIHqd4_aVA1ohaNJGsYZ7XDZaHCbY_OOk" />
+          
         </Script>
       </head>
       <body className={inter.className}>

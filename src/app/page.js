@@ -7,7 +7,7 @@ import PricingSection from "./components/PricingSection";
 import QuoteWizardTv from "./components/QuoteWizardTv";
 import ServicesSection from "./components/ServicesSection";
 import StatsSection from "./components/StatsSection";
-import Head from 'next/head';
+
 export const metadata = {
   title: "PrimeTvNashville | Professional TV Mounting in Nashville TN",
   description:
