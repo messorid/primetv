@@ -1,12 +1,12 @@
-import CallToAction from "./components/CallToAction";
-import FaqSection from "./components/FaqSection";
-import GallerySection from "./components/GallerySection";
+import FaqsSection from "./components/FaqsSection";
 import HeroSection from "./components/HeroSection";
-import LatestFromBlog from "./components/LatestFromBlog";
 import PricingSection from "./components/PricingSection";
-import QuoteWizardTv from "./components/QuoteWizardTv";
 import ServicesSection from "./components/ServicesSection";
-import StatsSection from "./components/StatsSection";
+import BookingSteps from "./components/BookingSteps";
+import StickyActionBar from "./components/StickyActionBar";
+import CoverageMap from "./components/CoverageMap";
+import WhyChooseSection from "./components/WhyChooseSection";
+import QuickQuoteForm from "./components/QuickQuoteForm";
 
 export const metadata = {
   title: "PrimeTvNashville | Professional TV Mounting in Nashville TN",
@@ -45,15 +45,14 @@ export default function HomePage() {
     <>
    
       <HeroSection/>
-      <StatsSection/>
-      <QuoteWizardTv/>
       <ServicesSection/>
       <PricingSection/>
-      <LatestFromBlog/>
-      <GallerySection/>
-      <FaqSection/>
-      <CallToAction/>
-
+      <BookingSteps/>
+      <WhyChooseSection/>
+      <CoverageMap/>
+      <QuickQuoteForm/>
+      <FaqsSection/>
+      <StickyActionBar/>
     </>
   );
 }

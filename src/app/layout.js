@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
+import StickyActionBar from "./components/StickyActionBar"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,7 +24,7 @@ export const metadata = {
 export default function Layout({ children }) {
   return (
     <html lang="en">
-    <head>
+      <head>
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-QJMH27JB3N"
@@ -31,18 +32,17 @@ export default function Layout({ children }) {
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
-          window.dataLayer = window.dataLayer || [];
+            window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
             gtag('config', 'G-QJMH27JB3N');
           `}
-          
         </Script>
       </head>
+
       <body className={inter.className}>
-                {/* Meta Pixel Code */}
-                <Script
+        {/* Meta Pixel Code */}
+        <Script
           id="fb-pixel-base"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -62,23 +62,33 @@ export default function Layout({ children }) {
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1015602400177523');
 fbq('track', 'PageView');
-            `
+            `,
           }}
         />
         <noscript>
           <img
             height="1"
             width="1"
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
             src="https://www.facebook.com/tr?id=1015602400177523&ev=PageView&noscript=1"
             alt=""
           />
         </noscript>
-      <Navbar />
-      <main className="pt-20">{children}</main>
-      <Toaster position="top-center" />
-        <Footer/>
-        </body>
+
+        <Navbar />
+
+        {/* Agrega padding inferior para no tapar contenido en mobile */}
+        <main className="pt-20 pb-20 md:pb-0">
+          {children}
+        </main>
+
+        {/* Barra fija siempre presente en todas las rutas */}
+        <StickyActionBar />
+
+        <Toaster position="top-center" />
+
+        <Footer />
+      </body>
     </html>
   )
 }
