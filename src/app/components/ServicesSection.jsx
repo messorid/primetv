@@ -16,19 +16,19 @@ const SERVICES = [
     notes: ["Same visit same address", "Bracket not included", "Drywall no extra"],
     promo: true,
     ctaLabel: "Use promo",
-    href: "/book?promo=2tvs-under55",
+    href: "/book",
   },
   {
     slug: "promo-2tvs-over55",
     title: "Promo 2 TVs over 55 in",
     desc: "Same visit and address. Brackets not included",
     img: "/images/tvpromo2.png",
-    priceLabel: "$250 total",
+    priceLabel: "$260 total",
     time: "Typically 120 to 150 min",
     notes: ["Same visit same address", "Bracket not included", "Two person handling"],
     promo: true,
     ctaLabel: "Use promo",
-    href: "/book?promo=2tvs-over55",
+    href: "/book",
   },
 
   // SERVICIOS BASE

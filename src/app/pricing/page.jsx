@@ -22,12 +22,12 @@ export const metadata = {
     {
       title: "Standard TV Mounting",
       description: "For TVs up to 55 inches",
-      price: "$99"
+      price: "$110"
     },
     {
       title: "Installation of 2 Televisions",
       description: "Perfect for setups in different rooms",
-      price: "$170"
+      price: "$199"
     },
     {
       title: "Large Screen Mounting",

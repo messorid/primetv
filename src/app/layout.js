@@ -5,6 +5,7 @@ import Footer from "./components/Footer"
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import StickyActionBar from "./components/StickyActionBar"
+import StickyGate from "./components/StickyGate"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -83,7 +84,7 @@ fbq('track', 'PageView');
         </main>
 
         {/* Barra fija siempre presente en todas las rutas */}
-        <StickyActionBar />
+        <StickyGate />
 
         <Toaster position="top-center" />
 

@@ -61,13 +61,13 @@ export default function PricingSection() {
               title="2 TVs up to 55 inches"
               price="$199 total"
               note="Same visit same address"
-              href='/book?promo=2tvs-under55'
+              href='/book'
             />
             <PromoCard
               title="2 TVs over 55 inches"
-              price="$250 total"
+              price="$260 total"
               note="Same visit same address"
-              href='/book?promo=2tvs-over55'
+              href='/book'
             />
           </div>
         </div>
