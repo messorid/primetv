@@ -58,7 +58,7 @@ export const metadata = {
               </div>
               <div className="md:w-1/2">
                 <img
-                  src="/gallery/tv1.jpeg"
+                  src="/images/primetvnashville.webp"
                   alt="TV mounting service"
                   className="w-full rounded-xl shadow-lg object-cover"
                 />
@@ -92,7 +92,7 @@ export const metadata = {
               </div>
               <div className="md:w-1/2">
                 <img
-                  src="/gallery/homet.webp"
+                  src="/images/homet.webp"
                   alt="Home theater setup"
                   className="w-full rounded-xl shadow-lg object-cover"
                 />

@@ -41,7 +41,7 @@ const SERVICES = [
     time: "45 to 75 min",
     notes: ["Drywall no extra", "Bracket not included"],
     ctaLabel: "Book this service",
-    href: "/book?service=tv-up-to-55",
+    href: "/book",
   },
   {
     slug: "tv-over-55",
@@ -53,7 +53,7 @@ const SERVICES = [
     notes: ["Drywall no extra", "Bracket not included"],
     highlight: true,
     ctaLabel: "Book this service",
-    href: "/book?service=tv-over-55",
+    href: "/book",
   },
   {
     slug: "over-fireplace",
@@ -65,7 +65,7 @@ const SERVICES = [
     notes: ["Add on", "Depends on setup"],
     addon: true,
     ctaLabel: "Add to booking",
-    href: "/book?addon=over-fireplace",
+    href: "/book",
   },
   {
     slug: "cable-concealment",
@@ -77,7 +77,7 @@ const SERVICES = [
     notes: ["Add on per TV"],
     addon: true,
     ctaLabel: "Add to booking",
-    href: "/book?addon=cable-concealment",
+    href: "/book",
   },
 
 ]
