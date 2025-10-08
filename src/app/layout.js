@@ -2,9 +2,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
-import { Toaster } from 'react-hot-toast'
-import Script from 'next/script'
-import StickyActionBar from "./components/StickyActionBar"
+import { Toaster } from "react-hot-toast"
+import Script from "next/script"
 import StickyGate from "./components/StickyGate"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -24,7 +23,7 @@ export const metadata = {
 
 export default function Layout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
         {/* Google Analytics */}
         <Script
@@ -41,7 +40,7 @@ export default function Layout({ children }) {
         </Script>
       </head>
 
-      <body className={inter.className}>
+      <body className={`${inter.className} overflow-x-hidden`}>
         {/* Meta Pixel Code */}
         <Script
           id="fb-pixel-base"
@@ -78,12 +77,12 @@ fbq('track', 'PageView');
 
         <Navbar />
 
-        {/* Agrega padding inferior para no tapar contenido en mobile */}
-        <main className="pt-20 pb-20 md:pb-0">
+        {/* Padding inferior para no tapar contenido con la barra fija */}
+        <main className="pt-20 pb-24 md:pb-24 overflow-x-hidden">
           {children}
         </main>
 
-        {/* Barra fija siempre presente en todas las rutas */}
+        {/* Barra fija visible en todas las rutas menos en /book */}
         <StickyGate />
 
         <Toaster position="top-center" />
