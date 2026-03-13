@@ -25,7 +25,7 @@ const BENEFITS = [
   },
   {
     title: "Wall and device protection",
-    desc: "Proper anchors, 2 person lift for big panels",
+    desc: "Proper anchors and two person handling for large TVs",
     icon: ShieldIcon,
   },
   {
@@ -37,44 +37,80 @@ const BENEFITS = [
 
 export default function WhyChooseSection() {
   return (
-    <section id="why-choose" className="w-full bg-white text-black">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-12 md:py-16">
+    <section
+      id="why-choose"
+      className="relative w-full bg-black text-white overflow-hidden"
+    >
+
+      {/* background glow */}
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 -translate-x-1/2 top-0 w-[900px] h-[400px] bg-red-600/20 blur-3xl"
+      />
+
+      <div className="relative max-w-6xl mx-auto px-5 md:px-6 py-16 md:py-20">
+
+        {/* header */}
         <header className="max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-extrabold">Why choose PrimeTv Nashville</h2>
-          <p className="mt-2 text-black/70">
+          <h2 className="text-3xl md:text-4xl font-extrabold">
+            Why choose PrimeTv Nashville
+          </h2>
+
+          <p className="mt-2 text-white/70">
             Trusted TV mounting with clear pricing and careful workmanship
           </p>
         </header>
 
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* benefits grid */}
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
           {BENEFITS.map((b, i) => (
+
             <motion.article
               key={b.title}
-              initial={{ y: 16, opacity: 0 }}
+              initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.45, delay: i * 0.05 }}
-              className="group relative rounded-2xl border border-black/10 bg-white p-5 shadow-sm hover:shadow-md transition"
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 hover:bg-white/10 transition"
             >
-              <div className="flex items-start gap-3">
-                <div className="grid h-11 w-11 place-content-center rounded-xl bg-black text-white">
+
+              <div className="flex items-start gap-4">
+
+                {/* icon */}
+                <div className="grid h-12 w-12 place-content-center rounded-xl bg-[#E50914] text-white shadow-lg group-hover:scale-110 transition">
                   <b.icon />
                 </div>
+
                 <div>
-                  <h3 className="text-lg font-bold">{b.title}</h3>
-                  <p className="mt-1 text-sm text-black/70">{b.desc}</p>
+
+                  <h3 className="text-lg font-bold">
+                    {b.title}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-white/70">
+                    {b.desc}
+                  </p>
+
                 </div>
+
               </div>
 
-              {/* red glow edge on hover */}
+              {/* glow border */}
               <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-[#E50914]/40 transition" />
+
             </motion.article>
+
           ))}
+
         </div>
+
       </div>
+
     </section>
   )
 }
+
 
 /* Icons */
 

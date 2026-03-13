@@ -9,7 +9,7 @@ import WhyChooseSection from "./components/WhyChooseSection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
 
 export const metadata = {
-  title: "PrimeTvNashville | Professional TV Mounting in Nashville TN",
+  title: "Professional TV Mounting in Nashville TN | PrimeTvNashville ",
   description:
     "Reliable and expert TV installation services for homes and businesses in Nashville. Flat screen mounting, concealed wiring and commercial setups.",
   openGraph: {
