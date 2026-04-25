@@ -3,8 +3,20 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export const metadata = {
-  title: 'Blog PrimeTvNashville',
-  description: 'blog',
+  title: 'TV Mounting Tips & Guides Nashville | PrimeTvNashville Blog',
+  description: 'Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners. Learn from the pros at PrimeTvNashville.',
+  keywords: ['TV mounting Nashville', 'TV installation tips', 'home theater Nashville', 'TV mount guide'],
+  openGraph: {
+    title: 'TV Mounting Tips & Guides | PrimeTvNashville Blog',
+    description: 'Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners.',
+    url: 'https://primetvnashville.com/blog',
+    siteName: 'PrimeTvNashville',
+    locale: 'en_US',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://primetvnashville.com/blog',
+  },
 }
 
 export default function BlogPage() {

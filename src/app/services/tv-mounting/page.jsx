@@ -17,7 +17,38 @@ export const metadata = {
   }
   
   export default function TvMountingPage() {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "TV Wall Mounting Service",
+      "description": "Professional TV wall mounting with secure installation, wire concealment and aesthetic integration. Serving Nashville TN homes and businesses.",
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "PrimeTvNashville",
+        "telephone": "+1-615-208-7089",
+        "url": "https://primetvnashville.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Nashville",
+          "addressRegion": "TN",
+          "addressCountry": "US"
+        }
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Nashville",
+        "sameAs": "https://en.wikipedia.org/wiki/Nashville,_Tennessee"
+      },
+      "serviceType": "TV Mounting",
+      "url": "https://primetvnashville.com/services/tv-mounting"
+    }
+
     return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       <section className="bg-white py-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="bg-gray-50 p-8 rounded-3xl shadow-md space-y-6">
@@ -45,6 +76,6 @@ export const metadata = {
           </div>
         </div>
       </section>
+      </>
     )
   }
-  

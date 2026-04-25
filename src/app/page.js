@@ -68,7 +68,7 @@ export default function HomePage() {
     "image": "https://primetvnashville.com/og-image.jpg",
     "@id": "https://primetvnashville.com",
     "url": "https://primetvnashville.com",
-    "telephone": "+1-000-000-0000", // TODO: Actualizar con el número real
+    "telephone": "+1-615-208-7089",
     "priceRange": "$$",
     "address": {
       "@type": "PostalAddress",

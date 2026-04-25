@@ -17,7 +17,38 @@ export const metadata = {
   }
   
   export default function HomeTheaterPage() {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Home Theater Setup Service",
+      "description": "Complete home theater and AV setup solutions in Nashville TN. Displays, speakers, PA systems and immersive entertainment installations.",
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "PrimeTvNashville",
+        "telephone": "+1-615-208-7089",
+        "url": "https://primetvnashville.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Nashville",
+          "addressRegion": "TN",
+          "addressCountry": "US"
+        }
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Nashville",
+        "sameAs": "https://en.wikipedia.org/wiki/Nashville,_Tennessee"
+      },
+      "serviceType": "Home Theater Installation",
+      "url": "https://primetvnashville.com/services/home-theater"
+    }
+
     return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       <section className="bg-white py-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="bg-gray-100 p-8 rounded-3xl shadow-md space-y-6">
@@ -45,6 +76,6 @@ export const metadata = {
           </div>
         </div>
       </section>
+      </>
     )
   }
-  

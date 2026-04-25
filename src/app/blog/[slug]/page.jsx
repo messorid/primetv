@@ -4,12 +4,32 @@ import Image from 'next/image'
 
 export async function generateMetadata({ params }) {
   const { data } = getPostBySlug(params.slug)
+  const slug = params.slug
 
   return {
-    title: `${data.title} | PrimeTV Nashville`,
+    title: `${data.title} | PrimeTvNashville`,
     description: data.description,
     openGraph: {
+      title: `${data.title} | PrimeTvNashville`,
+      description: data.description,
+      url: `https://primetvnashville.com/blog/${slug}`,
+      siteName: 'PrimeTvNashville',
+      images: [{ url: data.image, width: 1200, height: 630, alt: data.title }],
+      locale: 'en_US',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${data.title} | PrimeTvNashville`,
+      description: data.description,
       images: [data.image],
+    },
+    alternates: {
+      canonical: `https://primetvnashville.com/blog/${slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
     },
   }
 }
