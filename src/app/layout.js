@@ -78,7 +78,7 @@ fbq('track', 'PageView');
         <Navbar />
 
         {/* Padding inferior para no tapar contenido con la barra fija */}
-        <main className="pt-20 pb-24 md:pb-24 overflow-x-hidden">
+        <main className="pb-24 md:pb-24 overflow-x-hidden">
           {children}
         </main>
 
