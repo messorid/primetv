@@ -1,5 +1,4 @@
-// app/book/page.jsx
-import JotformEmbed from "./JotformEmbed"
+import BookingFormSection from "@/app/components/BookingFormSection"
 
 export const metadata = {
   title: "Book TV Mounting in Nashville | Schedule Your Installation | PrimeTvNashville",
@@ -20,8 +19,8 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <section id="book" className="bg-white text-black">
-      <JotformEmbed />
-    </section>
+    <main className="bg-white text-black min-h-screen">
+      <BookingFormSection />
+    </main>
   )
 }
