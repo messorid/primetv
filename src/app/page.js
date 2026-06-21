@@ -1,4 +1,4 @@
-import FaqsSection from "./components/FaqsSection";
+﻿import FaqsSection from "./components/FaqsSection";
 import HeroSection from "./components/HeroSection";
 import PricingSection from "./components/PricingSection";
 import ServicesSection from "./components/ServicesSection";
@@ -68,7 +68,7 @@ export default function HomePage() {
     "image": "https://primetvnashville.com/og-image.jpg",
     "@id": "https://primetvnashville.com",
     "url": "https://primetvnashville.com",
-    "telephone": "+1-615-208-7089",
+    "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "address": {
       "@type": "PostalAddress",

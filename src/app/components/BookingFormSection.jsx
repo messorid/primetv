@@ -1,11 +1,15 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const STEPS = ["Date & Time", "TV Details", "Address", "Your Info"]
 
-const TV_SIZES = ['Up to 55"', '55" – 70"', 'Over 70"']
+const TV_SIZES = [
+  { label: '20" – 55"', price: "$110" },
+  { label: '60" – 70"', price: "$150" },
+  { label: '75"+',      price: "Ask price" },
+]
 
 const WALL_TYPES = [
   { label: "Drywall",       surcharge: 0   },
@@ -16,9 +20,8 @@ const WALL_TYPES = [
 ]
 
 const PROMOS = [
-  { label: 'Promo 2 TVs up to 55"',        price: "$199" },
+  { label: 'Promo 2 TVs up to 55"',            price: "$199" },
   { label: 'Promo 2 TVs over 55" (up to 70")', price: "$260" },
-  { label: "Promo 1 TV up to 50\"",         price: "$99"  },
 ]
 
 const REFERRAL_OPTIONS = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Other"]
@@ -40,6 +43,7 @@ export default function BookingFormSection() {
   const [status,    setStatus]    = useState("idle") // idle | sending | ok | error
 
   const [selectedPromo,  setSelectedPromo]  = useState("")
+  const [promoCode,      setPromoCode]      = useState("")
   const [date,           setDate]           = useState("")
   const [timePreference, setTimePreference] = useState("")
   const [tvs,            setTvs]            = useState([emptyTv()])
@@ -81,7 +85,7 @@ export default function BookingFormSection() {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedPromo, date, timePreference, tvs, address, info }),
+        body: JSON.stringify({ selectedPromo, promoCode, date, timePreference, tvs, address, info }),
       })
       if (!res.ok) throw new Error()
       setStatus("ok")
@@ -110,8 +114,8 @@ export default function BookingFormSection() {
           </p>
           <p className="mt-4 text-sm text-black/50">
             Questions? Call us at{" "}
-            <a href="tel:+16152087089" className="text-[#E50914] font-semibold">
-              (615) 208-7089
+            <a href="tel:+16156690251" className="text-[#E50914] font-semibold">
+              (615) 669-0251
             </a>
           </p>
         </div>
@@ -215,6 +219,17 @@ export default function BookingFormSection() {
                     ))}
                   </div>
                   <p className="mt-2.5 text-xs text-black/40">Select a promo if it applies (optional)</p>
+
+                  <div className="mt-3 pt-3 border-t border-black/8">
+                    <label className="text-xs font-semibold text-black/60">Promo Code (optional)</label>
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Enter promo code"
+                      className="mt-1.5 w-full rounded-xl border border-black/15 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 uppercase placeholder:normal-case placeholder:text-black/30"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-5">
@@ -262,8 +277,21 @@ export default function BookingFormSection() {
                         <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">TV Size</label>
                         <div className="mt-1.5 grid grid-cols-3 gap-2">
                           {TV_SIZES.map(s => (
-                            <Chip key={s} label={s} active={tv.size === s}
-                              onClick={() => updateTv(i, "size", s)} small />
+                            <button
+                              key={s.label}
+                              type="button"
+                              onClick={() => updateTv(i, "size", s.label)}
+                              className={`rounded-xl border py-2 px-2 text-left transition ${
+                                tv.size === s.label
+                                  ? "bg-[#E50914] text-white border-[#E50914]"
+                                  : "border-black/15 bg-white hover:bg-black/5"
+                              }`}
+                            >
+                              <span className="block text-xs font-semibold">{s.label}</span>
+                              <span className={`block text-[11px] mt-0.5 ${tv.size === s.label ? "text-white/80" : "text-black/45"}`}>
+                                {s.price}
+                              </span>
+                            </button>
                           ))}
                         </div>
                         <div className="mt-2 flex items-center gap-2">
@@ -406,7 +434,7 @@ export default function BookingFormSection() {
 
                 {status === "error" && (
                   <p className="mt-4 text-sm font-medium text-[#E50914]">
-                    Something went wrong. Please try again or call us at (615) 208-7089.
+                    Something went wrong. Please try again or call us at (615) 669-0251.
                   </p>
                 )}
               </div>

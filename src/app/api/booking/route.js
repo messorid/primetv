@@ -1,4 +1,4 @@
-export const runtime = "nodejs"
+﻿export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import nodemailer from "nodemailer"
@@ -6,7 +6,7 @@ import nodemailer from "nodemailer"
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { date, timePreference, tvs, address, info } = body
+    const { date, timePreference, tvs, address, info, selectedPromo, promoCode } = body
 
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
@@ -57,7 +57,9 @@ export async function POST(request) {
             ${brow("Date Requested", date)}
             ${brow("Time Preference", timePreference)}
             ${brow("Service Address", fullAddress)}
-            ${brow("How they found us", info.referral)}
+            ${selectedPromo ? brow("Promo Selected", selectedPromo) : ""}
+          ${promoCode ? brow("Promo Code", promoCode) : ""}
+          ${brow("How they found us", info.referral)}
             ${brow("Payment Method", info.payment)}
           </table>
 
@@ -110,7 +112,7 @@ export async function POST(request) {
           </div>
 
           <p style="margin-top:24px;color:#444;font-size:14px;">
-            Questions? Call us at <strong>(615) 208-7089</strong> or reply to this email.
+            Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
           </p>
 
           <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">

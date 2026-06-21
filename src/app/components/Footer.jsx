@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { Phone, Mail, MapPin, Facebook, Instagram } from "lucide-react"
 
 const serviceLinks = [
@@ -45,11 +45,11 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
-              href="tel:+16152087089"
+              href="tel:+16156690251"
               className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/5 transition"
             >
               <Phone size={14} />
-              (615) 208-7089
+              (615) 669-0251
             </a>
             <Link
               href="/book"
@@ -85,9 +85,9 @@ export default function Footer() {
 
           {/* Contact info */}
           <div className="mt-6 space-y-2.5">
-            <a href="tel:+16152087089" className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition">
+            <a href="tel:+16156690251" className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition">
               <Phone size={13} className="text-[#E50914] shrink-0" />
-              (615) 208-7089
+              (615) 669-0251
             </a>
             <a href="mailto:info@primetvnashville.com" className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition">
               <Mail size={13} className="text-[#E50914] shrink-0" />

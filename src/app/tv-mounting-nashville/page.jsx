@@ -1,4 +1,4 @@
-import ServicesSection from "../components/ServicesSection";
+﻿import ServicesSection from "../components/ServicesSection";
 import PricingSection from "../components/PricingSection";
 import BookingSteps from "../components/BookingSteps";
 import CoverageMap from "../components/CoverageMap";
@@ -6,7 +6,8 @@ import WhyChooseSection from "../components/WhyChooseSection";
 import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
 import StickyActionBar from "../components/StickyActionBar";
-import HeroReusable from "../components/HeroReusable";
+import HeroReusable from "../components/HeroReusable"
+import LocalCitySection from "../components/LocalCitySection";
 
 export const metadata = {
   title: "TV Mounting in Nashville TN | Professional TV Installation",
@@ -48,7 +49,7 @@ export default function TvMountingPage() {
     "image": "https://primetvnashville.com/og-tv-mounting.jpg",
     "@id": "https://primetvnashville.com",
     "url": "https://primetvnashville.com/tv-mounting-nashville",
-    "telephone": "+1-615-208-7089",
+    "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting services in Nashville Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes, apartments and offices.",
     "address": {
@@ -91,6 +92,7 @@ export default function TvMountingPage() {
       />
 
       <WhyChooseSection />
+      <LocalCitySection city="nashville" />
 
       <ServicesSection />
 

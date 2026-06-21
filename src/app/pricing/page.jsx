@@ -1,11 +1,12 @@
 import ExtraServices from "../components/ExtraServices"
 
 export const metadata = {
-    title: "Pricing | PrimeTvNashville",
+    title: "TV Mounting Prices Nashville TN | PrimeTvNashville Pricing",
     description:
       "Transparent and affordable TV mounting and home theater installation prices in Nashville. View our service rates with no hidden fees.",
+    keywords: ["TV mounting price Nashville", "TV installation cost Nashville TN", "how much TV mounting Nashville", "TV mount service rates"],
     openGraph: {
-      title: "Pricing - PrimeTvNashville",
+      title: "TV Mounting Pricing Nashville | PrimeTvNashville",
       description:
         "Check our clear pricing for TV wall mounting and AV setups in Nashville TN. Reliable, affordable and professional services.",
       url: "https://primetvnashville.com/pricing",
@@ -17,6 +18,44 @@ export const metadata = {
       canonical: "https://primetvnashville.com/pricing"
     }
   }
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "PrimeTvNashville",
+  "url": "https://primetvnashville.com/pricing",
+  "telephone": "+1-615-669-0251",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Nashville",
+    "addressRegion": "TN",
+    "addressCountry": "US"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "TV Mounting Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "Standard TV Mounting (up to 55\")" },
+        "price": "110",
+        "priceCurrency": "USD"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "2 TV Installation Package" },
+        "price": "199",
+        "priceCurrency": "USD"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "Large Screen Mounting (60\"-70\")" },
+        "price": "150",
+        "priceCurrency": "USD"
+      }
+    ]
+  }
+}
   
   const pricingOptions = [
     {
@@ -38,6 +77,8 @@ export const metadata = {
   
   export default function PricingPage() {
     return (
+      <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="bg-white py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold text-black mb-4">Pricing</h1>
@@ -60,6 +101,7 @@ export const metadata = {
           <ExtraServices />
         </div>
       </section>
+      </>
     )
   }
   

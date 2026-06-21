@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 
-const PHONE = process.env.NEXT_PUBLIC_PRIMETV_PHONE || "+1-615-208-7089"
+const PHONE = process.env.NEXT_PUBLIC_PRIMETV_PHONE || "+1-615-669-0251"
 
 export default function StickyActionBar() {
 

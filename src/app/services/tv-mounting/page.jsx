@@ -1,7 +1,8 @@
-export const metadata = {
+﻿export const metadata = {
     title: "TV Wall Mounting Services in Nashville | PrimeTvNashville",
     description:
       "Expert TV wall mounting with secure installation, wire concealment and aesthetic integration. Serving Nashville TN homes and businesses.",
+    keywords: ["TV wall mounting Nashville", "TV installation service Nashville TN", "professional TV mount Nashville", "TV installer near me Nashville", "TV mounting company Nashville"],
     openGraph: {
       title: "TV Mounting Services in Nashville",
       description:
@@ -25,7 +26,7 @@ export const metadata = {
       "provider": {
         "@type": "LocalBusiness",
         "name": "PrimeTvNashville",
-        "telephone": "+1-615-208-7089",
+        "telephone": "+1-615-669-0251",
         "url": "https://primetvnashville.com",
         "address": {
           "@type": "PostalAddress",

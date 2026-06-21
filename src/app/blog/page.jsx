@@ -5,7 +5,7 @@ import Image from 'next/image'
 export const metadata = {
   title: 'TV Mounting Tips & Guides Nashville | PrimeTvNashville Blog',
   description: 'Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners. Learn from the pros at PrimeTvNashville.',
-  keywords: ['TV mounting Nashville', 'TV installation tips', 'home theater Nashville', 'TV mount guide'],
+  keywords: ['TV mounting Nashville', 'TV installation tips', 'home theater Nashville', 'TV mount guide', 'how to mount TV Nashville', 'TV wall mount tips'],
   openGraph: {
     title: 'TV Mounting Tips & Guides | PrimeTvNashville Blog',
     description: 'Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners.',
@@ -19,10 +19,26 @@ export const metadata = {
   },
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "PrimeTvNashville Blog",
+  "description": "Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners.",
+  "url": "https://primetvnashville.com/blog",
+  "publisher": {
+    "@type": "Organization",
+    "name": "PrimeTvNashville",
+    "url": "https://primetvnashville.com",
+    "logo": { "@type": "ImageObject", "url": "https://primetvnashville.com/og-image.jpg" }
+  }
+}
+
 export default function BlogPage() {
   const posts = getAllPosts()
 
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <main className="py-20 bg-blanco text-black bg-white dark:bg-white">
       <div className="w-[90%] max-w-6xl mx-auto text-center">
         <h1 className="text-4xl font-semibold mb-10">PrimeTv Blog</h1>
@@ -46,5 +62,6 @@ export default function BlogPage() {
         </div>
       </div>
     </main>
+    </>
   )
 }

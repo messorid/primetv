@@ -1,4 +1,4 @@
-import ServicesSection from "../components/ServicesSection";
+﻿import ServicesSection from "../components/ServicesSection";
 import PricingSection from "../components/PricingSection";
 import BookingSteps from "../components/BookingSteps";
 import CoverageMap from "../components/CoverageMap";
@@ -6,7 +6,8 @@ import WhyChooseSection from "../components/WhyChooseSection";
 import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
 import StickyActionBar from "../components/StickyActionBar";
-import HeroReusable from "../components/HeroReusable";
+import HeroReusable from "../components/HeroReusable"
+import LocalCitySection from "../components/LocalCitySection";
 
 export const metadata = {
   title: "TV Mounting in Nolensville TN | Professional TV Installation",
@@ -34,7 +35,7 @@ export default function TvMountingNolensvillePage() {
     "image": "https://primetvnashville.com/og-image.jpg",
     "@id": "https://primetvnashville.com",
     "url": "https://primetvnashville.com/tv-mounting-nolensville",
-    "telephone": "+1-615-208-7089",
+    "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting and installation services in Nolensville, Tennessee.",
     "address": {
@@ -71,6 +72,7 @@ export default function TvMountingNolensvillePage() {
         subtitle="Safe and secure TV wall mounting with clean cable management for homes and businesses in Nolensville."
       />
       <WhyChooseSection />
+      <LocalCitySection city="nolensville" />
       <ServicesSection />
       <PricingSection />
       <BookingSteps />

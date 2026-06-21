@@ -1,4 +1,4 @@
-import ContactUI from "./ContactUI"
+﻿import ContactUI from "./ContactUI"
 
 // 📝 OPTIMIZACIÓN SEO Y METADATOS
 export const metadata = {
@@ -30,7 +30,7 @@ export default function ContactPage() {
     "mainEntity": {
       "@type": "LocalBusiness",
       "name": "PrimeTvNashville",
-      "telephone": "+1-615-208-7089",
+      "telephone": "+1-615-669-0251",
       "email": "info@primetvnashville.com",
       "address": {
         "@type": "PostalAddress",

@@ -5,6 +5,7 @@ export const metadata = {
   title: "About PrimeTvNashville | Professional TV Installation in Nashville",
   description:
     "Learn more about PrimeTvNashville, our mission and why we are trusted by hundreds for TV mounting and installation services in Nashville TN.",
+  keywords: ["about PrimeTvNashville", "TV mounting company Nashville", "professional TV installers Nashville TN", "local TV installation experts"],
   openGraph: {
     title: "About PrimeTvNashville",
     description: "Get to know the story and commitment behind PrimeTvNashville",
@@ -18,8 +19,37 @@ export const metadata = {
   }
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "PrimeTvNashville",
+  "url": "https://primetvnashville.com",
+  "logo": "https://primetvnashville.com/og-image.jpg",
+  "image": "https://primetvnashville.com/og-image.jpg",
+  "description": "Professional TV mounting and installation company serving Nashville TN and surrounding areas.",
+  "telephone": "+1-615-669-0251",
+  "email": "info@primetvnashville.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Nashville",
+    "addressRegion": "TN",
+    "addressCountry": "US"
+  },
+  "areaServed": [
+    "Nashville", "Brentwood", "Franklin", "Murfreesboro", "Smyrna",
+    "Hendersonville", "Gallatin", "Goodlettsville", "La Vergne",
+    "Lebanon", "Mount Juliet", "Nolensville", "Spring Hill"
+  ],
+  "sameAs": [
+    "https://www.facebook.com/primetvnashville",
+    "https://www.instagram.com/primetvnashville"
+  ]
+}
+
 export default function AboutPage() {
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <section className="bg-gray-50 py-20">
       <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center gap-10">
         
@@ -50,5 +80,6 @@ export default function AboutPage() {
         </div>
       </div>
     </section>
+    </>
   )
 }

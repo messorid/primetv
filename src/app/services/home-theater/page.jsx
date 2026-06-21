@@ -1,7 +1,8 @@
-export const metadata = {
+﻿export const metadata = {
     title: "Home Theater Setup in Nashville | PrimeTvNashville",
     description:
       "Complete home theater and AV setup solutions in Nashville TN. Displays, speakers, PA systems and immersive entertainment installations.",
+    keywords: ["home theater setup Nashville", "home theater installation Nashville TN", "AV installation Nashville", "media room setup Nashville", "surround sound installation Nashville"],
     openGraph: {
       title: "Home Theater Installation in Nashville",
       description:
@@ -25,7 +26,7 @@ export const metadata = {
       "provider": {
         "@type": "LocalBusiness",
         "name": "PrimeTvNashville",
-        "telephone": "+1-615-208-7089",
+        "telephone": "+1-615-669-0251",
         "url": "https://primetvnashville.com",
         "address": {
           "@type": "PostalAddress",

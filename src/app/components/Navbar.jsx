@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -72,9 +72,9 @@ export default function Navbar() {
                 </span>
                 <span className="sm:hidden">Same-Day Availability</span>
                 <span className="hidden sm:block text-white/60">·</span>
-                <a href="tel:+16152087089" className="flex items-center gap-1 font-bold underline-offset-2 hover:underline">
+                <a href="tel:+16156690251" className="flex items-center gap-1 font-bold underline-offset-2 hover:underline">
                   <Phone size={12} />
-                  (615) 208-7089
+                  (615) 669-0251
                 </a>
               </div>
               <button
@@ -178,11 +178,11 @@ export default function Navbar() {
           {/* DESKTOP CTA */}
           <div className="hidden md:flex items-center gap-3 shrink-0">
             <a
-              href="tel:+16152087089"
+              href="tel:+16156690251"
               className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition font-medium"
             >
               <Phone size={14} />
-              (615) 208-7089
+              (615) 669-0251
             </a>
             <Link
               href="/book"
@@ -248,11 +248,11 @@ export default function Navbar() {
                 {/* Mobile CTAs */}
                 <div className="pt-4 mt-4 border-t border-white/5 space-y-3">
                   <a
-                    href="tel:+16152087089"
+                    href="tel:+16156690251"
                     className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/10 py-3 text-sm font-semibold text-white hover:bg-white/5 transition"
                   >
                     <Phone size={14} />
-                    (615) 208-7089
+                    (615) 669-0251
                   </a>
                   <Link
                     href="/book"
