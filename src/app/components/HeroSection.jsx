@@ -16,6 +16,9 @@ const badges = [
   { icon: <ShieldCheck size={14} />, text: "Licensed & Insured" },
   { icon: <Clock size={14} />, text: "Same-Day Service" },
   { icon: <Zap size={14} />, text: "Upfront Pricing" },
+  { icon: <Star size={14} />, text: "Workmanship Warranty" },
+  { icon: <ShieldCheck size={14} />, text: "Clean Cable Finish" },
+  { icon: <Zap size={14} />, text: "Large TV Specialists" },
 ]
 
 export default function HeroSection() {
@@ -55,7 +58,7 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1 className="text-[2.75rem] sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-black leading-[1.08] tracking-tight text-black">
-              Nashville's #1{" "}
+              Professional{" "}
               <span className="relative inline-block">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#E50914] to-red-500">
                   TV Mounting
@@ -63,12 +66,12 @@ export default function HeroSection() {
                 <span aria-hidden="true" className="absolute -bottom-1 left-0 w-full h-[6px] rounded-full bg-gradient-to-r from-[#E50914]/30 to-transparent" />
               </span>
               <br />
-              <span className="text-black/90">Service</span>
+              <span className="text-black/90">in Nashville TN</span>
             </h1>
 
             {/* Subheadline */}
             <p className="mt-5 text-base sm:text-lg text-black/60 max-w-lg leading-relaxed">
-              Safe, perfectly leveled, and clean installations for homes and businesses across Nashville and surrounding areas.
+              Same-day availability. Clean cable concealment, upfront pricing, and a workmanship warranty on every installation across Nashville and surrounding areas.
             </p>
 
             {/* Trust badges */}

@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const STEPS = ["Date & Time", "TV Details", "Address", "Your Info"]
@@ -41,6 +41,13 @@ export default function BookingFormSection() {
   const [step,      setStep]      = useState(0)
   const [direction, setDirection] = useState(1)
   const [status,    setStatus]    = useState("idle") // idle | sending | ok | error
+  const topRef = useRef(null)
+
+  useEffect(() => {
+    if (status === "ok") {
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [status])
 
   const [selectedPromo,  setSelectedPromo]  = useState("")
   const [promoCode,      setPromoCode]      = useState("")
@@ -97,7 +104,7 @@ export default function BookingFormSection() {
   /* ── Success ──────────────────────────────────────────────────────────── */
   if (status === "ok") {
     return (
-      <section className="relative w-full bg-gray-50 py-24 text-black">
+      <section ref={topRef} className="relative w-full bg-gray-50 py-24 text-black">
         <div className="relative max-w-md mx-auto px-5 text-center">
           <motion.div
             initial={{ scale: 0.7, opacity: 0 }}

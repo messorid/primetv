@@ -7,12 +7,13 @@ import StickyActionBar from "./components/StickyActionBar";
 import CoverageMap from "./components/CoverageMap";
 import WhyChooseSection from "./components/WhyChooseSection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
+import InternalLinksHub from "./components/InternalLinksHub";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
 export const metadata = {
-  title: "Expert TV Mounting in Nashville TN | PrimeTvNashville",
-  description: "Reliable and expert TV installation services for homes and businesses in Nashville. Flat screen mounting, concealed wiring, and commercial setups. Book today!",
-  keywords: ["TV mounting Nashville", "TV installation TN", "home theater setup", "commercial TV installation", "PrimeTvNashville", "cable concealment"],
+  title: "TV Mounting Nashville TN | Same-Day TV Installation | PrimeTvNashville",
+  description: "Professional TV mounting in Nashville TN. Same-day options, clean cable concealment, upfront pricing. Homes, apartments and businesses. Book today!",
+  keywords: ["TV mounting Nashville", "TV mounting Nashville TN", "TV installation Nashville", "same-day TV mounting Nashville", "TV wall mount Nashville", "cable concealment Nashville", "PrimeTvNashville"],
   robots: {
     index: true,
     follow: true,
@@ -107,6 +108,7 @@ export default function HomePage() {
         <PricingSection />
         <BookingSteps />
         <CoverageMap />
+        <InternalLinksHub />
         <QuickQuoteForm />
         <FaqsSection />
       </main>

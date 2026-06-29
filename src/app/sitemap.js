@@ -16,7 +16,10 @@ const STATIC_PAGES = [
   { path: "/contact",                  priority: 0.70, freq: "monthly" },
   { path: "/about",                    priority: 0.65, freq: "monthly" },
   { path: "/blog",                     priority: 0.70, freq: "weekly"  },
-  { path: "/soundbar-installation-nashville", priority: 0.70, freq: "monthly" },
+  { path: "/soundbar-installation-nashville",             priority: 0.75, freq: "monthly" },
+  { path: "/samsung-frame-tv-installation-nashville",    priority: 0.85, freq: "monthly" },
+  { path: "/tv-mounting-over-fireplace-nashville",       priority: 0.85, freq: "monthly" },
+  { path: "/cable-concealment-nashville",                priority: 0.80, freq: "monthly" },
 ]
 
 export default function sitemap() {

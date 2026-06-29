@@ -7,7 +7,8 @@ import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
 import StickyActionBar from "../components/StickyActionBar";
 import HeroReusable from "../components/HeroReusable"
-import LocalCitySection from "../components/LocalCitySection";
+import LocalCitySection from "../components/LocalCitySection"
+import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
   title: "TV Mounting in Nashville TN | Professional TV Installation",
@@ -103,6 +104,7 @@ export default function TvMountingPage() {
       <CoverageMap />
 
       <QuickQuoteForm />
+      <CityFaqSection city="nashville" />
 
       <FaqsSection />
 

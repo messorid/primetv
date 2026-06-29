@@ -7,7 +7,8 @@ import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
 import StickyActionBar from "../components/StickyActionBar";
 import HeroReusable from "../components/HeroReusable"
-import LocalCitySection from "../components/LocalCitySection";
+import LocalCitySection from "../components/LocalCitySection"
+import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
   title: "TV Mounting in Goodlettsville TN | Professional TV Installation",
@@ -78,6 +79,7 @@ export default function TvMountingGoodlettsvillePage() {
       <BookingSteps />
       <CoverageMap />
       <QuickQuoteForm />
+      <CityFaqSection city="goodlettsville" />
       <FaqsSection />
       <StickyActionBar />
     </>
