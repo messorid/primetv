@@ -1,7 +1,8 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { validateCoupon } from "@/app/lib/coupons"
 
 const STEPS = ["Date & Time", "TV Details", "Address", "Your Info"]
 
@@ -50,7 +51,9 @@ export default function BookingFormSection() {
   }, [status])
 
   const [selectedPromo,  setSelectedPromo]  = useState("")
-  const [promoCode,      setPromoCode]      = useState("")
+  const [couponCode,     setCouponCode]     = useState("")
+  const [couponStatus,   setCouponStatus]   = useState("idle") // idle | valid | invalid
+  const [appliedCoupon,  setAppliedCoupon]  = useState(null)
   const [date,           setDate]           = useState("")
   const [timePreference, setTimePreference] = useState("")
   const [tvs,            setTvs]            = useState([emptyTv()])
@@ -62,28 +65,51 @@ export default function BookingFormSection() {
 
   const today = new Date().toISOString().split("T")[0]
 
+  // Step 1 is valid if: promo selected (skip TV details) OR TVs are all filled out
   const stepValid = [
     date && timePreference,
-    tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType),
+    selectedPromo || (tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType)),
     address.street.trim() && address.city.trim() && address.state && /^\d{5}$/.test(address.zip),
     info.firstName.trim() && info.lastName.trim() && info.email.includes("@") &&
       info.phone.trim() && info.referral && info.payment && info.agreed,
   ]
 
+  // Skip TV Details step when a promo is selected
   function goNext() {
     if (!stepValid[step]) return
     setDirection(1)
-    setStep(s => s + 1)
+    setStep(s => (s === 0 && selectedPromo ? 2 : s + 1))
   }
 
   function goBack() {
     setDirection(-1)
-    setStep(s => s - 1)
+    setStep(s => (s === 2 && selectedPromo ? 0 : s - 1))
   }
 
-  function addTv()             { setTvs(prev => [...prev, emptyTv()]) }
-  function removeTv(i)         { setTvs(prev => prev.filter((_, idx) => idx !== i)) }
-  function updateTv(i, f, v)   { setTvs(prev => prev.map((tv, idx) => idx === i ? { ...tv, [f]: v } : tv)) }
+  function addTv()           { setTvs(prev => [...prev, emptyTv()]) }
+  function removeTv(i)       { setTvs(prev => prev.filter((_, idx) => idx !== i)) }
+  function updateTv(i, f, v) { setTvs(prev => prev.map((tv, idx) => idx === i ? { ...tv, [f]: v } : tv)) }
+
+  function handlePromoToggle(label) {
+    setSelectedPromo(p => p === label ? "" : label)
+  }
+
+  function applyCoupon() {
+    const result = validateCoupon(couponCode)
+    if (result) {
+      setAppliedCoupon(result)
+      setCouponStatus("valid")
+    } else {
+      setAppliedCoupon(null)
+      setCouponStatus("invalid")
+    }
+  }
+
+  function clearCoupon() {
+    setCouponCode("")
+    setCouponStatus("idle")
+    setAppliedCoupon(null)
+  }
 
   async function submit() {
     if (!stepValid[3]) return
@@ -92,7 +118,16 @@ export default function BookingFormSection() {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedPromo, promoCode, date, timePreference, tvs, address, info }),
+        body: JSON.stringify({
+          selectedPromo,
+          couponCode: appliedCoupon ? couponCode : "",
+          appliedCouponLabel: appliedCoupon?.label ?? "",
+          date,
+          timePreference,
+          tvs: selectedPromo ? [] : tvs,
+          address,
+          info,
+        }),
       })
       if (!res.ok) throw new Error()
       setStatus("ok")
@@ -149,35 +184,46 @@ export default function BookingFormSection() {
 
         {/* progress */}
         <div className="flex items-center mb-7">
-          {STEPS.map((label, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center relative">
-              {i < STEPS.length - 1 && (
+          {STEPS.map((label, i) => {
+            const skipped = i === 1 && !!selectedPromo
+            const passed  = i < step || (skipped && step > 1)
+            const active  = i === step && !skipped
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center relative">
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={`absolute top-4 left-1/2 w-full h-[2px] transition-colors duration-500 ${
+                      passed ? "bg-[#E50914]" : "bg-black/10"
+                    }`}
+                  />
+                )}
                 <div
-                  className={`absolute top-4 left-1/2 w-full h-[2px] transition-colors duration-500 ${
-                    i < step ? "bg-[#E50914]" : "bg-black/10"
+                  className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    skipped
+                      ? "bg-black/8 text-black/25"
+                      : passed
+                      ? "bg-[#E50914] text-white"
+                      : active
+                      ? "bg-[#E50914] text-white ring-4 ring-red-200"
+                      : "bg-black/10 text-black/40"
                   }`}
-                />
-              )}
-              <div
-                className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                  i < step
-                    ? "bg-[#E50914] text-white"
-                    : i === step
-                    ? "bg-[#E50914] text-white ring-4 ring-red-200"
-                    : "bg-black/10 text-black/40"
-                }`}
-              >
-                {i < step ? "✓" : i + 1}
+                >
+                  {passed && !skipped ? "✓" : skipped ? "—" : i + 1}
+                </div>
+                <span
+                  className={`mt-1 text-[11px] font-medium hidden sm:block ${
+                    skipped
+                      ? "text-black/25"
+                      : active
+                      ? "text-black"
+                      : "text-black/35"
+                  }`}
+                >
+                  {skipped ? "In promo" : label}
+                </span>
               </div>
-              <span
-                className={`mt-1 text-[11px] font-medium hidden sm:block ${
-                  i === step ? "text-black" : "text-black/35"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* animated card */}
@@ -204,11 +250,11 @@ export default function BookingFormSection() {
 
                 {/* PROMO */}
                 <div className="mb-5 rounded-xl border border-black/10 bg-gray-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#E50914] mb-3">Promo</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#E50914] mb-3">Promos</p>
                   <div className="space-y-2.5">
                     {PROMOS.map(promo => (
                       <label key={promo.label} className="flex items-center gap-3 cursor-pointer group"
-                        onClick={() => setSelectedPromo(p => p === promo.label ? "" : promo.label)}>
+                        onClick={() => handlePromoToggle(promo.label)}>
                         <div className={`w-5 h-5 flex-none rounded border-2 flex items-center justify-center transition ${
                           selectedPromo === promo.label
                             ? "bg-[#E50914] border-[#E50914]"
@@ -225,17 +271,61 @@ export default function BookingFormSection() {
                       </label>
                     ))}
                   </div>
-                  <p className="mt-2.5 text-xs text-black/40">Select a promo if it applies (optional)</p>
 
+                  {selectedPromo && (
+                    <p className="mt-2.5 text-xs text-emerald-600 font-medium">
+                      Promo selected — TV details are included in the package price.
+                    </p>
+                  )}
+
+                  {!selectedPromo && (
+                    <p className="mt-2.5 text-xs text-black/40">Select a promo if it applies (optional)</p>
+                  )}
+
+                  {/* Coupon code */}
                   <div className="mt-3 pt-3 border-t border-black/8">
-                    <label className="text-xs font-semibold text-black/60">Promo Code (optional)</label>
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={e => setPromoCode(e.target.value.toUpperCase())}
-                      placeholder="Enter promo code"
-                      className="mt-1.5 w-full rounded-xl border border-black/15 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 uppercase placeholder:normal-case placeholder:text-black/30"
-                    />
+                    <label className="text-xs font-semibold text-black/60">Coupon Code (optional)</label>
+
+                    {appliedCoupon ? (
+                      <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5">
+                        <svg className="w-4 h-4 text-emerald-600 flex-none" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-emerald-700">{appliedCoupon.label}</p>
+                        </div>
+                        <button type="button" onClick={clearCoupon}
+                          className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold flex-none">
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-1.5 flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus("idle") }}
+                          placeholder="Enter coupon code"
+                          className={`flex-1 rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 uppercase placeholder:normal-case placeholder:text-black/30 transition ${
+                            couponStatus === "invalid"
+                              ? "border-red-400 focus:ring-red-200"
+                              : "border-black/15 focus:ring-red-300"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={applyCoupon}
+                          disabled={!couponCode.trim()}
+                          className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white hover:bg-black/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    )}
+
+                    {couponStatus === "invalid" && !appliedCoupon && (
+                      <p className="mt-1.5 text-xs text-red-500 font-medium">Invalid code. Please check and try again.</p>
+                    )}
                   </div>
                 </div>
 
@@ -262,8 +352,8 @@ export default function BookingFormSection() {
               </div>
             )}
 
-            {/* ── STEP 1 — TV Details ── */}
-            {step === 1 && (
+            {/* ── STEP 1 — TV Details (only shown when no promo) ── */}
+            {step === 1 && !selectedPromo && (
               <div>
                 <StepHeader title="TV Details" sub="Tell us about each TV you need mounted" />
                 <div className="space-y-5">
@@ -315,7 +405,7 @@ export default function BookingFormSection() {
                         </div>
                       </div>
 
-                      {/* Wall type with pricing */}
+                      {/* Wall type */}
                       <div>
                         <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">Wall Type</label>
                         <div className="mt-1.5 grid grid-cols-2 gap-2">
