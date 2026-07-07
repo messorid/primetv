@@ -264,6 +264,11 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                     Coupon — {b.couponCode}
                   </p>
                   <p className="text-sm text-emerald-800">{b.appliedCouponLabel}</p>
+                  {b.couponComment && (
+                    <p className="mt-2 text-sm text-emerald-700 italic border-t border-emerald-200 pt-2">
+                      "{b.couponComment}"
+                    </p>
+                  )}
                 </div>
               )}
             </section>

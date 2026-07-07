@@ -18,9 +18,10 @@ export const COUPON_CODES = {
   },
 
   "2POR199": {
-    offer:  "Special deal — 2 TV installations for only $199",
-    note:   "2 TVs mounted for $199, no size restriction",
-    active: true,
+    offer:         "Special deal — 2 TV installations for only $199",
+    note:          "2 TVs mounted for $199, no size restriction",
+    skipTvDetails: true,   // habilita campo de comentario, salta el paso de detalles de TV
+    active:        true,
   },
 
   // Add more codes below as needed:

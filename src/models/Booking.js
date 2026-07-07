@@ -26,6 +26,7 @@ const BookingSchema = new mongoose.Schema({
   selectedPromo:      String,
   couponCode:         String,
   appliedCouponLabel: String,
+  couponComment:      String,
   tvs:                [TvSchema],
   status: {
     type:    String,

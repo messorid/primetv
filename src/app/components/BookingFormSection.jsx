@@ -54,6 +54,7 @@ export default function BookingFormSection() {
   const [couponCode,     setCouponCode]     = useState("")
   const [couponStatus,   setCouponStatus]   = useState("idle") // idle | valid | invalid
   const [appliedCoupon,  setAppliedCoupon]  = useState(null)
+  const [couponComment,  setCouponComment]  = useState("")
   const [date,           setDate]           = useState("")
   const [timePreference, setTimePreference] = useState("")
   const [tvs,            setTvs]            = useState([emptyTv()])
@@ -65,25 +66,27 @@ export default function BookingFormSection() {
 
   const today = new Date().toISOString().split("T")[0]
 
-  // Step 1 is valid if: promo selected (skip TV details) OR TVs are all filled out
+  const skipTvStep = !!selectedPromo || !!appliedCoupon?.skipTvDetails
+
+  // Step 1 is valid if: promo or skipTvDetails coupon active, OR TVs all filled out
   const stepValid = [
     date && timePreference,
-    selectedPromo || (tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType)),
+    skipTvStep || (tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType)),
     address.street.trim() && address.city.trim() && address.state && /^\d{5}$/.test(address.zip),
     info.firstName.trim() && info.lastName.trim() && info.email.includes("@") &&
       info.phone.trim() && info.referral && info.payment && info.agreed,
   ]
 
-  // Skip TV Details step when a promo is selected
+  // Skip TV Details step when a promo or skipTvDetails coupon is active
   function goNext() {
     if (!stepValid[step]) return
     setDirection(1)
-    setStep(s => (s === 0 && selectedPromo ? 2 : s + 1))
+    setStep(s => (s === 0 && skipTvStep ? 2 : s + 1))
   }
 
   function goBack() {
     setDirection(-1)
-    setStep(s => (s === 2 && selectedPromo ? 0 : s - 1))
+    setStep(s => (s === 2 && skipTvStep ? 0 : s - 1))
   }
 
   function addTv()           { setTvs(prev => [...prev, emptyTv()]) }
@@ -109,6 +112,7 @@ export default function BookingFormSection() {
     setCouponCode("")
     setCouponStatus("idle")
     setAppliedCoupon(null)
+    setCouponComment("")
   }
 
   async function submit() {
@@ -120,11 +124,12 @@ export default function BookingFormSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           selectedPromo,
-          couponCode: appliedCoupon ? couponCode : "",
+          couponCode:         appliedCoupon ? couponCode : "",
           appliedCouponLabel: appliedCoupon?.offer ?? "",
+          couponComment:      appliedCoupon?.skipTvDetails ? couponComment : "",
           date,
           timePreference,
-          tvs: selectedPromo ? [] : tvs,
+          tvs: skipTvStep ? [] : tvs,
           address,
           info,
         }),
@@ -185,7 +190,7 @@ export default function BookingFormSection() {
         {/* progress */}
         <div className="flex items-center mb-7">
           {STEPS.map((label, i) => {
-            const skipped = i === 1 && !!selectedPromo
+            const skipped = i === 1 && skipTvStep
             const passed  = i < step || (skipped && step > 1)
             const active  = i === step && !skipped
             return (
@@ -294,17 +299,33 @@ export default function BookingFormSection() {
                     <label className="text-xs font-semibold text-black/60">Coupon Code (optional)</label>
 
                     {appliedCoupon ? (
-                      <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5">
-                        <svg className="w-4 h-4 text-emerald-600 flex-none" viewBox="0 0 16 16" fill="none">
-                          <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-emerald-700">{appliedCoupon.offer}</p>
+                      <div className="mt-1.5 rounded-xl border border-emerald-300 bg-emerald-50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-3 py-2.5">
+                          <svg className="w-4 h-4 text-emerald-600 flex-none" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-emerald-700">{appliedCoupon.offer}</p>
+                          </div>
+                          <button type="button" onClick={clearCoupon}
+                            className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold flex-none">
+                            Remove
+                          </button>
                         </div>
-                        <button type="button" onClick={clearCoupon}
-                          className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold flex-none">
-                          Remove
-                        </button>
+                        {appliedCoupon.skipTvDetails && (
+                          <div className="border-t border-emerald-200 px-3 pb-3 pt-2.5 bg-white/60">
+                            <label className="text-xs font-semibold text-emerald-800">
+                              Additional comments <span className="font-normal text-black/40">(optional)</span>
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={couponComment}
+                              onChange={e => setCouponComment(e.target.value)}
+                              placeholder="Anything you'd like us to know about the installation…"
+                              className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                            />
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="mt-1.5 flex gap-2">

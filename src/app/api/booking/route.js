@@ -8,7 +8,7 @@ import Booking from "@/models/Booking"
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel } = body
+    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel, couponComment } = body
 
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
@@ -61,6 +61,7 @@ export async function POST(request) {
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-top:12px;">
         <p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(couponCode)}</p>
         <p style="margin:6px 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(appliedCouponLabel)}</p>
+        ${couponComment ? `<p style="margin:8px 0 0;font-size:13px;color:#166534;font-style:italic;">"${safe(couponComment)}"</p>` : ""}
       </div>
     ` : ""
 
@@ -85,6 +86,7 @@ export async function POST(request) {
             ${brow("Service Address", fullAddress)}
             ${hasPromo ? brow("Promo Selected", `${selectedPromo} — <strong>${promoPrice}</strong>`) : ""}
             ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
+            ${couponComment ? brow("Customer Comments", safe(couponComment)) : ""}
             ${brow("How they found us", info.referral)}
             ${brow("Payment Method", info.payment)}
           </table>
@@ -176,6 +178,7 @@ export async function POST(request) {
         selectedPromo:      selectedPromo || "",
         couponCode:         couponCode || "",
         appliedCouponLabel: appliedCouponLabel || "",
+        couponComment:      couponComment || "",
         tvs:                tvList,
         status:             "pending",
       })
