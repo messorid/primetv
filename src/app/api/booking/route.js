@@ -1,12 +1,14 @@
-﻿export const runtime = "nodejs"
+export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import nodemailer from "nodemailer"
+import { connectToDatabase } from "@/lib/mongodb"
+import Booking from "@/models/Booking"
 
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { date, timePreference, tvs, address, info, selectedPromo, promoCode } = body
+    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel } = body
 
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
@@ -29,7 +31,13 @@ export async function POST(request) {
       `${safe(address.city)}, ${safe(address.state)} ${safe(address.zip)}`,
     ].filter(Boolean).join(", ")
 
-    const tvRows = (tvs || []).map((tv, idx) => `
+    const tvList = (tvs || [])
+    const hasPromo = !!selectedPromo
+    const promoPrice = hasPromo
+      ? (selectedPromo.includes("55") ? "$199" : "$260")
+      : ""
+
+    const tvRows = tvList.map((tv, idx) => `
       <tr style="background:${idx % 2 ? "#fafafa" : "#fff"};">
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${idx + 1}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${safe(tv.size)}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""}</td>
@@ -37,6 +45,24 @@ export async function POST(request) {
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${safe(tv.comments) || "-"}</td>
       </tr>
     `).join("")
+
+    // ── Price / promo block for client email ──────────────────────────────────
+    const promoPriceBlock = hasPromo ? `
+      <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Package Price</p>
+          <p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(selectedPromo)}</p>
+        </div>
+        <span style="font-size:28px;font-weight:900;color:#e50914;">${promoPrice}</span>
+      </div>
+    ` : ""
+
+    const couponBlock = (couponCode && appliedCouponLabel) ? `
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-top:12px;">
+        <p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(couponCode)}</p>
+        <p style="margin:6px 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(appliedCouponLabel)}</p>
+      </div>
+    ` : ""
 
     // ── Email to business ──────────────────────────────────────────────────────
     await transporter.sendMail({
@@ -57,24 +83,30 @@ export async function POST(request) {
             ${brow("Date Requested", date)}
             ${brow("Time Preference", timePreference)}
             ${brow("Service Address", fullAddress)}
-            ${selectedPromo ? brow("Promo Selected", selectedPromo) : ""}
-          ${promoCode ? brow("Promo Code", promoCode) : ""}
-          ${brow("How they found us", info.referral)}
+            ${hasPromo ? brow("Promo Selected", `${selectedPromo} — <strong>${promoPrice}</strong>`) : ""}
+            ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
+            ${brow("How they found us", info.referral)}
             ${brow("Payment Method", info.payment)}
           </table>
 
-          <h4 style="margin:28px 0 8px;color:#444;font-size:15px;">TV Details (${tvs.length} TV${tvs.length > 1 ? "s" : ""})</h4>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            <thead>
-              <tr style="background:#f0f0f0;">
-                <th style="padding:8px 12px;text-align:left;">#</th>
-                <th style="padding:8px 12px;text-align:left;">Size</th>
-                <th style="padding:8px 12px;text-align:left;">Wall Type</th>
-                <th style="padding:8px 12px;text-align:left;">Comments</th>
-              </tr>
-            </thead>
-            <tbody>${tvRows}</tbody>
-          </table>
+          ${hasPromo ? `
+            <p style="margin:20px 0 8px;font-size:13px;color:#888;font-style:italic;">
+              Package promo — TV details not required.
+            </p>
+          ` : `
+            <h4 style="margin:28px 0 8px;color:#444;font-size:15px;">TV Details (${tvList.length} TV${tvList.length !== 1 ? "s" : ""})</h4>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+              <thead>
+                <tr style="background:#f0f0f0;">
+                  <th style="padding:8px 12px;text-align:left;">#</th>
+                  <th style="padding:8px 12px;text-align:left;">Size</th>
+                  <th style="padding:8px 12px;text-align:left;">Wall Type</th>
+                  <th style="padding:8px 12px;text-align:left;">Comments</th>
+                </tr>
+              </thead>
+              <tbody>${tvRows}</tbody>
+            </table>
+          `}
 
           <p style="margin-top:28px;font-size:12px;color:#aaa;">
             Submitted from PrimeTvNashville.com
@@ -107,9 +139,15 @@ export async function POST(request) {
               ${crow("Date", date)}
               ${crow("Time Window", timePreference)}
               ${crow("Address", fullAddress)}
-              ${crow("TVs", `${tvs.length} TV${tvs.length > 1 ? "s" : ""}`)}
+              ${hasPromo
+                ? crow("Package", selectedPromo)
+                : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
+              }
             </table>
           </div>
+
+          ${promoPriceBlock}
+          ${couponBlock}
 
           <p style="margin-top:24px;color:#444;font-size:14px;">
             Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
@@ -121,6 +159,30 @@ export async function POST(request) {
         </div>
       `,
     })
+
+    // ── Save to MongoDB ────────────────────────────────────────────────────────
+    try {
+      await connectToDatabase()
+      await Booking.create({
+        firstName:          info.firstName,
+        lastName:           info.lastName,
+        email:              info.email,
+        phone:              info.phone,
+        referral:           info.referral,
+        payment:            info.payment,
+        date,
+        timePreference,
+        address,
+        selectedPromo:      selectedPromo || "",
+        couponCode:         couponCode || "",
+        appliedCouponLabel: appliedCouponLabel || "",
+        tvs:                tvList,
+        status:             "pending",
+      })
+    } catch (dbErr) {
+      console.error("DB save error", dbErr)
+      // Don't fail the request — emails already sent
+    }
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 })
   } catch (err) {

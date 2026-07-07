@@ -121,7 +121,7 @@ export default function BookingFormSection() {
         body: JSON.stringify({
           selectedPromo,
           couponCode: appliedCoupon ? couponCode : "",
-          appliedCouponLabel: appliedCoupon?.label ?? "",
+          appliedCouponLabel: appliedCoupon?.offer ?? "",
           date,
           timePreference,
           tvs: selectedPromo ? [] : tvs,
@@ -272,11 +272,18 @@ export default function BookingFormSection() {
                     ))}
                   </div>
 
-                  {selectedPromo && (
-                    <p className="mt-2.5 text-xs text-emerald-600 font-medium">
-                      Promo selected — TV details are included in the package price.
-                    </p>
-                  )}
+                  {selectedPromo && (() => {
+                    const promo = PROMOS.find(p => p.label === selectedPromo)
+                    return (
+                      <div className="mt-3 flex items-center justify-between rounded-xl bg-[#E50914]/8 border border-[#E50914]/20 px-4 py-3">
+                        <div>
+                          <p className="text-xs font-semibold text-[#E50914] uppercase tracking-wide">Package total</p>
+                          <p className="text-xs text-black/55 mt-0.5">TV details included in price</p>
+                        </div>
+                        <span className="text-2xl font-extrabold text-[#E50914]">{promo?.price}</span>
+                      </div>
+                    )
+                  })()}
 
                   {!selectedPromo && (
                     <p className="mt-2.5 text-xs text-black/40">Select a promo if it applies (optional)</p>
@@ -292,7 +299,7 @@ export default function BookingFormSection() {
                           <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-emerald-700">{appliedCoupon.label}</p>
+                          <p className="text-xs font-semibold text-emerald-700">{appliedCoupon.offer}</p>
                         </div>
                         <button type="button" onClick={clearCoupon}
                           className="text-xs text-emerald-600 hover:text-emerald-800 font-semibold flex-none">
