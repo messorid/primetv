@@ -2,8 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import nodemailer from "nodemailer"
-import { connectToDatabase } from "@/lib/mongodb"
-import Booking from "@/models/Booking"
+import { neon } from "@neondatabase/serverless"
 
 export async function POST(request) {
   try {
@@ -162,29 +161,34 @@ export async function POST(request) {
       `,
     })
 
-    // ── Save to MongoDB ────────────────────────────────────────────────────────
+    // ── Save to Neon Postgres ──────────────────────────────────────────────────
     try {
-      await connectToDatabase()
-      await Booking.create({
-        firstName:          info.firstName,
-        lastName:           info.lastName,
-        email:              info.email,
-        phone:              info.phone,
-        referral:           info.referral,
-        payment:            info.payment,
-        date,
-        timePreference,
-        address,
-        selectedPromo:      selectedPromo || "",
-        couponCode:         couponCode || "",
-        appliedCouponLabel: appliedCouponLabel || "",
-        couponComment:      couponComment || "",
-        tvs:                tvList,
-        status:             "pending",
-      })
+      const sql = neon(process.env.DATABASE_URL)
+      await sql`
+        CREATE TABLE IF NOT EXISTS bookings (
+          id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          first_name     TEXT, last_name TEXT, email TEXT, phone TEXT,
+          referral       TEXT, payment TEXT, date TEXT, time_pref TEXT,
+          address        JSONB, promo TEXT, coupon_code TEXT,
+          coupon_label   TEXT, coupon_comment TEXT, tvs JSONB,
+          status         TEXT DEFAULT 'pending', notes TEXT,
+          created_at     TIMESTAMPTZ DEFAULT NOW()
+        )
+      `
+      await sql`
+        INSERT INTO bookings
+          (first_name, last_name, email, phone, referral, payment, date, time_pref,
+           address, promo, coupon_code, coupon_label, coupon_comment, tvs)
+        VALUES
+          (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
+           ${info.referral}, ${info.payment}, ${date}, ${timePreference},
+           ${JSON.stringify(address)}, ${selectedPromo || ""},
+           ${couponCode || ""}, ${appliedCouponLabel || ""},
+           ${couponComment || ""}, ${JSON.stringify(tvList)})
+      `
     } catch (dbErr) {
       console.error("DB save error", dbErr)
-      // Don't fail the request — emails already sent
+      // Don't fail — emails already sent
     }
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 })
