@@ -14,13 +14,14 @@ export default function AdminLayout({ children }) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    if (path === "/admin/login") { setReady(true); return }
     const isAuth = localStorage.getItem("admin-auth") || document.cookie.includes("admin-auth")
     if (!isAuth) {
       router.push("/admin/login")
     } else {
       setReady(true)
     }
-  }, [router])
+  }, [router, path])
 
   function logout() {
     localStorage.removeItem("admin-auth")
@@ -29,6 +30,7 @@ export default function AdminLayout({ children }) {
   }
 
   if (!ready) return null
+  if (path === "/admin/login") return <>{children}</>
 
   return (
     <div className="min-h-screen bg-[#f4f5f7] flex flex-col">

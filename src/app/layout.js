@@ -1,10 +1,8 @@
 import { Inter } from "next/font/google"
 import "./globals.css"
-import Navbar from "./components/Navbar"
-import Footer from "./components/Footer"
 import { Toaster } from "react-hot-toast"
 import Script from "next/script"
-import StickyGate from "./components/StickyGate"
+import RootContent from "./components/RootContent"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -75,19 +73,8 @@ fbq('track', 'PageView');
           />
         </noscript>
 
-        <Navbar />
-
-        {/* Padding inferior para no tapar contenido con la barra fija */}
-        <main className="pb-24 md:pb-24 overflow-x-hidden">
-          {children}
-        </main>
-
-        {/* Barra fija visible en todas las rutas menos en /book */}
-        <StickyGate />
-
+        <RootContent>{children}</RootContent>
         <Toaster position="top-center" />
-
-        <Footer />
       </body>
     </html>
   )
