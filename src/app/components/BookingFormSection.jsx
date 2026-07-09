@@ -51,10 +51,12 @@ export default function BookingFormSection() {
   }, [status])
 
   const [selectedPromo,  setSelectedPromo]  = useState("")
-  const [couponCode,     setCouponCode]     = useState("")
-  const [couponStatus,   setCouponStatus]   = useState("idle") // idle | valid | invalid
-  const [appliedCoupon,  setAppliedCoupon]  = useState(null)
-  const [couponComment,  setCouponComment]  = useState("")
+  const [couponCode,      setCouponCode]     = useState("")
+  const [couponStatus,    setCouponStatus]   = useState("idle") // idle | valid | invalid
+  const [appliedCoupon,   setAppliedCoupon]  = useState(null)
+  const [couponComment,   setCouponComment]  = useState("")
+  const [moreTvs,         setMoreTvs]        = useState(false)
+  const [moreTvsComment,  setMoreTvsComment] = useState("")
   const [date,           setDate]           = useState("")
   const [timePreference, setTimePreference] = useState("")
   const [tvs,            setTvs]            = useState([emptyTv()])
@@ -66,7 +68,7 @@ export default function BookingFormSection() {
 
   const today = new Date().toISOString().split("T")[0]
 
-  const skipTvStep = !!selectedPromo || !!appliedCoupon?.skipTvDetails
+  const skipTvStep = !!selectedPromo || !!appliedCoupon?.skipTvDetails || moreTvs
 
   // Step 1 is valid if: promo or skipTvDetails coupon active, OR TVs all filled out
   const stepValid = [
@@ -95,6 +97,8 @@ export default function BookingFormSection() {
 
   function handlePromoToggle(label) {
     setSelectedPromo(p => p === label ? "" : label)
+    setMoreTvs(false)
+    setMoreTvsComment("")
   }
 
   function applyCoupon() {
@@ -124,9 +128,12 @@ export default function BookingFormSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           selectedPromo,
-          couponCode:         appliedCoupon ? couponCode : "",
-          appliedCouponLabel: appliedCoupon?.offer ?? "",
-          couponComment:      appliedCoupon?.skipTvDetails ? couponComment : "",
+          couponCode:           appliedCoupon ? couponCode : "",
+          appliedCouponLabel:   appliedCoupon?.offer ?? "",
+          couponComment:        appliedCoupon?.skipTvDetails ? couponComment : "",
+          couponHidden:         !!appliedCoupon?.hideCodeFromClient,
+          moreTvs,
+          moreTvsComment,
           date,
           timePreference,
           tvs: skipTvStep ? [] : tvs,
@@ -293,6 +300,45 @@ export default function BookingFormSection() {
                   {!selectedPromo && (
                     <p className="mt-2.5 text-xs text-black/40">Select a promo if it applies (optional)</p>
                   )}
+
+                  {/* 3+ TVs toggle */}
+                  <div className="mt-3 pt-3 border-t border-black/8">
+                    <button
+                      type="button"
+                      onClick={() => { setMoreTvs(p => !p); setSelectedPromo(""); setAppliedCoupon(null); setCouponCode(""); setCouponComment("") }}
+                      className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+                        moreTvs
+                          ? "bg-gray-900 border-gray-900 text-white"
+                          : "border-black/15 bg-white hover:bg-black/5"
+                      }`}
+                    >
+                      <div>
+                        <span className="block text-sm font-bold">3 or more TVs</span>
+                        <span className={`block text-xs mt-0.5 ${moreTvs ? "text-white/60" : "text-black/45"}`}>
+                          Pricing varies — we'll confirm your quote
+                        </span>
+                      </div>
+                      <span className="text-lg">📺📺📺</span>
+                    </button>
+
+                    {moreTvs && (
+                      <div className="mt-3 rounded-xl border border-black/10 bg-gray-50 p-3">
+                        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium mb-3">
+                          Pricing for 3+ TVs varies. We'll contact you to confirm the total before the appointment.
+                        </p>
+                        <label className="text-xs font-semibold text-black/60">
+                          How many TVs & any details <span className="font-normal">(optional)</span>
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={moreTvsComment}
+                          onChange={e => setMoreTvsComment(e.target.value)}
+                          placeholder="e.g. 4 TVs — 2 in living room, 1 bedroom, 1 office. All drywall."
+                          className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                        />
+                      </div>
+                    )}
+                  </div>
 
                   {/* Coupon code */}
                   <div className="mt-3 pt-3 border-t border-black/8">

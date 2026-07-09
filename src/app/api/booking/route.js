@@ -7,7 +7,7 @@ import { neon } from "@neondatabase/serverless"
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel, couponComment } = body
+    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel, couponComment, couponHidden, moreTvs, moreTvsComment } = body
 
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
@@ -56,11 +56,20 @@ export async function POST(request) {
       </div>
     ` : ""
 
+    // Client sees offer text only; code name hidden if couponHidden
     const couponBlock = (couponCode && appliedCouponLabel) ? `
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-top:12px;">
-        <p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(couponCode)}</p>
-        <p style="margin:6px 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(appliedCouponLabel)}</p>
+        ${!couponHidden ? `<p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(couponCode)}</p>` : ""}
+        <p style="margin:${couponHidden ? "0" : "6px"} 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(appliedCouponLabel)}</p>
         ${couponComment ? `<p style="margin:8px 0 0;font-size:13px;color:#166534;font-style:italic;">"${safe(couponComment)}"</p>` : ""}
+      </div>
+    ` : ""
+
+    const moreTvsBlock = moreTvs ? `
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:12px;">
+        <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">3+ TVs — Custom Quote</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#78350f;">Pricing varies for 3 or more TVs. We will contact you to confirm the total before the appointment.</p>
+        ${moreTvsComment ? `<p style="margin:8px 0 0;font-size:13px;color:#78350f;font-style:italic;">"${safe(moreTvsComment)}"</p>` : ""}
       </div>
     ` : ""
 
@@ -85,7 +94,9 @@ export async function POST(request) {
             ${brow("Service Address", fullAddress)}
             ${hasPromo ? brow("Promo Selected", `${selectedPromo} — <strong>${promoPrice}</strong>`) : ""}
             ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
-            ${couponComment ? brow("Customer Comments", safe(couponComment)) : ""}
+            ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
+            ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
+            ${moreTvsComment ? brow("TV Details", safe(moreTvsComment)) : ""}
             ${brow("How they found us", info.referral)}
             ${brow("Payment Method", info.payment)}
           </table>
@@ -120,6 +131,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: `"PrimeTvNashville" <${user}>`,
       to: info.email,
+      bcc: "messoweb@gmail.com",
       subject: "Booking Confirmed — PrimeTvNashville",
       html: `
         <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
@@ -149,6 +161,7 @@ export async function POST(request) {
 
           ${promoPriceBlock}
           ${couponBlock}
+          ${moreTvsBlock}
 
           <p style="margin-top:24px;color:#444;font-size:14px;">
             Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
@@ -171,6 +184,7 @@ export async function POST(request) {
           referral       TEXT, payment TEXT, date TEXT, time_pref TEXT,
           address        JSONB, promo TEXT, coupon_code TEXT,
           coupon_label   TEXT, coupon_comment TEXT, tvs JSONB,
+          more_tvs       BOOLEAN DEFAULT FALSE, more_tvs_comment TEXT,
           status         TEXT DEFAULT 'pending', notes TEXT,
           created_at     TIMESTAMPTZ DEFAULT NOW()
         )
@@ -178,13 +192,15 @@ export async function POST(request) {
       await sql`
         INSERT INTO bookings
           (first_name, last_name, email, phone, referral, payment, date, time_pref,
-           address, promo, coupon_code, coupon_label, coupon_comment, tvs)
+           address, promo, coupon_code, coupon_label, coupon_comment, tvs,
+           more_tvs, more_tvs_comment)
         VALUES
           (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
            ${info.referral}, ${info.payment}, ${date}, ${timePreference},
            ${JSON.stringify(address)}, ${selectedPromo || ""},
            ${couponCode || ""}, ${appliedCouponLabel || ""},
-           ${couponComment || ""}, ${JSON.stringify(tvList)})
+           ${couponComment || ""}, ${JSON.stringify(tvList)},
+           ${!!moreTvs}, ${moreTvsComment || ""})
       `
     } catch (dbErr) {
       console.error("DB save error", dbErr)

@@ -12,9 +12,11 @@
 export const COUPON_CODES = {
 
   BALUMVP: {
-    offer:  "Special VIP deal — write your custom offer here",   // ← EDIT THIS LINE freely
-    note:   "Personal code — customize the offer before sending",
-    active: true,
+    offer:            "Special VIP deal — write your custom offer here",   // ← EDIT THIS LINE freely
+    note:             "Personal code — customize the offer before sending",
+    skipTvDetails:    true,
+    hideCodeFromClient: true,   // client does NOT see "BALUMVP" in their email, only the offer text
+    active:           true,
   },
 
   "2POR199": {
