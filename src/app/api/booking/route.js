@@ -189,6 +189,9 @@ export async function POST(request) {
           created_at     TIMESTAMPTZ DEFAULT NOW()
         )
       `
+      // Add columns if they didn't exist in a previous version of the table
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs BOOLEAN DEFAULT FALSE`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
       await sql`
         INSERT INTO bookings
           (first_name, last_name, email, phone, referral, payment, date, time_pref,
