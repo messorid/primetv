@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 
 const STATUS_CONFIG = {
   pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200"   },
@@ -11,14 +11,21 @@ const STATUS_CONFIG = {
 const STATUS_FLOW = ["pending", "confirmed", "completed", "cancelled"]
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [search,   setSearch]   = useState("")
-  const [filter,   setFilter]   = useState("all")
-  const [expanded, setExpanded] = useState(null)
-  const [noteEdit, setNoteEdit] = useState({}) // id → text
+  const [bookings,    setBookings]    = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [search,      setSearch]      = useState("")
+  const [filter,      setFilter]      = useState("all")
+  const [expanded,    setExpanded]    = useState(null)
+  const [noteEdit,    setNoteEdit]    = useState({})
+  const [installers,  setInstallers]  = useState([])
 
-  useEffect(() => { loadBookings() }, [])
+  useEffect(() => { loadBookings(); loadInstallers() }, [])
+
+  async function loadInstallers() {
+    const res  = await fetch("/api/installers")
+    const data = await res.json()
+    if (data.ok) setInstallers(data.installers)
+  }
 
   async function loadBookings() {
     setLoading(true)
@@ -48,6 +55,23 @@ export default function BookingsPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, notes }),
+    })
+  }
+
+  async function assignInstaller(bookingId, installer) {
+    setBookings(prev => prev.map(b => b._id === bookingId
+      ? { ...b, installerId: installer.id, installerName: installer.name, installerEmail: installer.email }
+      : b
+    ))
+    await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id:             bookingId,
+        installerId:    installer.id,
+        installerName:  installer.name,
+        installerEmail: installer.email,
+      }),
     })
   }
 
@@ -151,6 +175,8 @@ export default function BookingsPage() {
               onNoteChange={v => setNoteEdit(prev => ({ ...prev, [b._id]: v }))}
               onNoteSave={() => saveNote(b._id)}
               onDelete={() => deleteBooking(b._id)}
+              installers={installers}
+              onAssign={installer => assignInstaller(b._id, installer)}
             />
           ))}
         </div>
@@ -159,7 +185,18 @@ export default function BookingsPage() {
   )
 }
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign }) {
+  const [selectedInstaller, setSelectedInstaller] = useState("")
+  const [assigning, setAssigning] = useState(false)
+
+  async function handleAssign() {
+    const inst = installers.find(i => i.id === selectedInstaller)
+    if (!inst) return
+    setAssigning(true)
+    await onAssign(inst)
+    setAssigning(false)
+    setSelectedInstaller("")
+  }
   const sc = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending
   const fullName = `${b.firstName} ${b.lastName}`
   const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
@@ -273,8 +310,53 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
               )}
             </section>
 
-            {/* Column 3 — Status & Notes */}
+            {/* Column 3 — Installer, Status & Notes */}
             <section>
+              <SectionTitle>Installer</SectionTitle>
+
+              {b.installerName ? (
+                <div className="mb-4 rounded-xl bg-blue-50 border border-blue-100 p-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
+                      <span className="text-[#E50914] font-bold text-xs">
+                        {b.installerName.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{b.installerName}</p>
+                      <p className="text-xs text-gray-500">{b.installerEmail}</p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2">
+                    Assigned {b.assignedAt ? new Date(b.assignedAt).toLocaleDateString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }) : ""}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 mb-3">No installer assigned yet</p>
+              )}
+
+              {installers.length > 0 && (
+                <div className="flex gap-2 mb-5">
+                  <select
+                    value={selectedInstaller}
+                    onChange={e => setSelectedInstaller(e.target.value)}
+                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
+                  >
+                    <option value="">Select installer…</option>
+                    {installers.map(i => (
+                      <option key={i.id} value={i.id}>{i.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssign}
+                    disabled={!selectedInstaller || assigning}
+                    className="rounded-xl bg-[#E50914] text-white text-xs font-bold px-4 py-2 hover:bg-red-700 transition disabled:opacity-40"
+                  >
+                    {assigning ? "…" : "Assign"}
+                  </button>
+                </div>
+              )}
+
               <SectionTitle>Status & Notes</SectionTitle>
 
               <div className="grid grid-cols-2 gap-2 mb-4">

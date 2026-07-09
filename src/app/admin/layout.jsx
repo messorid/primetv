@@ -4,8 +4,9 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 
 const NAV = [
-  { href: "/admin/bookings", label: "Bookings", icon: "📅" },
-  { href: "/admin/dashboard", label: "Leads",    icon: "📋" },
+  { href: "/admin/bookings",   label: "Bookings",   icon: "📅" },
+  { href: "/admin/installers", label: "Installers", icon: "🔧" },
+  { href: "/admin/dashboard",  label: "Leads",      icon: "📋" },
 ]
 
 export default function AdminLayout({ children }) {
