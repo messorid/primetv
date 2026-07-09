@@ -140,10 +140,9 @@ async function sendInstallerEmail(b, installerName, installerEmail) {
         </div>
 
         <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:20px;margin-top:16px;">
-          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Customer Contact</h4>
+          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Customer</h4>
           <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            ${irow("👤 Name",  `${safe(b.first_name)} ${safe(b.last_name)}`)}
-            ${irow("📞 Phone", safe(b.phone))}
+            ${irow("👤 Name", `${safe(b.first_name)} ${safe(b.last_name)}`)}
           </table>
         </div>
 
