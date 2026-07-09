@@ -154,6 +154,8 @@ export async function POST(request) {
               ${crow("Address", fullAddress)}
               ${hasPromo
                 ? crow("Package", selectedPromo)
+                : moreTvs
+                ? crow("TVs", "3+ TVs — custom quote")
                 : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
               }
             </table>
