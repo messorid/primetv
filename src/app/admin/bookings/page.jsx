@@ -231,6 +231,8 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
             <span className="text-xs font-semibold text-[#E50914]">
               {b.selectedPromo.includes("55") ? "$199 Promo" : "$260 Promo"}
             </span>
+          ) : b.moreTvs ? (
+            <span className="text-xs font-semibold text-amber-600">3+ TVs</span>
           ) : (
             <span className="text-xs text-gray-500">
               {b.tvs?.length || 0} TV{b.tvs?.length !== 1 ? "s" : ""}
@@ -274,7 +276,8 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
               <InfoRow icon="📅" value={b.date || "—"} label="Date" />
               <InfoRow icon="🕐" value={b.timePreference || "—"} label="Time" />
 
-              {b.selectedPromo ? (
+              {/* Promo */}
+              {b.selectedPromo && (
                 <div className="mt-3 rounded-xl bg-red-50 border border-red-100 p-3">
                   <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide mb-1">Promo Package</p>
                   <p className="text-sm font-semibold text-gray-800">{b.selectedPromo}</p>
@@ -282,7 +285,23 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                     {b.selectedPromo.includes("55") ? "$199" : "$260"}
                   </p>
                 </div>
-              ) : b.tvs?.length > 0 ? (
+              )}
+
+              {/* 3+ TVs */}
+              {b.moreTvs && (
+                <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">3+ TVs — Custom Quote</p>
+                  <p className="text-xs text-amber-600 mb-1">Pricing to be confirmed with customer</p>
+                  {b.moreTvsComment && (
+                    <p className="text-sm text-amber-800 italic border-t border-amber-200 pt-2">
+                      "{b.moreTvsComment}"
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Individual TVs */}
+              {!b.selectedPromo && !b.moreTvs && b.tvs?.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {b.tvs.map((tv, i) => (
                     <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
@@ -293,8 +312,14 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                     </div>
                   ))}
                 </div>
-              ) : null}
+              )}
 
+              {/* No service info */}
+              {!b.selectedPromo && !b.moreTvs && !b.tvs?.length && (
+                <p className="mt-3 text-xs text-gray-400 italic">No service details recorded</p>
+              )}
+
+              {/* Coupon */}
               {b.couponCode && (
                 <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 p-3">
                   <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">
