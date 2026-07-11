@@ -1,6 +1,23 @@
 "use client"
 import { useEffect, useState, useMemo } from "react"
 
+const TV_SIZES  = ['Under 32"', '32" – 42"', '43" – 55"', '56" – 65"', '66" – 75"', '75"+']
+const WALL_TYPES = ["Drywall (standard)", "Concrete / Brick", "Tile", "Above fireplace"]
+const TIME_PREFS = ["Morning (8am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–8pm)", "Flexible"]
+const PAYMENTS   = ["Cash", "Zelle", "Card"]
+
+const BLANK_FORM = {
+  firstName: "", lastName: "", email: "", phone: "",
+  date: "", timePref: "Flexible",
+  street: "", city: "Nashville", state: "TN", zip: "",
+  payment: "Cash", referral: "",
+  serviceType: "tvs",
+  tvs: [{ size: '43" – 55"', wallType: "Drywall (standard)", exactSize: "", comments: "" }],
+  moreTvsComment: "",
+  notes: "",
+  status: "pending",
+}
+
 const STATUS_CONFIG = {
   pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200"       },
   confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700 border-blue-200"          },
@@ -18,9 +35,13 @@ export default function BookingsPage() {
   const [expanded,      setExpanded]      = useState(null)
   const [noteEdit,      setNoteEdit]      = useState({})
   const [installers,    setInstallers]    = useState([])
-  const [completeModal, setCompleteModal] = useState(null)   // { id, name }
+  const [completeModal, setCompleteModal] = useState(null)
   const [completeForm,  setCompleteForm]  = useState({ amountCharged: "", amountPaidWorkers: "" })
   const [completing,    setCompleting]    = useState(false)
+  const [newModal,      setNewModal]      = useState(false)
+  const [newForm,       setNewForm]       = useState(BLANK_FORM)
+  const [newErr,        setNewErr]        = useState("")
+  const [creating,      setCreating]      = useState(false)
 
   useEffect(() => { loadBookings(); loadInstallers() }, [])
 
@@ -66,6 +87,53 @@ export default function BookingsPage() {
       setCompleteModal(null)
     }
     setCompleting(false)
+  }
+
+  function addTv() {
+    setNewForm(f => ({ ...f, tvs: [...f.tvs, { size: '43" – 55"', wallType: "Drywall (standard)", exactSize: "", comments: "" }] }))
+  }
+  function removeTv(idx) {
+    setNewForm(f => ({ ...f, tvs: f.tvs.filter((_, i) => i !== idx) }))
+  }
+  function updateTv(idx, field, val) {
+    setNewForm(f => ({ ...f, tvs: f.tvs.map((tv, i) => i === idx ? { ...tv, [field]: val } : tv) }))
+  }
+
+  async function handleCreate() {
+    if (!newForm.firstName.trim() || !newForm.lastName.trim()) {
+      setNewErr("First and last name are required"); return
+    }
+    setNewErr(""); setCreating(true)
+    const promo =
+      newForm.serviceType === "promo199" ? '2 TVs Up To 55" — $199 Package' :
+      newForm.serviceType === "promo260" ? '2 TVs Up To 65" — $260 Package' : null
+    const body = {
+      firstName:      newForm.firstName,
+      lastName:       newForm.lastName,
+      email:          newForm.email,
+      phone:          newForm.phone,
+      date:           newForm.date,
+      timePref:       newForm.timePref,
+      address:        { street: newForm.street, city: newForm.city, state: newForm.state, zip: newForm.zip },
+      payment:        newForm.payment,
+      referral:       newForm.referral,
+      promo,
+      tvs:            newForm.serviceType === "tvs" ? newForm.tvs : [],
+      moreTvs:        newForm.serviceType === "moreTvs",
+      moreTvsComment: newForm.moreTvsComment,
+      notes:          newForm.notes,
+      status:         newForm.status,
+    }
+    const res  = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    const data = await res.json()
+    if (data.ok) {
+      setBookings(prev => [data.booking, ...prev])
+      setNewModal(false)
+      setNewForm(BLANK_FORM)
+    } else {
+      setNewErr("Error creating booking — try again")
+    }
+    setCreating(false)
   }
 
   async function updateStatus(id, status) {
@@ -142,10 +210,16 @@ export default function BookingsPage() {
           <h1 className="text-2xl font-extrabold text-gray-900">Bookings</h1>
           <p className="text-sm text-gray-500 mt-0.5">All customer reservation requests</p>
         </div>
-        <button onClick={loadBookings}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm transition">
-          ↻ Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={loadBookings}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm transition">
+            ↻ Refresh
+          </button>
+          <button onClick={() => { setNewForm(BLANK_FORM); setNewErr(""); setNewModal(true) }}
+            className="flex items-center gap-2 text-sm font-bold text-white bg-[#E50914] hover:bg-red-700 rounded-xl px-4 py-2 shadow-sm transition">
+            + New Booking
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -207,6 +281,178 @@ export default function BookingsPage() {
               onAssign={installer => assignInstaller(b._id, installer)}
             />
           ))}
+        </div>
+      )}
+
+      {/* New Booking Modal */}
+      {newModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+              <h2 className="text-lg font-extrabold text-gray-900">New Booking</h2>
+              <button onClick={() => setNewModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {/* Customer */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Customer</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
+                  <Field label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
+                  <Field label="Phone"        value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: v }))}     placeholder="(615) 000-0000" />
+                  <Field label="Email"        value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" />
+                  <Field label="Referral"     value={newForm.referral}  onChange={v => setNewForm(f => ({ ...f, referral: v }))}  placeholder="Google, friend…" />
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">Payment</label>
+                    <select value={newForm.payment} onChange={e => setNewForm(f => ({ ...f, payment: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                      {PAYMENTS.map(p => <option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Schedule</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">Date</label>
+                    <input type="date" value={newForm.date} onChange={e => setNewForm(f => ({ ...f, date: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">Time</label>
+                    <select value={newForm.timePref} onChange={e => setNewForm(f => ({ ...f, timePref: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                      {TIME_PREFS.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Address</p>
+                <div className="space-y-2">
+                  <Field label="Street" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-1">
+                      <Field label="City"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
+                    </div>
+                    <Field label="State" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
+                    <Field label="ZIP"   value={newForm.zip}   onChange={v => setNewForm(f => ({ ...f, zip: v }))}   placeholder="37201" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Service */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Service</p>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {[
+                    { val: "tvs",      label: "Individual TVs"  },
+                    { val: "promo199", label: "$199 Promo"      },
+                    { val: "promo260", label: "$260 Promo"      },
+                    { val: "moreTvs",  label: "3+ TVs"          },
+                  ].map(opt => (
+                    <button key={opt.val} type="button"
+                      onClick={() => setNewForm(f => ({ ...f, serviceType: opt.val }))}
+                      className={`rounded-xl border py-2 text-xs font-semibold transition ${
+                        newForm.serviceType === opt.val
+                          ? "bg-[#E50914] text-white border-[#E50914]"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {newForm.serviceType === "tvs" && (
+                  <div className="space-y-3">
+                    {newForm.tvs.map((tv, idx) => (
+                      <div key={idx} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-bold text-gray-500">TV #{idx + 1}</p>
+                          {newForm.tvs.length > 1 && (
+                            <button type="button" onClick={() => removeTv(idx)}
+                              className="text-xs text-red-400 hover:text-red-600 transition">Remove</button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-500">Size</label>
+                            <select value={tv.size} onChange={e => updateTv(idx, "size", e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                              {TV_SIZES.map(s => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-500">Wall Type</label>
+                            <select value={tv.wallType} onChange={e => updateTv(idx, "wallType", e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                              {WALL_TYPES.map(w => <option key={w}>{w}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {newForm.tvs.length < 5 && (
+                      <button type="button" onClick={addTv}
+                        className="w-full rounded-xl border border-dashed border-gray-300 text-xs font-semibold text-gray-400 py-2 hover:border-gray-400 hover:text-gray-600 transition">
+                        + Add TV
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {newForm.serviceType === "moreTvs" && (
+                  <textarea
+                    rows={2}
+                    value={newForm.moreTvsComment}
+                    onChange={e => setNewForm(f => ({ ...f, moreTvsComment: e.target.value }))}
+                    placeholder="Details for the customer (e.g. 4 TVs, pricing TBD)…"
+                    className="w-full rounded-xl border border-gray-200 bg-amber-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
+                  />
+                )}
+              </div>
+
+              {/* Status + Notes */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Status & Notes</p>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {STATUS_FLOW.map(s => (
+                    <button key={s} type="button" onClick={() => setNewForm(f => ({ ...f, status: s }))}
+                      className={`rounded-xl border py-2 text-xs font-semibold transition ${
+                        newForm.status === s
+                          ? STATUS_CONFIG[s].color + " shadow-sm"
+                          : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                      }`}>
+                      {STATUS_CONFIG[s].label}
+                    </button>
+                  ))}
+                </div>
+                <textarea rows={2} value={newForm.notes} onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Internal notes…"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
+              </div>
+
+              {newErr && <p className="text-xs text-red-500 font-medium">{newErr}</p>}
+            </div>
+
+            <div className="flex gap-3 px-6 pb-6">
+              <button onClick={() => setNewModal(false)}
+                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition">
+                Cancel
+              </button>
+              <button onClick={handleCreate} disabled={creating}
+                className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-2.5 hover:bg-red-700 transition disabled:opacity-50">
+                {creating ? "Creating…" : "Create Booking"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -546,6 +792,21 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
 function SectionTitle({ children }) {
   return <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">{children}</p>
+}
+
+function Field({ label, value, onChange, placeholder, type = "text" }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold text-gray-500">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+      />
+    </div>
+  )
 }
 
 function InfoRow({ icon, value, label }) {

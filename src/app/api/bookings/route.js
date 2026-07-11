@@ -46,6 +46,40 @@ export async function GET() {
   }
 }
 
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const {
+      firstName, lastName, email, phone, date, timePref,
+      address, promo, tvs, moreTvs, moreTvsComment,
+      payment, referral, notes, status,
+    } = body
+    const sql = db()
+    await ensureTable(sql)
+    const [row] = await sql`
+      INSERT INTO bookings (
+        first_name, last_name, email, phone, date, time_pref,
+        address, promo, tvs, more_tvs, more_tvs_comment,
+        payment, referral, notes, status
+      ) VALUES (
+        ${firstName || ""}, ${lastName || ""}, ${email || ""}, ${phone || ""},
+        ${date || ""}, ${timePref || "Flexible"},
+        ${JSON.stringify(address || {})}::jsonb,
+        ${promo || null},
+        ${JSON.stringify(tvs || [])}::jsonb,
+        ${moreTvs || false}, ${moreTvsComment || null},
+        ${payment || ""}, ${referral || null}, ${notes || null},
+        ${status || "pending"}
+      )
+      RETURNING *
+    `
+    return Response.json({ ok: true, booking: toBooking(row) })
+  } catch (err) {
+    console.error(err)
+    return Response.json({ ok: false, error: err.message }, { status: 500 })
+  }
+}
+
 export async function PATCH(request) {
   try {
     const body = await request.json()
