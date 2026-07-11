@@ -1,23 +1,26 @@
 "use client"
-import { useEffect, useState, useMemo, useCallback } from "react"
+import { useEffect, useState, useMemo } from "react"
 
 const STATUS_CONFIG = {
-  pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200"   },
-  confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700 border-blue-200"      },
+  pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200"       },
+  confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700 border-blue-200"          },
   completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-500 border-gray-200"      },
+  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-500 border-gray-200"          },
 }
 
 const STATUS_FLOW = ["pending", "confirmed", "completed", "cancelled"]
 
 export default function BookingsPage() {
-  const [bookings,    setBookings]    = useState([])
-  const [loading,     setLoading]     = useState(true)
-  const [search,      setSearch]      = useState("")
-  const [filter,      setFilter]      = useState("all")
-  const [expanded,    setExpanded]    = useState(null)
-  const [noteEdit,    setNoteEdit]    = useState({})
-  const [installers,  setInstallers]  = useState([])
+  const [bookings,      setBookings]      = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [search,        setSearch]        = useState("")
+  const [filter,        setFilter]        = useState("all")
+  const [expanded,      setExpanded]      = useState(null)
+  const [noteEdit,      setNoteEdit]      = useState({})
+  const [installers,    setInstallers]    = useState([])
+  const [completeModal, setCompleteModal] = useState(null)   // { id, name }
+  const [completeForm,  setCompleteForm]  = useState({ amountCharged: "", amountPaidWorkers: "" })
+  const [completing,    setCompleting]    = useState(false)
 
   useEffect(() => { loadBookings(); loadInstallers() }, [])
 
@@ -38,23 +41,50 @@ export default function BookingsPage() {
     }
   }
 
+  function openCompleteModal(id, name) {
+    setCompleteModal({ id, name })
+    setCompleteForm({ amountCharged: "", amountPaidWorkers: "" })
+  }
+
+  async function handleComplete() {
+    if (!completeModal) return
+    setCompleting(true)
+    const charged = parseFloat(completeForm.amountCharged) || 0
+    const paid    = parseFloat(completeForm.amountPaidWorkers) || 0
+    const profit  = charged - paid
+    const res = await fetch("/api/bookings", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, amountPaidWorkers: paid }),
+    })
+    const data = await res.json()
+    if (data.ok) {
+      setBookings(prev => prev.map(b => b._id === completeModal.id
+        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: paid, companyProfit: profit, completedAt: new Date().toISOString() }
+        : b
+      ))
+      setCompleteModal(null)
+    }
+    setCompleting(false)
+  }
+
   async function updateStatus(id, status) {
     setBookings(prev => prev.map(b => b._id === id ? { ...b, status } : b))
     await fetch("/api/bookings", {
-      method: "PATCH",
+      method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
+      body:    JSON.stringify({ id, status }),
     })
   }
 
   async function saveNote(id) {
     const notes = noteEdit[id] ?? ""
     setBookings(prev => prev.map(b => b._id === id ? { ...b, notes } : b))
-    setNoteEdit(prev => { const n = {...prev}; delete n[id]; return n })
+    setNoteEdit(prev => { const n = { ...prev }; delete n[id]; return n })
     await fetch("/api/bookings", {
-      method: "PATCH",
+      method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, notes }),
+      body:    JSON.stringify({ id, notes }),
     })
   }
 
@@ -64,14 +94,9 @@ export default function BookingsPage() {
       : b
     ))
     await fetch("/api/bookings", {
-      method: "PATCH",
+      method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id:             bookingId,
-        installerId:    installer.id,
-        installerName:  installer.name,
-        installerEmail: installer.email,
-      }),
+      body:    JSON.stringify({ id: bookingId, installerId: installer.id, installerName: installer.name, installerEmail: installer.email }),
     })
   }
 
@@ -102,10 +127,13 @@ export default function BookingsPage() {
     completed: bookings.filter(b => b.status === "completed").length,
   }), [bookings])
 
-  // Week range
   const weekStart = new Date()
   weekStart.setDate(weekStart.getDate() - weekStart.getDay())
   const thisWeek = bookings.filter(b => new Date(b.createdAt) >= weekStart).length
+
+  const profit = completeForm.amountCharged || completeForm.amountPaidWorkers
+    ? (parseFloat(completeForm.amountCharged) || 0) - (parseFloat(completeForm.amountPaidWorkers) || 0)
+    : null
 
   return (
     <div>
@@ -123,10 +151,10 @@ export default function BookingsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total",     value: stats.total,     bg: "bg-white"           },
-          { label: "Pending",   value: stats.pending,   bg: "bg-amber-50"        },
-          { label: "Confirmed", value: stats.confirmed, bg: "bg-blue-50"         },
-          { label: "This week", value: thisWeek,        bg: "bg-emerald-50"      },
+          { label: "Total",     value: stats.total,     bg: "bg-white"      },
+          { label: "Pending",   value: stats.pending,   bg: "bg-amber-50"   },
+          { label: "Confirmed", value: stats.confirmed, bg: "bg-blue-50"    },
+          { label: "This week", value: thisWeek,        bg: "bg-emerald-50" },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl border border-gray-200 p-4 shadow-sm`}>
             <p className="text-xs text-gray-500 font-medium">{s.label}</p>
@@ -171,7 +199,7 @@ export default function BookingsPage() {
               expanded={expanded === b._id}
               noteValue={noteEdit[b._id] ?? b.notes ?? ""}
               onToggle={() => setExpanded(e => e === b._id ? null : b._id)}
-              onStatus={s => updateStatus(b._id, s)}
+              onStatus={s => s === "completed" ? openCompleteModal(b._id, `${b.firstName} ${b.lastName}`) : updateStatus(b._id, s)}
               onNoteChange={v => setNoteEdit(prev => ({ ...prev, [b._id]: v }))}
               onNoteSave={() => saveNote(b._id)}
               onDelete={() => deleteBooking(b._id)}
@@ -181,13 +209,83 @@ export default function BookingsPage() {
           ))}
         </div>
       )}
+
+      {/* Complete Booking Modal */}
+      {completeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h2 className="text-lg font-extrabold text-gray-900 mb-0.5">Complete Booking</h2>
+            <p className="text-sm text-gray-500 mb-5">{completeModal.name}</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount Charged to Customer</label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={completeForm.amountCharged}
+                    onChange={e => setCompleteForm(f => ({ ...f, amountCharged: e.target.value }))}
+                    placeholder="0.00"
+                    autoFocus
+                    className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount Paid to Workers</label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={completeForm.amountPaidWorkers}
+                    onChange={e => setCompleteForm(f => ({ ...f, amountPaidWorkers: e.target.value }))}
+                    placeholder="0.00"
+                    className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                  />
+                </div>
+              </div>
+
+              {profit !== null && (
+                <div className={`rounded-xl border p-4 ${profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    Company Profit
+                  </p>
+                  <p className={`text-3xl font-extrabold ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    ${profit.toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setCompleteModal(null)}
+                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleComplete}
+                disabled={completing}
+                className="flex-1 rounded-xl bg-emerald-500 text-white text-sm font-bold py-2.5 hover:bg-emerald-600 transition disabled:opacity-50"
+              >
+                {completing ? "Saving…" : "Mark Complete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
-  const [assigning, setAssigning] = useState(false)
+  const [assigning,         setAssigning]         = useState(false)
 
   async function handleAssign() {
     const inst = installers.find(i => i.id === selectedInstaller)
@@ -197,26 +295,23 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
     setAssigning(false)
     setSelectedInstaller("")
   }
-  const sc = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending
-  const fullName = `${b.firstName} ${b.lastName}`
-  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
-    .filter(Boolean).join(", ")
+
+  const sc          = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending
+  const fullName    = `${b.firstName} ${b.lastName}`
+  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip].filter(Boolean).join(", ")
   const createdDate = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   const createdTime = new Date(b.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Card header — always visible */}
+      {/* Header — always visible */}
       <div className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition" onClick={onToggle}>
-
-        {/* Status dot */}
         <div className={`w-2.5 h-2.5 rounded-full flex-none ${
-          b.status === "pending"   ? "bg-amber-400" :
-          b.status === "confirmed" ? "bg-blue-500"  :
+          b.status === "pending"   ? "bg-amber-400"   :
+          b.status === "confirmed" ? "bg-blue-500"    :
           b.status === "completed" ? "bg-emerald-500" : "bg-gray-300"
         }`} />
 
-        {/* Name + date */}
         <div className="flex-1 min-w-0">
           <p className="font-bold text-gray-900 truncate">{fullName}</p>
           <p className="text-xs text-gray-500 mt-0.5 truncate">
@@ -225,7 +320,6 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
           </p>
         </div>
 
-        {/* Promo / TV count */}
         <div className="hidden sm:block text-right flex-none">
           {b.selectedPromo ? (
             <span className="text-xs font-semibold text-[#E50914]">
@@ -240,12 +334,16 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
           )}
         </div>
 
-        {/* Status badge */}
+        {b.status === "completed" && b.companyProfit != null && (
+          <div className="hidden sm:block text-right flex-none">
+            <span className="text-xs font-semibold text-emerald-600">+${Number(b.companyProfit).toFixed(0)}</span>
+          </div>
+        )}
+
         <span className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full border ${sc.color}`}>
           {sc.label}
         </span>
 
-        {/* Submitted */}
         <div className="text-right flex-none hidden md:block">
           <p className="text-xs text-gray-400">{createdDate}</p>
           <p className="text-xs text-gray-400">{createdTime}</p>
@@ -276,7 +374,6 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
               <InfoRow icon="📅" value={b.date || "—"} label="Date" />
               <InfoRow icon="🕐" value={b.timePreference || "—"} label="Time" />
 
-              {/* Promo */}
               {b.selectedPromo && (
                 <div className="mt-3 rounded-xl bg-red-50 border border-red-100 p-3">
                   <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide mb-1">Promo Package</p>
@@ -287,7 +384,6 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
 
-              {/* 3+ TVs */}
               {b.moreTvs && (
                 <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3">
                   <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">3+ TVs — Custom Quote</p>
@@ -300,7 +396,6 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
 
-              {/* Individual TVs */}
               {!b.selectedPromo && !b.moreTvs && b.tvs?.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {b.tvs.map((tv, i) => (
@@ -314,12 +409,10 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
 
-              {/* No service info */}
               {!b.selectedPromo && !b.moreTvs && !b.tvs?.length && (
                 <p className="mt-3 text-xs text-gray-400 italic">No service details recorded</p>
               )}
 
-              {/* Coupon */}
               {b.couponCode && (
                 <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 p-3">
                   <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">
@@ -344,7 +437,7 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
                       <span className="text-[#E50914] font-bold text-xs">
-                        {b.installerName.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                        {b.installerName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                       </span>
                     </div>
                     <div>
@@ -353,7 +446,7 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                     </div>
                   </div>
                   <p className="text-[10px] text-gray-400 mt-2">
-                    Assigned {b.assignedAt ? new Date(b.assignedAt).toLocaleDateString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }) : ""}
+                    Assigned {b.assignedAt ? new Date(b.assignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
                   </p>
                 </div>
               ) : (
@@ -403,9 +496,30 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 })}
               </div>
 
+              {/* Financial summary (completed bookings) */}
+              {b.status === "completed" && b.amountCharged != null && (
+                <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">Financials</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Charged</span>
+                      <span className="font-semibold">${Number(b.amountCharged).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Paid Workers</span>
+                      <span className="font-semibold">${Number(b.amountPaidWorkers).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t border-emerald-200 pt-1.5 mt-1.5">
+                      <span className="font-bold text-emerald-700">Profit</span>
+                      <span className="font-extrabold text-emerald-700">${Number(b.companyProfit).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Internal Notes</label>
               <textarea
-                rows={4}
+                rows={3}
                 value={noteValue}
                 onChange={e => onNoteChange(e.target.value)}
                 placeholder="Add notes about this booking…"

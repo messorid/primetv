@@ -28,6 +28,10 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs BOOLEAN DEFAULT FALSE`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_charged NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_paid_workers NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS company_profit NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`
 }
 
 export async function GET() {
@@ -64,6 +68,22 @@ export async function PATCH(request) {
       }
 
       return Response.json({ ok: true })
+    }
+
+    // ── Complete with financial data ───────────────────────────────────────────
+    if (status === "completed" && body.amountCharged !== undefined) {
+      const charged = parseFloat(body.amountCharged) || 0
+      const paid    = parseFloat(body.amountPaidWorkers) || 0
+      const profit  = charged - paid
+      await sql`
+        UPDATE bookings
+        SET status='completed', amount_charged=${charged},
+            amount_paid_workers=${paid}, company_profit=${profit},
+            completed_at=NOW()
+            ${notes !== undefined ? sql`, notes=${notes}` : sql``}
+        WHERE id=${id}
+      `
+      return Response.json({ ok: true, profit })
     }
 
     // ── Update status / notes ──────────────────────────────────────────────────
@@ -192,6 +212,10 @@ function toBooking(row) {
     installerName:      row.installer_name,
     installerEmail:     row.installer_email,
     assignedAt:         row.assigned_at,
+    amountCharged:      row.amount_charged,
+    amountPaidWorkers:  row.amount_paid_workers,
+    companyProfit:      row.company_profit,
+    completedAt:        row.completed_at,
     createdAt:          row.created_at,
   }
 }
