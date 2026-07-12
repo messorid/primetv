@@ -42,6 +42,7 @@ export default function BookingsPage() {
   const [newForm,       setNewForm]       = useState(BLANK_FORM)
   const [newErr,        setNewErr]        = useState("")
   const [creating,      setCreating]      = useState(false)
+  const [datePeriod,    setDatePeriod]    = useState("all")
 
   useEffect(() => { loadBookings(); loadInstallers() }, [])
 
@@ -176,7 +177,23 @@ export default function BookingsPage() {
   }
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q   = search.toLowerCase()
+    const now = new Date()
+    const pad = n => String(n).padStart(2, "0")
+    const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`
+
+    const weekStartDate = new Date(now)
+    weekStartDate.setDate(now.getDate() - now.getDay())
+    const weekISO = `${weekStartDate.getFullYear()}-${pad(weekStartDate.getMonth()+1)}-${pad(weekStartDate.getDate())}`
+
+    const weekEndDate = new Date(weekStartDate)
+    weekEndDate.setDate(weekStartDate.getDate() + 6)
+    const weekEndISO = `${weekEndDate.getFullYear()}-${pad(weekEndDate.getMonth()+1)}-${pad(weekEndDate.getDate())}`
+
+    const monthISO    = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`
+    const monthEndDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate()
+    const monthEndISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(monthEndDay)}`
+
     return bookings.filter(b => {
       const matchFilter = filter === "all" || b.status === filter
       const matchSearch = !q ||
@@ -184,9 +201,18 @@ export default function BookingsPage() {
         b.email?.toLowerCase().includes(q) ||
         b.phone?.includes(q) ||
         b.address?.city?.toLowerCase().includes(q)
-      return matchFilter && matchSearch
+      let matchDate = true
+      if (datePeriod !== "all") {
+        const d = b.date || ""
+        if (!d) { matchDate = false }
+        else if (datePeriod === "today")    matchDate = d === todayISO
+        else if (datePeriod === "week")     matchDate = d >= weekISO && d <= weekEndISO
+        else if (datePeriod === "month")    matchDate = d >= monthISO && d <= monthEndISO
+        else if (datePeriod === "upcoming") matchDate = d >= todayISO
+      }
+      return matchFilter && matchSearch && matchDate
     })
-  }, [bookings, search, filter])
+  }, [bookings, search, filter, datePeriod])
 
   const stats = useMemo(() => ({
     total:     bookings.length,
@@ -238,22 +264,45 @@ export default function BookingsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email, phone or city…"
-          className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-        />
-        <div className="flex gap-2">
-          {["all", ...STATUS_FLOW].map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold capitalize border transition ${
-                filter === s
-                  ? "bg-[#E50914] text-white border-[#E50914]"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+      <div className="flex flex-col gap-3 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name, email, phone or city…"
+            className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+          />
+          <div className="flex gap-2 flex-wrap">
+            {["all", ...STATUS_FLOW].map(s => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`rounded-xl px-3 py-2 text-xs font-semibold capitalize border transition ${
+                  filter === s
+                    ? "bg-[#E50914] text-white border-[#E50914]"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                }`}>
+                {s === "all" ? "All Status" : STATUS_CONFIG[s].label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Date period filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide pr-1">Appointment date:</span>
+          {[
+            { val: "all",      label: "All dates"   },
+            { val: "today",    label: "Today"        },
+            { val: "week",     label: "This week"    },
+            { val: "month",    label: "This month"   },
+            { val: "upcoming", label: "Upcoming"     },
+          ].map(p => (
+            <button key={p.val} onClick={() => setDatePeriod(p.val)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition ${
+                datePeriod === p.val
+                  ? "bg-gray-900 text-white border-gray-900"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
               }`}>
-              {s === "all" ? "All" : STATUS_CONFIG[s].label}
+              {p.label}
             </button>
           ))}
         </div>
