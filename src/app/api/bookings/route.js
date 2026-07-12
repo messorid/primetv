@@ -104,6 +104,12 @@ export async function PATCH(request) {
       return Response.json({ ok: true })
     }
 
+    // ── Update date / time ────────────────────────────────────────────────────
+    if (body.updateSchedule) {
+      await sql`UPDATE bookings SET date=${body.date || ""}, time_pref=${body.timePref || ""} WHERE id=${id}`
+      return Response.json({ ok: true })
+    }
+
     // ── Complete with financial data ───────────────────────────────────────────
     if (status === "completed" && body.amountCharged !== undefined) {
       const charged = parseFloat(body.amountCharged) || 0
