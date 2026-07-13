@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/installers", label: "Installers", icon: "🔧" },
   { href: "/admin/insights",   label: "Insights",   icon: "💰" },
   { href: "/admin/dashboard",  label: "Leads",      icon: "📋" },
+  { href: "/admin/crm-leads",  label: "Leads CRM",  icon: "🚀" },
 ]
 
 export default function AdminLayout({ children }) {
