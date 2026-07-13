@@ -35,6 +35,9 @@ export default function CrmLeadsPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     async function fetchLeads() {
@@ -68,6 +71,45 @@ export default function CrmLeadsPage() {
           lead.phone?.toLowerCase().includes(value)
       )
     );
+  };
+
+  const startEditing = (lead) => {
+    setEditingId(lead.id);
+    setEditingName(lead.fullName || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const saveName = async (id) => {
+    const fullName = editingName.trim();
+    if (!fullName) return;
+    setSavingId(id);
+    try {
+      const res = await fetch(`/api/crm-leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'No se pudo actualizar el nombre.');
+        return;
+      }
+      const updateName = (list) =>
+        list.map((lead) => (lead.id === id ? { ...lead, fullName } : lead));
+      setLeads(updateName);
+      setFilteredLeads(updateName);
+      setEditingId(null);
+      setEditingName('');
+    } catch (err) {
+      console.error('Error al actualizar el nombre del lead', err);
+      alert('No se pudo actualizar el nombre.');
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -111,7 +153,45 @@ export default function CrmLeadsPage() {
               {filteredLeads.map((lead) => (
                 <tr key={lead.id}>
                   <td className="border p-2">
-                    {lead.fullName}
+                    {editingId === lead.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          className="border rounded px-1.5 py-0.5 text-sm w-36"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveName(lead.id);
+                            if (e.key === 'Escape') cancelEditing();
+                          }}
+                        />
+                        <button
+                          onClick={() => saveName(lead.id)}
+                          disabled={savingId === lead.id}
+                          className="text-green-600 hover:text-green-800 text-xs font-medium"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="text-gray-400 hover:text-gray-600 text-xs font-medium"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="group flex items-center gap-1.5">
+                        <span>{lead.fullName}</span>
+                        <button
+                          onClick={() => startEditing(lead)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-700 text-xs transition"
+                          title="Editar nombre"
+                        >
+                          ✏️
+                        </button>
+                      </div>
+                    )}
                     {lead.lastMessagePreview && (
                       <div className="text-xs text-gray-400 truncate max-w-[200px]">
                         {lead.lastMessagePreview}
