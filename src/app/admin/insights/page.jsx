@@ -92,10 +92,10 @@ export default function InsightsPage() {
           <h1 className="text-2xl font-extrabold text-gray-900">Insights</h1>
           <p className="text-sm text-gray-500 mt-0.5">Revenue, expenses & profit overview</p>
         </div>
-        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm self-start sm:self-auto">
+        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm self-start sm:self-auto overflow-x-auto max-w-full">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-none ${
                 period === p ? "bg-[#E50914] text-white" : "text-gray-500 hover:text-gray-900"
               }`}
             >
@@ -110,18 +110,20 @@ export default function InsightsPage() {
       ) : (
         <>
           {/* Stat Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
             <StatCard label="Revenue"      value={`$${totalRevenue.toFixed(2)}`}  bg="bg-blue-50"    color="text-blue-700" />
             <StatCard label="Worker Costs" value={`$${totalWorkers.toFixed(2)}`}  bg="bg-amber-50"   color="text-amber-700" />
             <StatCard label="Gross Profit" value={`$${totalProfit.toFixed(2)}`}   bg="bg-emerald-50" color="text-emerald-600" />
             <StatCard label="Expenses"     value={`$${totalExpenses.toFixed(2)}`} bg="bg-red-50"     color="text-red-600" />
-            <StatCard
-              label="Net Profit"
-              value={`$${netProfit.toFixed(2)}`}
-              bg={netProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}
-              color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
-              large
-            />
+            <div className="col-span-2 lg:col-span-1">
+              <StatCard
+                label="Net Profit"
+                value={`$${netProfit.toFixed(2)}`}
+                bg={netProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}
+                color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
+                large
+              />
+            </div>
           </div>
 
           {/* Completed Jobs */}
@@ -137,15 +139,15 @@ export default function InsightsPage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {filteredBookings.map(b => (
-                  <div key={b._id} className="flex items-center gap-4 px-6 py-4">
+                  <div key={b._id} className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{b.firstName} {b.lastName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{b.firstName} {b.lastName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
                         {b.date || "No date"}
                         {b.installerName ? ` · ${b.installerName}` : ""}
                       </p>
                     </div>
-                    <div className="text-right hidden sm:block">
+                    <div className="text-right hidden sm:block flex-none">
                       <p className="text-xs text-gray-400">
                         Charged <span className="font-semibold text-gray-700 ml-1">${Number(b.amountCharged).toFixed(2)}</span>
                       </p>
@@ -153,9 +155,9 @@ export default function InsightsPage() {
                         Workers <span className="font-semibold text-gray-700 ml-1">${Number(b.amountPaidWorkers).toFixed(2)}</span>
                       </p>
                     </div>
-                    <div className="text-right w-28 flex-none">
+                    <div className="text-right flex-none">
                       <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Profit</p>
-                      <p className={`text-lg font-extrabold ${Number(b.companyProfit) >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      <p className={`text-base sm:text-lg font-extrabold ${Number(b.companyProfit) >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                         ${Number(b.companyProfit).toFixed(2)}
                       </p>
                     </div>

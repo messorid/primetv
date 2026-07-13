@@ -267,7 +267,7 @@ export default function BookingsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Bookings</h1>
           <p className="text-sm text-gray-500 mt-0.5">All customer reservation requests</p>
@@ -279,7 +279,7 @@ export default function BookingsPage() {
           </button>
           <button onClick={() => { setNewForm(BLANK_FORM); setNewErr(""); setNewModal(true) }}
             className="flex items-center gap-2 text-sm font-bold text-white bg-[#E50914] hover:bg-red-700 rounded-xl px-4 py-2 shadow-sm transition">
-            + New Booking
+            + New
           </button>
         </div>
       </div>
@@ -300,15 +300,15 @@ export default function BookingsPage() {
       </div>
 
       {/* ── Admin Calendar ───────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 sm:p-5 mb-5">
         {/* Cal header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button onClick={calPrev}
               className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-600 text-xl font-bold transition">
               ‹
             </button>
-            <h2 className="text-base font-extrabold text-gray-900">
+            <h2 className="text-base font-extrabold text-gray-900 min-w-[130px] text-center sm:text-left">
               {MONTHS_LONG[calMonth]} {calYear}
             </h2>
             <button onClick={calNext}
@@ -322,7 +322,7 @@ export default function BookingsPage() {
           </div>
 
           {selectedDay && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold text-gray-700">
                 {new Date(selectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                 {" — "}{filtered.length} booking{filtered.length !== 1 ? "s" : ""}
@@ -334,8 +334,8 @@ export default function BookingsPage() {
             </div>
           )}
 
-          {/* Status filter inside calendar header */}
-          <div className="hidden md:flex gap-1">
+          {/* Status filter inside calendar header — desktop only */}
+          <div className="hidden md:flex gap-1 flex-wrap">
             {["all", ...STATUS_FLOW].map(s => (
               <button key={s} onClick={() => setFilter(s)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-semibold border transition ${
@@ -350,41 +350,63 @@ export default function BookingsPage() {
         </div>
 
         {/* Day-of-week headers */}
-        <div className="grid grid-cols-7 mb-2">
+        <div className="grid grid-cols-7 mb-1 sm:mb-2">
           {DOW.map(d => (
-            <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</div>
+            <div key={d} className="text-center text-[10px] sm:text-xs font-semibold text-gray-400 py-1">
+              <span className="hidden sm:inline">{d}</span>
+              <span className="sm:hidden">{d.charAt(0)}</span>
+            </div>
           ))}
         </div>
 
         {/* Calendar cells */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {calCells.map((d, i) => {
             if (!d) return <div key={`e${i}`} />
-            const iso       = `${calYear}-${pad(calMonth+1)}-${pad(d)}`
-            const dayBs     = byDay[d] || []
-            const isToday   = iso === todayISO
-            const isSel     = iso === selectedDay
-            const hasBks    = dayBs.length > 0
+            const iso    = `${calYear}-${pad(calMonth+1)}-${pad(d)}`
+            const dayBs  = byDay[d] || []
+            const isToday = iso === todayISO
+            const isSel  = iso === selectedDay
+            const hasBks = dayBs.length > 0
 
             return (
               <button
                 key={iso}
                 onClick={() => setSelectedDay(isSel ? null : iso)}
-                className={`relative flex flex-col p-1.5 rounded-xl border text-left transition min-h-[70px] ${
+                className={`relative flex flex-col p-1 sm:p-1.5 rounded-lg sm:rounded-xl border text-left transition min-h-[36px] sm:min-h-[70px] ${
                   isSel    ? "bg-[#E50914] border-[#E50914] shadow-md" :
                   isToday  ? "border-[#E50914]/40 bg-red-50" :
                   hasBks   ? "border-gray-200 bg-white hover:border-[#E50914]/40 hover:shadow-sm" :
                              "border-transparent bg-gray-50/50 hover:bg-gray-100"
                 }`}
               >
-                <span className={`text-xs font-bold mb-1 ${
-                  isSel ? "text-white" : isToday ? "text-[#E50914]" : "text-gray-600"
-                }`}>
+                <span className={`text-[10px] sm:text-xs font-bold ${isSel ? "text-white" : isToday ? "text-[#E50914]" : "text-gray-600"}`}>
                   {d}
                 </span>
 
+                {/* Mobile: colored dots */}
+                {hasBks && (
+                  <div className="flex flex-wrap gap-0.5 mt-0.5 sm:hidden">
+                    {dayBs.slice(0, 3).map(b => (
+                      <div key={b._id} className={`w-1.5 h-1.5 rounded-full ${
+                        isSel              ? "bg-white" :
+                        b.status === "confirmed" ? "bg-blue-500" :
+                        b.status === "completed" ? "bg-emerald-500" :
+                        b.status === "cancelled" ? "bg-gray-400" :
+                        "bg-amber-400"
+                      }`} />
+                    ))}
+                    {dayBs.length > 3 && (
+                      <span className={`text-[7px] font-bold leading-tight ${isSel ? "text-white/70" : "text-gray-400"}`}>
+                        +{dayBs.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Desktop: name pills */}
                 {dayBs.slice(0, 2).map(b => (
-                  <span key={b._id} className={`text-[10px] font-medium truncate w-full leading-tight py-0.5 px-1 rounded mb-0.5 ${
+                  <span key={b._id} className={`hidden sm:block text-[10px] font-medium truncate w-full leading-tight py-0.5 px-1 rounded mb-0.5 ${
                     isSel ? "bg-white/20 text-white" :
                     b.status === "confirmed" ? "bg-blue-100 text-blue-700" :
                     b.status === "completed" ? "bg-emerald-100 text-emerald-700" :
@@ -394,9 +416,8 @@ export default function BookingsPage() {
                     {b.firstName} {b.lastName?.charAt(0)}.
                   </span>
                 ))}
-
                 {dayBs.length > 2 && (
-                  <span className={`text-[10px] font-semibold ${isSel ? "text-white/70" : "text-gray-400"}`}>
+                  <span className={`hidden sm:block text-[10px] font-semibold ${isSel ? "text-white/70" : "text-gray-400"}`}>
                     +{dayBs.length - 2} more
                   </span>
                 )}
@@ -469,18 +490,18 @@ export default function BookingsPage() {
 
       {/* ── New Booking Modal ─────────────────────────────────────────────────── */}
       {newModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4 py-0 sm:py-8 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg sm:my-auto">
+            <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100">
               <h2 className="text-lg font-extrabold text-gray-900">New Booking</h2>
               <button onClick={() => setNewModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
             </div>
 
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto max-h-[75vh] sm:max-h-none">
               {/* Customer */}
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Customer</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
                   <Field label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
                   <Field label="Phone"        value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: v }))}     placeholder="(615) 000-0000" />
@@ -519,8 +540,8 @@ export default function BookingsPage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Address</p>
                 <div className="space-y-2">
                   <Field label="Street" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="col-span-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="col-span-2 sm:col-span-1">
                       <Field label="City"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
                     </div>
                     <Field label="State" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
@@ -614,13 +635,13 @@ export default function BookingsPage() {
               {newErr && <p className="text-xs text-red-500 font-medium">{newErr}</p>}
             </div>
 
-            <div className="flex gap-3 px-6 pb-6">
+            <div className="flex gap-3 px-5 sm:px-6 pb-6 pt-2">
               <button onClick={() => setNewModal(false)}
-                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition">
+                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={creating}
-                className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-2.5 hover:bg-red-700 transition disabled:opacity-50">
+                className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-3 hover:bg-red-700 transition disabled:opacity-50">
                 {creating ? "Creating…" : "Create Booking"}
               </button>
             </div>
@@ -630,8 +651,8 @@ export default function BookingsPage() {
 
       {/* ── Complete Modal ────────────────────────────────────────────────────── */}
       {completeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md p-5 sm:p-6">
             <h2 className="text-lg font-extrabold text-gray-900 mb-0.5">Complete Booking</h2>
             <p className="text-sm text-gray-500 mb-5">{completeModal.name}</p>
             <div className="space-y-4">
@@ -660,9 +681,9 @@ export default function BookingsPage() {
 
       {/* ── Edit Schedule Modal ───────────────────────────────────────────────── */}
       {schedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4 py-0 sm:py-8 overflow-y-auto">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg sm:my-auto">
+            <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100">
               <div>
                 <h2 className="text-lg font-extrabold text-gray-900">Edit Schedule</h2>
                 <p className="text-sm text-gray-500">{schedModal.name}</p>
@@ -670,7 +691,7 @@ export default function BookingsPage() {
               <button onClick={() => setSchedModal(null)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
             </div>
 
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto max-h-[75vh] sm:max-h-none">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Select Date</p>
                 <MiniCalendar selectedDate={schedDate} onChange={d => { setSchedDate(d); setSchedTime("") }} />
@@ -687,13 +708,13 @@ export default function BookingsPage() {
               )}
             </div>
 
-            <div className="flex gap-3 px-6 pb-6">
+            <div className="flex gap-3 px-5 sm:px-6 pb-6 pt-2">
               <button onClick={() => setSchedModal(null)}
-                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition">
+                className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
                 Cancel
               </button>
               <button onClick={saveSchedule} disabled={savingSched || !schedDate || !schedTime}
-                className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-2.5 hover:bg-red-700 transition disabled:opacity-50">
+                className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-3 hover:bg-red-700 transition disabled:opacity-50">
                 {savingSched ? "Saving…" : "Save Changes"}
               </button>
             </div>
@@ -737,34 +758,24 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition" onClick={onToggle}>
+      <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 cursor-pointer hover:bg-gray-50 transition" onClick={onToggle}>
         <div className={`w-2.5 h-2.5 rounded-full flex-none ${sc.dot}`} />
 
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 truncate">{fullName}</p>
+          <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{fullName}</p>
           <p className="text-xs text-gray-500 mt-0.5 truncate">
             {b.date
-              ? `📅 ${new Date(b.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
-              : "No date set"}
+              ? `📅 ${new Date(b.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+              : "No date"}
             {b.timePreference && ` · ${b.timePreference}`}
           </p>
         </div>
 
-        <div className="hidden sm:block text-right flex-none">
-          {b.selectedPromo ? (
-            <span className="text-xs font-semibold text-[#E50914]">{b.selectedPromo.includes("55") ? "$199 Promo" : "$260 Promo"}</span>
-          ) : b.moreTvs ? (
-            <span className="text-xs font-semibold text-amber-600">3+ TVs</span>
-          ) : (
-            <span className="text-xs text-gray-500">{b.tvs?.length || 0} TV{b.tvs?.length !== 1 ? "s" : ""}</span>
-          )}
-        </div>
-
         {b.status === "completed" && b.companyProfit != null && (
-          <span className="hidden sm:block text-xs font-semibold text-emerald-600">+${Number(b.companyProfit).toFixed(0)}</span>
+          <span className="text-xs font-semibold text-emerald-600 flex-none">+${Number(b.companyProfit).toFixed(0)}</span>
         )}
 
-        <span className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full border ${sc.color}`}>{sc.label}</span>
+        <span className={`inline-flex text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-full border flex-none ${sc.color}`}>{sc.label}</span>
 
         <div className="text-right flex-none hidden md:block">
           <p className="text-xs text-gray-400">{createdDate}</p>

@@ -54,7 +54,7 @@ export default function InstallersPage() {
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
         <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Add Installer</h2>
         <form onSubmit={add} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-gray-500">Full Name *</label>
               <input
