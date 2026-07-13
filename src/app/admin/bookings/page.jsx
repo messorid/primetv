@@ -167,6 +167,14 @@ export default function BookingsPage() {
     setCompleting(false)
   }
 
+  // ── Resend installer email ───────────────────────────────────────────────────
+  async function resendInstallerEmail(bookingId) {
+    await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: bookingId, resendInstaller: true }),
+    })
+  }
+
   // ── Edit schedule ────────────────────────────────────────────────────────────
   function openSchedModal(b) {
     setSchedModal({ id: b._id, name: `${b.firstName} ${b.lastName}` })
@@ -453,6 +461,7 @@ export default function BookingsPage() {
               installers={installers}
               onAssign={installer => assignInstaller(b._id, installer)}
               onEditSchedule={() => openSchedModal(b)}
+              onResend={() => resendInstallerEmail(b._id)}
             />
           ))}
         </div>
@@ -697,9 +706,18 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [assigning,         setAssigning]         = useState(false)
+  const [resending,         setResending]         = useState(false)
+  const [resendOk,          setResendOk]          = useState(false)
+
+  async function handleResend() {
+    setResending(true); setResendOk(false)
+    await onResend()
+    setResending(false); setResendOk(true)
+    setTimeout(() => setResendOk(false), 3000)
+  }
 
   async function handleAssign() {
     const inst = installers.find(i => i.id === selectedInstaller)
@@ -852,6 +870,17 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   <p className="text-[10px] text-gray-400 mt-2">
                     Assigned {b.assignedAt ? new Date(b.assignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
                   </p>
+                  <button
+                    onClick={handleResend}
+                    disabled={resending}
+                    className={`mt-2 w-full rounded-xl border text-xs font-semibold py-1.5 transition ${
+                      resendOk
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-600"
+                        : "border-blue-200 text-blue-600 hover:bg-blue-100"
+                    }`}
+                  >
+                    {resendOk ? "✓ Email sent!" : resending ? "Sending…" : "↻ Resend Installer Email"}
+                  </button>
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 mb-3">No installer assigned yet</p>

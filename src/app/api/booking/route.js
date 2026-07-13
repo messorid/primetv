@@ -73,12 +73,31 @@ export async function POST(request) {
       </div>
     ` : ""
 
+    // ── Calendar invites ──────────────────────────────────────────────────────
+    const icsUID = `${date || "nodate"}-${(info.email || "").replace(/[^a-z0-9]/gi, "")}@primetv`
+    const icsBase = { uid: icsUID, date, timePref: timePreference, location: fullAddress,
+      organizer: user, description: `Customer: ${fullName}\nPhone: ${info.phone}\nAddress: ${fullAddress}` }
+
+    const icsForBusiness = date ? buildICS({
+      ...icsBase,
+      summary: `TV Installation — ${fullName}`,
+      attendees: [{ name: "PrimeTvNashville", email: "tvprimenashville@gmail.com" }],
+    }) : null
+
+    const icsForClient = date ? buildICS({
+      ...icsBase,
+      summary: "TV Installation — PrimeTvNashville",
+      description: `Your TV installation appointment.\nAddress: ${fullAddress}`,
+      attendees: [{ name: fullName, email: info.email }],
+    }) : null
+
     // ── Email to business ──────────────────────────────────────────────────────
     await transporter.sendMail({
       from: `"PrimeTvNashville Bookings" <${user}>`,
       to: "tvprimenashville@gmail.com",
       replyTo: info.email,
       subject: `New Booking — ${fullName} | ${date}`,
+      attachments: icsForBusiness ? [{ filename: "appointment.ics", content: icsForBusiness, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
       html: `
         <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
           <h2 style="color:#222;border-bottom:3px solid #e50914;padding-bottom:12px;margin-bottom:0;">
@@ -133,6 +152,7 @@ export async function POST(request) {
       to: info.email,
       bcc: "messoweb@gmail.com",
       subject: "Booking Confirmed — PrimeTvNashville",
+      attachments: icsForClient ? [{ filename: "appointment.ics", content: icsForClient, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
       html: `
         <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
           <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;">
@@ -217,6 +237,41 @@ export async function POST(request) {
     console.error("booking error", err)
     return new Response(JSON.stringify({ ok: false, error: "Server error" }), { status: 500 })
   }
+}
+
+function buildICS({ uid, date, timePref, summary, description, location, organizer, attendees }) {
+  if (!date) return null
+  let startH = 10, startM = 0
+  const m = (timePref || "").match(/(\d+):(\d+)\s*(AM|PM)/i)
+  if (m) {
+    startH = parseInt(m[1]); startM = parseInt(m[2])
+    if (m[3].toUpperCase() === "PM" && startH !== 12) startH += 12
+    if (m[3].toUpperCase() === "AM" && startH === 12) startH = 0
+  } else if (/morning/i.test(timePref)) { startH = 9 }
+  else if (/afternoon/i.test(timePref)) { startH = 13 }
+  else if (/evening/i.test(timePref))   { startH = 17 }
+  const p2 = n => String(n).padStart(2, "0")
+  const [y, mo, d] = date.split("-")
+  const dtStart = `${y}${mo}${d}T${p2(startH)}${p2(startM)}00`
+  const dtEnd   = `${y}${mo}${d}T${p2(Math.min(startH + 2, 23))}${p2(startM)}00`
+  const stamp   = new Date().toISOString().replace(/[-:.]/g,"").slice(0,15) + "Z"
+  return [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PrimeTvNashville//EN",
+    "METHOD:REQUEST", "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${uid || Date.now()}@primetv`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=America/Chicago:${dtStart}`,
+    `DTEND;TZID=America/Chicago:${dtEnd}`,
+    `SUMMARY:${summary}`,
+    description ? `DESCRIPTION:${description.replace(/[\r\n]+/g, "\\n")}` : "",
+    location    ? `LOCATION:${location}` : "",
+    `ORGANIZER;CN=PrimeTvNashville:mailto:${organizer}`,
+    ...(attendees || []).filter(a => a?.email).map(a =>
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${a.name}:mailto:${a.email}`
+    ),
+    "STATUS:CONFIRMED", "END:VEVENT", "END:VCALENDAR",
+  ].filter(Boolean).join("\r\n")
 }
 
 function brow(label, value) {

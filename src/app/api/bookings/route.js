@@ -104,6 +104,15 @@ export async function PATCH(request) {
       return Response.json({ ok: true })
     }
 
+    // ── Resend installer email ────────────────────────────────────────────────
+    if (body.resendInstaller) {
+      const [b] = await sql`SELECT * FROM bookings WHERE id=${id}`
+      if (b?.installer_email) {
+        await sendInstallerEmail(b, b.installer_name, b.installer_email)
+      }
+      return Response.json({ ok: true })
+    }
+
     // ── Update date / time ────────────────────────────────────────────────────
     if (body.updateSchedule) {
       await sql`UPDATE bookings SET date=${body.date || ""}, time_pref=${body.timePref || ""} WHERE id=${id}`
@@ -155,6 +164,41 @@ export async function DELETE(request) {
   }
 }
 
+// ── ICS calendar invite builder ───────────────────────────────────────────────
+function buildICS({ uid, date, timePref, summary, description, location, organizer, attendees }) {
+  if (!date) return null
+  let startH = 10, startM = 0
+  const m = (timePref || "").match(/(\d+):(\d+)\s*(AM|PM)/i)
+  if (m) {
+    startH = parseInt(m[1]); startM = parseInt(m[2])
+    if (m[3].toUpperCase() === "PM" && startH !== 12) startH += 12
+    if (m[3].toUpperCase() === "AM" && startH === 12) startH = 0
+  } else if (/morning/i.test(timePref))   { startH = 9  }
+  else if (/afternoon/i.test(timePref))   { startH = 13 }
+  else if (/evening/i.test(timePref))     { startH = 17 }
+  const p2 = n => String(n).padStart(2, "0")
+  const [y, mo, d] = date.split("-")
+  const dtStart = `${y}${mo}${d}T${p2(startH)}${p2(startM)}00`
+  const dtEnd   = `${y}${mo}${d}T${p2(Math.min(startH + 2, 23))}${p2(startM)}00`
+  const stamp   = new Date().toISOString().replace(/[-:.]/g,"").slice(0,15) + "Z"
+  return [
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//PrimeTvNashville//EN",
+    "METHOD:REQUEST","CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${uid || Date.now()}@primetv`, `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=America/Chicago:${dtStart}`,
+    `DTEND;TZID=America/Chicago:${dtEnd}`,
+    `SUMMARY:${summary}`,
+    description ? `DESCRIPTION:${description.replace(/[\r\n]+/g,"\\n")}` : "",
+    location    ? `LOCATION:${location}` : "",
+    `ORGANIZER;CN=PrimeTvNashville:mailto:${organizer}`,
+    ...(attendees||[]).filter(a=>a?.email).map(a=>
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${a.name}:mailto:${a.email}`
+    ),
+    "STATUS:CONFIRMED","END:VEVENT","END:VCALENDAR",
+  ].filter(Boolean).join("\r\n")
+}
+
 // ── Installer assignment email ─────────────────────────────────────────────────
 async function sendInstallerEmail(b, installerName, installerEmail) {
   const user = process.env.EMAIL_USER
@@ -162,9 +206,6 @@ async function sendInstallerEmail(b, installerName, installerEmail) {
   if (!user || !pass) return
 
   const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
-
-  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
-    .filter(Boolean).join(", ")
 
   const serviceDetail = b.promo
     ? `<strong>Package:</strong> ${safe(b.promo)}`
@@ -174,10 +215,25 @@ async function sendInstallerEmail(b, installerName, installerEmail) {
         `TV #${i+1}: ${safe(tv.size)}${tv.exactSize ? ` (${tv.exactSize}")` : ""} · ${safe(tv.wallType)}${tv.comments ? ` · ${safe(tv.comments)}` : ""}`
       ).join("<br>")
 
+  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
+    .filter(Boolean).join(", ")
+
+  const ics = buildICS({
+    uid:         `${b.id}@primetv`,
+    date:        b.date,
+    timePref:    b.time_pref,
+    summary:     `Job Assignment — ${safe(b.first_name)} ${safe(b.last_name)}`,
+    description: `Customer: ${safe(b.first_name)} ${safe(b.last_name)}\nAddress: ${fullAddress}`,
+    location:    fullAddress,
+    organizer:   user,
+    attendees:   [{ name: installerName, email: installerEmail }],
+  })
+
   await transporter.sendMail({
-    from:    `"PrimeTvNashville" <${user}>`,
-    to:      installerEmail,
-    subject: `New Job Assigned — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
+    from:        `"PrimeTvNashville" <${user}>`,
+    to:          installerEmail,
+    subject:     `New Job Assigned — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
+    attachments: ics ? [{ filename: "job.ics", content: ics, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
         <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;margin-bottom:0;">
