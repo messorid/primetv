@@ -52,7 +52,7 @@ export default function BookingsPage() {
 
   // Modals
   const [completeModal,  setCompleteModal]  = useState(null)
-  const [completeForm,   setCompleteForm]   = useState({ amountCharged: "", amountPaidWorkers: "" })
+  const [completeForm,   setCompleteForm]   = useState({ amountCharged: "", amountPaidWorkers: "", materialsCost: "" })
   const [completing,     setCompleting]     = useState(false)
 
   const [newModal,       setNewModal]       = useState(false)
@@ -145,26 +145,32 @@ export default function BookingsPage() {
   }
 
   // ── Complete ─────────────────────────────────────────────────────────────────
-  function openCompleteModal(id, name) { setCompleteModal({ id, name }); setCompleteForm({ amountCharged: "", amountPaidWorkers: "" }) }
+  function openCompleteModal(id, name) { setCompleteModal({ id, name }); setCompleteForm({ amountCharged: "", amountPaidWorkers: "", materialsCost: "" }) }
 
   async function handleComplete() {
     if (!completeModal) return
     setCompleting(true)
-    const charged = parseFloat(completeForm.amountCharged) || 0
-    const paid    = parseFloat(completeForm.amountPaidWorkers) || 0
-    const profit  = charged - paid
+    const charged   = parseFloat(completeForm.amountCharged) || 0
+    const paid      = parseFloat(completeForm.amountPaidWorkers) || 0
+    const materials = parseFloat(completeForm.materialsCost) || 0
+    const profit    = charged - paid - materials
     const res  = await fetch("/api/bookings", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, amountPaidWorkers: paid }),
+      body: JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, amountPaidWorkers: paid, materialsCost: materials }),
     })
     const data = await res.json()
     if (data.ok) {
       setBookings(prev => prev.map(b => b._id === completeModal.id
-        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: paid, companyProfit: profit, completedAt: new Date().toISOString() } : b
+        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: paid, materialsCost: materials, companyProfit: profit, completedAt: new Date().toISOString() } : b
       ))
       setCompleteModal(null)
     }
     setCompleting(false)
+  }
+
+  // ── Update materials cost ────────────────────────────────────────────────────
+  function updateMaterials(id, materialsCost, companyProfit) {
+    setBookings(prev => prev.map(b => b._id === id ? { ...b, materialsCost, companyProfit } : b))
   }
 
   // ── Resend installer email ───────────────────────────────────────────────────
@@ -253,8 +259,8 @@ export default function BookingsPage() {
   }), [bookings])
 
   const todayISO  = isoDate(new Date())
-  const profit    = completeForm.amountCharged || completeForm.amountPaidWorkers
-    ? (parseFloat(completeForm.amountCharged) || 0) - (parseFloat(completeForm.amountPaidWorkers) || 0)
+  const profit    = completeForm.amountCharged || completeForm.amountPaidWorkers || completeForm.materialsCost
+    ? (parseFloat(completeForm.amountCharged) || 0) - (parseFloat(completeForm.amountPaidWorkers) || 0) - (parseFloat(completeForm.materialsCost) || 0)
     : null
 
   // Calendar grid
@@ -483,6 +489,7 @@ export default function BookingsPage() {
               onAssign={installer => assignInstaller(b._id, installer)}
               onEditSchedule={() => openSchedModal(b)}
               onResend={() => resendInstallerEmail(b._id)}
+              onMaterialsUpdate={updateMaterials}
             />
           ))}
         </div>
@@ -660,9 +667,15 @@ export default function BookingsPage() {
                 onChange={v => setCompleteForm(f => ({ ...f, amountCharged: v }))} />
               <AmountField label="Amount Paid to Workers" value={completeForm.amountPaidWorkers}
                 onChange={v => setCompleteForm(f => ({ ...f, amountPaidWorkers: v }))} />
+              <AmountField label="Materials & Tools Used" value={completeForm.materialsCost}
+                onChange={v => setCompleteForm(f => ({ ...f, materialsCost: v }))}
+                hint="Mounts, cables, hardware, etc." />
               {profit !== null && (
                 <div className={`rounded-xl border p-4 ${profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                  <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Company Profit</p>
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Charged − Workers − Materials</span>
+                  </div>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Net Profit</p>
                   <p className={`text-3xl font-extrabold ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>${profit.toFixed(2)}</p>
                 </div>
               )}
@@ -727,17 +740,35 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onMaterialsUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [assigning,         setAssigning]         = useState(false)
   const [resending,         setResending]         = useState(false)
   const [resendOk,          setResendOk]          = useState(false)
+  const [editMaterials,     setEditMaterials]     = useState(false)
+  const [materialsVal,      setMaterialsVal]      = useState("")
+  const [savingMat,         setSavingMat]         = useState(false)
 
   async function handleResend() {
     setResending(true); setResendOk(false)
     await onResend()
     setResending(false); setResendOk(true)
     setTimeout(() => setResendOk(false), 3000)
+  }
+
+  async function handleSaveMaterials() {
+    setSavingMat(true)
+    const val = parseFloat(materialsVal) || 0
+    const res  = await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: b._id, updateMaterials: true, materialsCost: val }),
+    })
+    const data = await res.json()
+    if (data.ok) {
+      onMaterialsUpdate(b._id, val, data.profit)
+      setEditMaterials(false)
+    }
+    setSavingMat(false)
   }
 
   async function handleAssign() {
@@ -926,16 +957,53 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
               {b.status === "completed" && b.amountCharged != null && (
                 <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
                   <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">Financials</p>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Charged</span>
                       <span className="font-semibold">${Number(b.amountCharged).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Paid Workers</span>
-                      <span className="font-semibold">${Number(b.amountPaidWorkers).toFixed(2)}</span>
+                      <span className="font-semibold text-red-500">−${Number(b.amountPaidWorkers).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-sm border-t border-emerald-200 pt-1.5 mt-1.5">
+
+                    {/* Materials — inline editable */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Materials & Tools</span>
+                      {editMaterials ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400 text-xs">$</span>
+                          <input
+                            type="number" step="0.01" min="0"
+                            value={materialsVal}
+                            onChange={e => setMaterialsVal(e.target.value)}
+                            className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-red-300"
+                            autoFocus
+                          />
+                          <button onClick={handleSaveMaterials} disabled={savingMat}
+                            className="rounded-lg bg-emerald-500 text-white text-xs font-bold px-2 py-1 hover:bg-emerald-600 transition disabled:opacity-40">
+                            {savingMat ? "…" : "✓"}
+                          </button>
+                          <button onClick={() => setEditMaterials(false)}
+                            className="rounded-lg border border-gray-200 text-gray-400 text-xs px-2 py-1 hover:bg-gray-100 transition">
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-red-500">
+                            −${Number(b.materialsCost || 0).toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() => { setMaterialsVal(String(b.materialsCost || "")); setEditMaterials(true) }}
+                            className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                            edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between text-sm border-t border-emerald-200 pt-1.5 mt-0.5">
                       <span className="font-bold text-emerald-700">Profit</span>
                       <span className="font-extrabold text-emerald-700">${Number(b.companyProfit).toFixed(2)}</span>
                     </div>
@@ -991,13 +1059,14 @@ function Field({ label, value, onChange, placeholder, type = "text" }) {
     </div>
   )
 }
-function AmountField({ label, value, onChange }) {
+function AmountField({ label, value, onChange, hint }) {
   return (
     <div>
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</label>
+      {hint && <p className="text-[10px] text-gray-400 mt-0.5">{hint}</p>}
       <div className="relative mt-1.5">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
-        <input type="number" step="0.01" value={value} onChange={e => onChange(e.target.value)} placeholder="0.00" autoFocus
+        <input type="number" step="0.01" value={value} onChange={e => onChange(e.target.value)} placeholder="0.00"
           className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
       </div>
     </div>

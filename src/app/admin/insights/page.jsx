@@ -57,6 +57,7 @@ export default function InsightsPage() {
 
   const totalRevenue    = filteredBookings.reduce((s, b) => s + Number(b.amountCharged    || 0), 0)
   const totalWorkers    = filteredBookings.reduce((s, b) => s + Number(b.amountPaidWorkers || 0), 0)
+  const totalMaterials  = filteredBookings.reduce((s, b) => s + Number(b.materialsCost    || 0), 0)
   const totalProfit     = filteredBookings.reduce((s, b) => s + Number(b.companyProfit    || 0), 0)
   const totalExpenses   = filteredExpenses.reduce((s, e) => s + Number(e.amount           || 0), 0)
   const netProfit       = totalProfit - totalExpenses
@@ -111,10 +112,10 @@ export default function InsightsPage() {
         <>
           {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
-            <StatCard label="Revenue"      value={`$${totalRevenue.toFixed(2)}`}  bg="bg-blue-50"    color="text-blue-700" />
-            <StatCard label="Worker Costs" value={`$${totalWorkers.toFixed(2)}`}  bg="bg-amber-50"   color="text-amber-700" />
-            <StatCard label="Gross Profit" value={`$${totalProfit.toFixed(2)}`}   bg="bg-emerald-50" color="text-emerald-600" />
-            <StatCard label="Expenses"     value={`$${totalExpenses.toFixed(2)}`} bg="bg-red-50"     color="text-red-600" />
+            <StatCard label="Revenue"      value={`$${totalRevenue.toFixed(2)}`}   bg="bg-blue-50"    color="text-blue-700" />
+            <StatCard label="Workers"      value={`$${totalWorkers.toFixed(2)}`}   bg="bg-amber-50"   color="text-amber-700" />
+            <StatCard label="Materials"    value={`$${totalMaterials.toFixed(2)}`} bg="bg-orange-50"  color="text-orange-600" />
+            <StatCard label="Expenses"     value={`$${totalExpenses.toFixed(2)}`}  bg="bg-red-50"     color="text-red-600" />
             <div className="col-span-2 lg:col-span-1">
               <StatCard
                 label="Net Profit"
@@ -122,6 +123,7 @@ export default function InsightsPage() {
                 bg={netProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}
                 color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
                 large
+                hint={`After workers, materials & expenses`}
               />
             </div>
           </div>
@@ -154,6 +156,11 @@ export default function InsightsPage() {
                       <p className="text-xs text-gray-400">
                         Workers <span className="font-semibold text-gray-700 ml-1">${Number(b.amountPaidWorkers).toFixed(2)}</span>
                       </p>
+                      {Number(b.materialsCost) > 0 && (
+                        <p className="text-xs text-gray-400">
+                          Materials <span className="font-semibold text-orange-600 ml-1">${Number(b.materialsCost).toFixed(2)}</span>
+                        </p>
+                      )}
                     </div>
                     <div className="text-right flex-none">
                       <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Profit</p>
@@ -299,13 +306,14 @@ export default function InsightsPage() {
   )
 }
 
-function StatCard({ label, value, bg, color, large }) {
+function StatCard({ label, value, bg, color, large, hint }) {
   return (
-    <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm`}>
+    <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm h-full`}>
       <p className="text-xs text-gray-500 font-medium">{label}</p>
-      <p className={`font-extrabold mt-1 ${color || "text-gray-900"} ${large ? "text-3xl" : "text-2xl"}`}>
+      <p className={`font-extrabold mt-1 ${color || "text-gray-900"} ${large ? "text-2xl sm:text-3xl" : "text-xl sm:text-2xl"}`}>
         {value}
       </p>
+      {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
     </div>
   )
 }

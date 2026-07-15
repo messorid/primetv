@@ -30,6 +30,7 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_charged NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_paid_workers NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS materials_cost NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS company_profit NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`
 }
@@ -113,6 +114,18 @@ export async function PATCH(request) {
       return Response.json({ ok: true })
     }
 
+    // ── Update materials cost ─────────────────────────────────────────────────
+    if (body.updateMaterials) {
+      const materials = parseFloat(body.materialsCost) || 0
+      const [b] = await sql`SELECT amount_charged, amount_paid_workers FROM bookings WHERE id=${id}`
+      if (b) {
+        const profit = (parseFloat(b.amount_charged) || 0) - (parseFloat(b.amount_paid_workers) || 0) - materials
+        await sql`UPDATE bookings SET materials_cost=${materials}, company_profit=${profit} WHERE id=${id}`
+        return Response.json({ ok: true, profit })
+      }
+      return Response.json({ ok: false }, { status: 404 })
+    }
+
     // ── Update date / time ────────────────────────────────────────────────────
     if (body.updateSchedule) {
       await sql`UPDATE bookings SET date=${body.date || ""}, time_pref=${body.timePref || ""} WHERE id=${id}`
@@ -121,14 +134,15 @@ export async function PATCH(request) {
 
     // ── Complete with financial data ───────────────────────────────────────────
     if (status === "completed" && body.amountCharged !== undefined) {
-      const charged = parseFloat(body.amountCharged) || 0
-      const paid    = parseFloat(body.amountPaidWorkers) || 0
-      const profit  = charged - paid
+      const charged   = parseFloat(body.amountCharged) || 0
+      const paid      = parseFloat(body.amountPaidWorkers) || 0
+      const materials = parseFloat(body.materialsCost) || 0
+      const profit    = charged - paid - materials
       await sql`
         UPDATE bookings
         SET status='completed', amount_charged=${charged},
-            amount_paid_workers=${paid}, company_profit=${profit},
-            completed_at=NOW()
+            amount_paid_workers=${paid}, materials_cost=${materials},
+            company_profit=${profit}, completed_at=NOW()
             ${notes !== undefined ? sql`, notes=${notes}` : sql``}
         WHERE id=${id}
       `
@@ -310,6 +324,7 @@ function toBooking(row) {
     assignedAt:         row.assigned_at,
     amountCharged:      row.amount_charged,
     amountPaidWorkers:  row.amount_paid_workers,
+    materialsCost:      row.materials_cost,
     companyProfit:      row.company_profit,
     completedAt:        row.completed_at,
     createdAt:          row.created_at,
