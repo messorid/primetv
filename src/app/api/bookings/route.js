@@ -158,6 +158,14 @@ export async function PATCH(request) {
       await sql`UPDATE bookings SET notes=${notes} WHERE id=${id}`
     }
 
+    // Send cancellation email to installer if applicable
+    if (status === "cancelled") {
+      const [b] = await sql`SELECT * FROM bookings WHERE id=${id}`
+      if (b?.installer_email) {
+        await sendCancellationEmail(b).catch(err => console.error("Cancel email error:", err))
+      }
+    }
+
     return Response.json({ ok: true })
   } catch (err) {
     console.error(err)
@@ -273,6 +281,51 @@ async function sendInstallerEmail(b, installerName, installerEmail) {
           <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Customer</h4>
           <table style="width:100%;border-collapse:collapse;font-size:14px;">
             ${irow("👤 Name", `${safe(b.first_name)} ${safe(b.last_name)}`)}
+          </table>
+        </div>
+
+        <p style="margin-top:24px;color:#888;font-size:12px;">
+          Questions? Contact the office at <strong>(615) 669-0251</strong> or reply to this email.
+        </p>
+      </div>
+    `,
+  })
+}
+
+// ── Cancellation email to installer ──────────────────────────────────────────
+async function sendCancellationEmail(b) {
+  const user = process.env.EMAIL_USER
+  const pass = process.env.EMAIL_PASS
+  if (!user || !pass || !b.installer_email) return
+
+  const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+
+  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
+    .filter(Boolean).join(", ")
+
+  await transporter.sendMail({
+    from:    `"PrimeTvNashville" <${user}>`,
+    to:      b.installer_email,
+    subject: `❌ Job Cancelled — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
+        <h2 style="color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:12px;margin-bottom:0;">
+          ❌ Job Cancelled
+        </h2>
+
+        <p style="color:#444;margin-top:16px;font-size:15px;">
+          Hi <strong>${safe(b.installer_name)}</strong>,<br><br>
+          The following job that was assigned to you has been <strong style="color:#dc2626;">cancelled</strong>.
+          You do not need to attend this appointment.
+        </p>
+
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px;margin-top:20px;">
+          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Cancelled Job Details</h4>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            ${irow("📅 Date",    b.date || "TBD")}
+            ${irow("🕐 Time",    b.time_pref || "Flexible")}
+            ${irow("📍 Address", fullAddress || "—")}
+            ${irow("👤 Customer", `${safe(b.first_name)} ${safe(b.last_name)}`)}
           </table>
         </div>
 
