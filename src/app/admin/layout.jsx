@@ -26,6 +26,13 @@ export default function AdminLayout({ children }) {
     }
   }, [router, path])
 
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/admin/sw.js")
+        .catch(() => {})
+    }
+  }, [])
+
   function logout() {
     localStorage.removeItem("admin-auth")
     document.cookie = "admin-auth=; path=/; max-age=0"
