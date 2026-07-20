@@ -17,21 +17,12 @@ export const metadata = {
     locale: "en_US",
     type: "website",
   },
-  // PWA meta for admin
-  appleWebApp: {
-    capable: true,
-    title: "PrimeTV Admin",
-    statusBarStyle: "black-translucent",
-  },
 }
 
 export default function Layout({ children }) {
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        {/* PWA */}
-        <link rel="apple-touch-icon" href="/admin-icon.svg" />
-        <meta name="mobile-web-app-capable" content="yes" />
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-QJMH27JB3N"

@@ -27,9 +27,18 @@ export default function AdminLayout({ children }) {
   }, [router, path])
 
   useEffect(() => {
+    // Inject manifest only while in admin — keeps PWA install prompt away from public site
+    const link = document.createElement("link")
+    link.rel = "manifest"
+    link.href = "/admin-manifest.json"
+    document.head.appendChild(link)
+
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/admin/sw.js")
-        .catch(() => {})
+      navigator.serviceWorker.register("/admin/sw.js").catch(() => {})
+    }
+
+    return () => {
+      document.head.removeChild(link)
     }
   }, [])
 

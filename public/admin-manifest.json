@@ -1,0 +1,25 @@
+{
+  "name": "PrimeTV Admin",
+  "short_name": "PrimeTV",
+  "description": "PrimeTvNashville — Admin Dashboard",
+  "start_url": "/admin/bookings",
+  "scope": "/admin/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#E50914",
+  "icons": [
+    {
+      "src": "/admin-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/admin-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
