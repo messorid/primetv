@@ -1,4 +1,4 @@
-export const metadata = {
+﻿export const metadata = {
     title: "Our Services | PrimeTvNashville",
     description:
       "Explore our professional TV mounting and home theater setup services in Nashville TN. Clean installations, aesthetic integration and expert AV solutions.",
@@ -6,13 +6,13 @@ export const metadata = {
       title: "Services - PrimeTvNashville",
       description:
         "We offer TV wall mounting and home theater installations for homes and businesses in Nashville TN. Clean, safe and visually stunning results.",
-      url: "https://primetvnashville.com/services",
+      url: "https://www.primetvnashville.com/services",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"
     },
     alternates: {
-      canonical: "https://primetvnashville.com/services"
+      canonical: "https://www.primetvnashville.com/services"
     }
   }
   

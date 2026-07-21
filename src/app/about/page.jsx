@@ -1,4 +1,4 @@
-import Image from "next/image"
+﻿import Image from "next/image"
 import CallToAction from "../components/CallToAction"
 
 export const metadata = {
@@ -9,13 +9,13 @@ export const metadata = {
   openGraph: {
     title: "About PrimeTvNashville",
     description: "Get to know the story and commitment behind PrimeTvNashville",
-    url: "https://primetvnashville.com/about",
+    url: "https://www.primetvnashville.com/about",
     siteName: "PrimeTvNashville",
     locale: "en_US",
     type: "website"
   },
   alternates: {
-    canonical: "https://primetvnashville.com/about"
+    canonical: "https://www.primetvnashville.com/about"
   }
 }
 
@@ -23,9 +23,9 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "PrimeTvNashville",
-  "url": "https://primetvnashville.com",
-  "logo": "https://primetvnashville.com/og-image.jpg",
-  "image": "https://primetvnashville.com/og-image.jpg",
+  "url": "https://www.primetvnashville.com",
+  "logo": "https://www.primetvnashville.com/opengraph-image",
+  "image": "https://www.primetvnashville.com/opengraph-image",
   "description": "Professional TV mounting and installation company serving Nashville TN and surrounding areas.",
   "telephone": "+1-615-669-0251",
   "email": "info@primetvnashville.com",

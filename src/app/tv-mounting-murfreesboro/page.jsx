@@ -17,13 +17,13 @@ export const metadata = {
   openGraph: {
     title: "TV Mounting Murfreesboro TN | PrimeTvNashville",
     description: "Professional TV installation and wall mounting services in Murfreesboro Tennessee. Same-day availability.",
-    url: "https://primetvnashville.com/tv-mounting-murfreesboro",
+    url: "https://www.primetvnashville.com/tv-mounting-murfreesboro",
     siteName: "PrimeTvNashville",
-    images: [{ url: "https://primetvnashville.com/og-image.jpg", width: 1200, height: 630, alt: "TV wall mounting service in Murfreesboro Tennessee" }],
+    images: [{ url: "https://www.primetvnashville.com/opengraph-image", width: 1200, height: 630, alt: "TV wall mounting service in Murfreesboro Tennessee" }],
     locale: "en_US",
     type: "website",
   },
-  alternates: { canonical: "https://primetvnashville.com/tv-mounting-murfreesboro" },
+  alternates: { canonical: "https://www.primetvnashville.com/tv-mounting-murfreesboro" },
 };
 
 export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 };
@@ -33,9 +33,9 @@ export default function TvMountingMurfreesboroPage() {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     "name": "PrimeTvNashville",
-    "image": "https://primetvnashville.com/og-image.jpg",
-    "@id": "https://primetvnashville.com",
-    "url": "https://primetvnashville.com/tv-mounting-murfreesboro",
+    "image": "https://www.primetvnashville.com/opengraph-image",
+    "@id": "https://www.primetvnashville.com",
+    "url": "https://www.primetvnashville.com/tv-mounting-murfreesboro",
     "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting and installation services in Murfreesboro, Tennessee.",

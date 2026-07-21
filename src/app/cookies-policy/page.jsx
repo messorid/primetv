@@ -1,13 +1,13 @@
-export const metadata = {
+﻿export const metadata = {
     title: "Cookies Policy | PrimeTvNashville",
     description: "Learn how PrimeTvNashville uses cookies to improve user experience on our website.",
     alternates: {
-      canonical: "https://primetvnashville.com/cookies-policy"
+      canonical: "https://www.primetvnashville.com/cookies-policy"
     },
     openGraph: {
       title: "Cookies Policy | PrimeTvNashville",
       description: "Details on the use of cookies for analytics and user experience enhancement.",
-      url: "https://primetvnashville.com/cookies-policy",
+      url: "https://www.primetvnashville.com/cookies-policy",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"

@@ -7,13 +7,13 @@
       title: "TV Mounting Services in Nashville",
       description:
         "Professional TV installation with secure wall mounting and clean cable concealment. Trusted by hundreds in Nashville TN.",
-      url: "https://primetvnashville.com/services/tv-mounting",
+      url: "https://www.primetvnashville.com/services/tv-mounting",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"
     },
     alternates: {
-      canonical: "https://primetvnashville.com/services/tv-mounting"
+      canonical: "https://www.primetvnashville.com/services/tv-mounting"
     }
   }
   
@@ -27,7 +27,7 @@
         "@type": "LocalBusiness",
         "name": "PrimeTvNashville",
         "telephone": "+1-615-669-0251",
-        "url": "https://primetvnashville.com",
+        "url": "https://www.primetvnashville.com",
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Nashville",
@@ -41,7 +41,7 @@
         "sameAs": "https://en.wikipedia.org/wiki/Nashville,_Tennessee"
       },
       "serviceType": "TV Mounting",
-      "url": "https://primetvnashville.com/services/tv-mounting"
+      "url": "https://www.primetvnashville.com/services/tv-mounting"
     }
 
     return (

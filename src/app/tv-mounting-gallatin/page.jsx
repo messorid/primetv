@@ -17,13 +17,13 @@ export const metadata = {
   openGraph: {
     title: "TV Mounting Gallatin TN | PrimeTvNashville",
     description: "Professional TV installation and wall mounting services in Gallatin Tennessee. Same-day availability.",
-    url: "https://primetvnashville.com/tv-mounting-gallatin",
+    url: "https://www.primetvnashville.com/tv-mounting-gallatin",
     siteName: "PrimeTvNashville",
-    images: [{ url: "https://primetvnashville.com/og-image.jpg", width: 1200, height: 630, alt: "TV wall mounting service in Gallatin Tennessee" }],
+    images: [{ url: "https://www.primetvnashville.com/opengraph-image", width: 1200, height: 630, alt: "TV wall mounting service in Gallatin Tennessee" }],
     locale: "en_US",
     type: "website",
   },
-  alternates: { canonical: "https://primetvnashville.com/tv-mounting-gallatin" },
+  alternates: { canonical: "https://www.primetvnashville.com/tv-mounting-gallatin" },
 };
 
 export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 };
@@ -33,9 +33,9 @@ export default function TvMountingGallatinPage() {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     "name": "PrimeTvNashville",
-    "image": "https://primetvnashville.com/og-image.jpg",
-    "@id": "https://primetvnashville.com",
-    "url": "https://primetvnashville.com/tv-mounting-gallatin",
+    "image": "https://www.primetvnashville.com/opengraph-image",
+    "@id": "https://www.primetvnashville.com",
+    "url": "https://www.primetvnashville.com/tv-mounting-gallatin",
     "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting and installation services in Gallatin, Tennessee.",

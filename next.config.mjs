@@ -1,10 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  // Include MDX blog content files in the standalone output
   outputFileTracingIncludes: {
     "/blog": ["./content/blog/**/*"],
     "/blog/[slug]": ["./content/blog/**/*"],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/tv-mounting-nashville",
+        destination: "/",
+        permanent: true,
+      },
+    ]
   },
 }
 

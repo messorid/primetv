@@ -11,7 +11,7 @@ import InternalLinksHub from "./components/InternalLinksHub";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
 export const metadata = {
-  title: "TV Mounting Nashville TN | Same-Day TV Installation | PrimeTvNashville",
+  title: "TV Mounting Nashville TN | PrimeTvNashville",
   description: "Professional TV mounting in Nashville TN. Same-day options, clean cable concealment, upfront pricing. Homes, apartments and businesses. Book today!",
   keywords: ["TV mounting Nashville", "TV mounting Nashville TN", "TV installation Nashville", "same-day TV mounting Nashville", "TV wall mount Nashville", "cable concealment Nashville", "PrimeTvNashville"],
   robots: {
@@ -28,11 +28,11 @@ export const metadata = {
   openGraph: {
     title: "Expert TV Wall Mounting in Nashville, TN | PrimeTvNashville",
     description: "Same-day and next-day TV installation experts in Nashville. Safe, secure, and perfectly leveled.",
-    url: "https://primetvnashville.com",
+    url: "https://www.primetvnashville.com",
     siteName: "PrimeTvNashville",
     images: [
       {
-        url: "https://primetvnashville.com/og-image.jpg",
+        url: "https://www.primetvnashville.com/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Professional TV wall mounting by PrimeTvNashville",
@@ -45,10 +45,10 @@ export const metadata = {
     card: "summary_large_image",
     title: "Expert TV Mounting in Nashville TN | PrimeTvNashville",
     description: "Reliable and expert TV installation services for homes and businesses in Nashville.",
-    images: ["https://primetvnashville.com/og-image.jpg"],
+    images: ["https://www.primetvnashville.com/opengraph-image"],
   },
   alternates: {
-    canonical: "https://primetvnashville.com",
+    canonical: "https://www.primetvnashville.com",
   }
 };
 
@@ -66,9 +66,9 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     "name": "PrimeTvNashville",
-    "image": "https://primetvnashville.com/og-image.jpg",
-    "@id": "https://primetvnashville.com",
-    "url": "https://primetvnashville.com",
+    "image": "https://www.primetvnashville.com/opengraph-image",
+    "@id": "https://www.primetvnashville.com",
+    "url": "https://www.primetvnashville.com",
     "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "address": {

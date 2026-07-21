@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
 import FaqsSection from "../components/FaqsSection"
 
@@ -16,13 +16,13 @@ export const metadata = {
   openGraph: {
     title: "Samsung Frame TV Installation Nashville | PrimeTvNashville",
     description: "Professional Samsung Frame TV installation in Nashville. Slim fit mount, invisible cables, Art Mode setup. Book today.",
-    url: "https://primetvnashville.com/samsung-frame-tv-installation-nashville",
+    url: "https://www.primetvnashville.com/samsung-frame-tv-installation-nashville",
     siteName: "PrimeTvNashville",
-    images: [{ url: "https://primetvnashville.com/og-image.jpg", width: 1200, height: 630, alt: "Samsung Frame TV installation Nashville TN" }],
+    images: [{ url: "https://www.primetvnashville.com/opengraph-image", width: 1200, height: 630, alt: "Samsung Frame TV installation Nashville TN" }],
     locale: "en_US",
     type: "website",
   },
-  alternates: { canonical: "https://primetvnashville.com/samsung-frame-tv-installation-nashville" },
+  alternates: { canonical: "https://www.primetvnashville.com/samsung-frame-tv-installation-nashville" },
 }
 
 const jsonLd = {
@@ -34,7 +34,7 @@ const jsonLd = {
     "@type": "LocalBusiness",
     "name": "PrimeTvNashville",
     "telephone": "+1-615-669-0251",
-    "url": "https://primetvnashville.com",
+    "url": "https://www.primetvnashville.com",
     "address": { "@type": "PostalAddress", "addressLocality": "Nashville", "addressRegion": "TN", "addressCountry": "US" },
   },
   "areaServed": "Nashville, TN",

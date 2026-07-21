@@ -18,11 +18,11 @@ export const metadata = {
     title: "TV Mounting Nashville TN | PrimeTvNashville",
     description:
       "Professional TV installation and wall mounting services in Nashville Tennessee.",
-    url: "https://primetvnashville.com/tv-mounting-nashville",
+    url: "https://www.primetvnashville.com/tv-mounting-nashville",
     siteName: "PrimeTvNashville",
     images: [
       {
-        url: "https://primetvnashville.com/og-tv-mounting.jpg",
+        url: "https://www.primetvnashville.com/opengraph-image",
         width: 1200,
         height: 630,
         alt: "TV wall mounting service in Nashville Tennessee"
@@ -32,7 +32,7 @@ export const metadata = {
     type: "website"
   },
   alternates: {
-    canonical: "https://primetvnashville.com/tv-mounting-nashville"
+    canonical: "https://www.primetvnashville.com/tv-mounting-nashville"
   }
 };
 
@@ -47,9 +47,9 @@ export default function TvMountingPage() {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     "name": "PrimeTvNashville",
-    "image": "https://primetvnashville.com/og-tv-mounting.jpg",
-    "@id": "https://primetvnashville.com",
-    "url": "https://primetvnashville.com/tv-mounting-nashville",
+    "image": "https://www.primetvnashville.com/opengraph-image",
+    "@id": "https://www.primetvnashville.com",
+    "url": "https://www.primetvnashville.com/tv-mounting-nashville",
     "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting services in Nashville Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes, apartments and offices.",

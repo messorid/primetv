@@ -1,4 +1,4 @@
-import { getAllPosts } from '../lib/blog'
+﻿import { getAllPosts } from '../lib/blog'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -9,13 +9,13 @@ export const metadata = {
   openGraph: {
     title: 'TV Mounting Tips & Guides | PrimeTvNashville Blog',
     description: 'Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners.',
-    url: 'https://primetvnashville.com/blog',
+    url: 'https://www.primetvnashville.com/blog',
     siteName: 'PrimeTvNashville',
     locale: 'en_US',
     type: 'website',
   },
   alternates: {
-    canonical: 'https://primetvnashville.com/blog',
+    canonical: 'https://www.primetvnashville.com/blog',
   },
 }
 
@@ -24,12 +24,12 @@ const jsonLd = {
   "@type": "Blog",
   "name": "PrimeTvNashville Blog",
   "description": "Expert TV mounting tips, installation guides, and home theater advice for Nashville homeowners.",
-  "url": "https://primetvnashville.com/blog",
+  "url": "https://www.primetvnashville.com/blog",
   "publisher": {
     "@type": "Organization",
     "name": "PrimeTvNashville",
-    "url": "https://primetvnashville.com",
-    "logo": { "@type": "ImageObject", "url": "https://primetvnashville.com/og-image.jpg" }
+    "url": "https://www.primetvnashville.com",
+    "logo": { "@type": "ImageObject", "url": "https://www.primetvnashville.com/opengraph-image" }
   }
 }
 

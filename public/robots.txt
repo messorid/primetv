@@ -4,4 +4,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://primetvnashville.com/sitemap.xml
+Sitemap: https://www.primetvnashville.com/sitemap.xml

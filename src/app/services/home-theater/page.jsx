@@ -7,13 +7,13 @@
       title: "Home Theater Installation in Nashville",
       description:
         "Create your dream media room with our home theater setup services. We install projectors, speakers, and displays for homes and businesses.",
-      url: "https://primetvnashville.com/services/home-theater",
+      url: "https://www.primetvnashville.com/services/home-theater",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"
     },
     alternates: {
-      canonical: "https://primetvnashville.com/services/home-theater"
+      canonical: "https://www.primetvnashville.com/services/home-theater"
     }
   }
   
@@ -27,7 +27,7 @@
         "@type": "LocalBusiness",
         "name": "PrimeTvNashville",
         "telephone": "+1-615-669-0251",
-        "url": "https://primetvnashville.com",
+        "url": "https://www.primetvnashville.com",
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Nashville",
@@ -41,7 +41,7 @@
         "sameAs": "https://en.wikipedia.org/wiki/Nashville,_Tennessee"
       },
       "serviceType": "Home Theater Installation",
-      "url": "https://primetvnashville.com/services/home-theater"
+      "url": "https://www.primetvnashville.com/services/home-theater"
     }
 
     return (

@@ -7,12 +7,13 @@ import RootContent from "./components/RootContent"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
+  metadataBase: new URL("https://www.primetvnashville.com"),
   title: "PrimeTvNashville | TV Mounting and Installation Experts",
   description: "Professional TV installation services in Nashville TN",
   openGraph: {
     title: "PrimeTvNashville",
     description: "Reliable and expert TV mounting in Nashville",
-    url: "https://primetvnashville.com",
+    url: "https://www.primetvnashville.com",
     siteName: "PrimeTvNashville",
     locale: "en_US",
     type: "website",

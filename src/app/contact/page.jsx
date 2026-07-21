@@ -12,13 +12,13 @@ export const metadata = {
   openGraph: {
     title: "Contact PrimeTvNashville | Expert TV Mounting",
     description: "Get in touch with our team for expert TV mounting and cable concealment in Nashville, TN.",
-    url: "https://primetvnashville.com/contact",
+    url: "https://www.primetvnashville.com/contact",
     siteName: "PrimeTvNashville",
     locale: "en_US",
     type: "website",
   },
   alternates: {
-    canonical: "https://primetvnashville.com/contact",
+    canonical: "https://www.primetvnashville.com/contact",
   }
 }
 

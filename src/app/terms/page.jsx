@@ -1,13 +1,13 @@
-export const metadata = {
+﻿export const metadata = {
     title: "Terms and Conditions | PrimeTvNashville",
     description: "Read the official Terms and Conditions of Prime TV Nashville's website and services. Updated policies for booking, liability, privacy, and more.",
     alternates: {
-      canonical: "https://primetvnashville.com/terms"
+      canonical: "https://www.primetvnashville.com/terms"
     },
     openGraph: {
       title: "Terms and Conditions | PrimeTvNashville",
       description: "Official policies and service terms for Prime TV Nashville customers.",
-      url: "https://primetvnashville.com/terms",
+      url: "https://www.primetvnashville.com/terms",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"

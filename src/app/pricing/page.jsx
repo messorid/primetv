@@ -1,4 +1,4 @@
-import ExtraServices from "../components/ExtraServices"
+﻿import ExtraServices from "../components/ExtraServices"
 
 export const metadata = {
     title: "TV Mounting Prices Nashville TN | PrimeTvNashville Pricing",
@@ -9,13 +9,13 @@ export const metadata = {
       title: "TV Mounting Pricing Nashville | PrimeTvNashville",
       description:
         "Check our clear pricing for TV wall mounting and AV setups in Nashville TN. Reliable, affordable and professional services.",
-      url: "https://primetvnashville.com/pricing",
+      url: "https://www.primetvnashville.com/pricing",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"
     },
     alternates: {
-      canonical: "https://primetvnashville.com/pricing"
+      canonical: "https://www.primetvnashville.com/pricing"
     }
   }
 
@@ -23,7 +23,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "PrimeTvNashville",
-  "url": "https://primetvnashville.com/pricing",
+  "url": "https://www.primetvnashville.com/pricing",
   "telephone": "+1-615-669-0251",
   "address": {
     "@type": "PostalAddress",

@@ -17,13 +17,13 @@ export const metadata = {
   openGraph: {
     title: "TV Mounting Spring Hill TN | PrimeTvNashville",
     description: "Professional TV installation and wall mounting services in Spring Hill Tennessee. Same-day availability.",
-    url: "https://primetvnashville.com/tv-mounting-spring-hill",
+    url: "https://www.primetvnashville.com/tv-mounting-spring-hill",
     siteName: "PrimeTvNashville",
-    images: [{ url: "https://primetvnashville.com/og-image.jpg", width: 1200, height: 630, alt: "TV wall mounting service in Spring Hill Tennessee" }],
+    images: [{ url: "https://www.primetvnashville.com/opengraph-image", width: 1200, height: 630, alt: "TV wall mounting service in Spring Hill Tennessee" }],
     locale: "en_US",
     type: "website",
   },
-  alternates: { canonical: "https://primetvnashville.com/tv-mounting-spring-hill" },
+  alternates: { canonical: "https://www.primetvnashville.com/tv-mounting-spring-hill" },
 };
 
 export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 };
@@ -33,9 +33,9 @@ export default function TvMountingSpringHillPage() {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
     "name": "PrimeTvNashville",
-    "image": "https://primetvnashville.com/og-image.jpg",
-    "@id": "https://primetvnashville.com",
-    "url": "https://primetvnashville.com/tv-mounting-spring-hill",
+    "image": "https://www.primetvnashville.com/opengraph-image",
+    "@id": "https://www.primetvnashville.com",
+    "url": "https://www.primetvnashville.com/tv-mounting-spring-hill",
     "telephone": "+1-615-669-0251",
     "priceRange": "$$",
     "description": "Professional TV mounting and installation services in Spring Hill, Tennessee.",

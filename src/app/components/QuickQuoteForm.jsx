@@ -4,9 +4,14 @@ import Link from "next/link"
 import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 
+function gtag(...args) {
+  if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
+}
+
 export default function QuickQuoteForm({ onSubmitted }) {
 
   const [status,setStatus] = useState("idle")
+  const [formStarted,setFormStarted] = useState(false)
 
   const [form,setForm] = useState({
     tvSize:"",
@@ -76,6 +81,8 @@ export default function QuickQuoteForm({ onSubmitted }) {
 
       if(!res.ok) throw new Error()
 
+      gtag("event", "quote_form_submit", { event_category: "lead", event_label: "quick_quote" })
+
       setStatus("ok")
 
       setForm({
@@ -111,6 +118,12 @@ export default function QuickQuoteForm({ onSubmitted }) {
 
         <motion.form
           onSubmit={onSubmit}
+          onFocus={() => {
+            if (!formStarted) {
+              setFormStarted(true)
+              gtag("event", "quote_form_start", { event_category: "engagement", event_label: "quick_quote" })
+            }
+          }}
           initial={{opacity:0,y:30}}
           whileInView={{opacity:1,y:0}}
           viewport={{once:true}}

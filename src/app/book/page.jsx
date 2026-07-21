@@ -1,4 +1,4 @@
-import BookingFormSection from "@/app/components/BookingFormSection"
+﻿import BookingFormSection from "@/app/components/BookingFormSection"
 
 export const metadata = {
   title: "Book TV Mounting in Nashville | Schedule Your Installation | PrimeTvNashville",
@@ -7,13 +7,13 @@ export const metadata = {
   openGraph: {
     title: "Book TV Mounting in Nashville | PrimeTvNashville",
     description: "Schedule your professional TV mounting or installation appointment in Nashville TN. Fast, easy online booking.",
-    url: "https://primetvnashville.com/book",
+    url: "https://www.primetvnashville.com/book",
     siteName: "PrimeTvNashville",
     locale: "en_US",
     type: "website",
   },
   alternates: {
-    canonical: "https://primetvnashville.com/book",
+    canonical: "https://www.primetvnashville.com/book",
   },
 }
 

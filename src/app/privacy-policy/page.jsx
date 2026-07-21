@@ -1,13 +1,13 @@
-export const metadata = {
+﻿export const metadata = {
     title: "Privacy Policy | PrimeTvNashville",
     description: "Read how PrimeTvNashville protects your personal information when using our website or booking services.",
     alternates: {
-      canonical: "https://primetvnashville.com/privacy-policy"
+      canonical: "https://www.primetvnashville.com/privacy-policy"
     },
     openGraph: {
       title: "Privacy Policy | PrimeTvNashville",
       description: "Details on how we collect, use, and protect your data at PrimeTvNashville.",
-      url: "https://primetvnashville.com/privacy-policy",
+      url: "https://www.primetvnashville.com/privacy-policy",
       siteName: "PrimeTvNashville",
       locale: "en_US",
       type: "website"

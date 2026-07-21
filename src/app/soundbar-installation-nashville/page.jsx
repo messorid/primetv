@@ -1,4 +1,4 @@
-import HeroReusable from "../components/HeroReusable"
+﻿import HeroReusable from "../components/HeroReusable"
 import ServicesSection from "../components/ServicesSection"
 import WhyChooseSection from "../components/WhyChooseSection"
 import QuickQuoteForm from "../components/QuickQuoteForm"
@@ -14,11 +14,11 @@ export const metadata = {
     title: "Soundbar Installation Nashville TN",
     description:
       "Professional soundbar mounting and setup services in Nashville Tennessee.",
-    url: "https://primetvnashville.com/soundbar-installation-nashville",
+    url: "https://www.primetvnashville.com/soundbar-installation-nashville",
     siteName: "PrimeTvNashville",
     images: [
       {
-        url: "https://primetvnashville.com/og-soundbar.jpg",
+        url: "https://www.primetvnashville.com/og-soundbar.jpg",
         width: 1200,
         height: 630,
         alt: "Soundbar installation service in Nashville"
@@ -28,7 +28,7 @@ export const metadata = {
     type: "website"
   },
   alternates: {
-    canonical: "https://primetvnashville.com/soundbar-installation-nashville"
+    canonical: "https://www.primetvnashville.com/soundbar-installation-nashville"
   }
 }
 

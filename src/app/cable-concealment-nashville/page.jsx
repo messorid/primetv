@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
 
 export const metadata = {
@@ -15,12 +15,12 @@ export const metadata = {
   openGraph: {
     title: "Cable Concealment Nashville TN | PrimeTvNashville",
     description: "Hide TV wires professionally in Nashville. In-wall routing and raceways for any wall type. Upfront pricing. Book today.",
-    url: "https://primetvnashville.com/cable-concealment-nashville",
+    url: "https://www.primetvnashville.com/cable-concealment-nashville",
     siteName: "PrimeTvNashville",
     locale: "en_US",
     type: "website",
   },
-  alternates: { canonical: "https://primetvnashville.com/cable-concealment-nashville" },
+  alternates: { canonical: "https://www.primetvnashville.com/cable-concealment-nashville" },
 }
 
 const jsonLd = {
@@ -32,7 +32,7 @@ const jsonLd = {
     "@type": "LocalBusiness",
     "name": "PrimeTvNashville",
     "telephone": "+1-615-669-0251",
-    "url": "https://primetvnashville.com",
+    "url": "https://www.primetvnashville.com",
     "address": { "@type": "PostalAddress", "addressLocality": "Nashville", "addressRegion": "TN", "addressCountry": "US" },
   },
 }
