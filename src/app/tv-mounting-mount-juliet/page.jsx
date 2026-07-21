@@ -11,8 +11,8 @@ import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
-  title: "TV Mounting in Mount Juliet TN | Professional TV Installation",
-  description: "Professional TV mounting and installation services in Mount Juliet, Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes and businesses.",
+  title: "TV Mounting in Mount Juliet TN | PrimeTvNashville",
+  description: "Professional TV mounting in Mount Juliet, TN. Secure wall mounting, cable concealment and fireplace TV installs for homes and businesses. Same-day available.",
   keywords: ["TV mounting Mount Juliet TN", "TV installation Mount Juliet", "TV mount Mount Juliet Tennessee", "TV wall mount Mount Juliet"],
   openGraph: {
     title: "TV Mounting Mount Juliet TN | PrimeTvNashville",
@@ -31,37 +31,23 @@ export const viewport = { width: "device-width", initialScale: 1, maximumScale: 
 export default function TvMountingMountJulietPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "HomeAndConstructionBusiness",
-    "name": "PrimeTvNashville",
-    "image": "https://www.primetvnashville.com/opengraph-image",
-    "@id": "https://www.primetvnashville.com",
-    "url": "https://www.primetvnashville.com/tv-mounting-mount-juliet",
-    "telephone": "+1-615-669-0251",
-    "priceRange": "$$",
+    "@type": "Service",
+    "name": "TV Mounting in Mount Juliet, TN",
+    "serviceType": "TV Mounting",
     "description": "Professional TV mounting and installation services in Mount Juliet, Tennessee.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Mount Juliet",
-      "addressRegion": "TN",
-      "addressCountry": "US"
+    "provider": {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": "https://www.primetvnashville.com",
+      "name": "PrimeTvNashville",
+      "url": "https://www.primetvnashville.com",
+      "telephone": "+1-615-669-0251"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 36.2001, "longitude": -86.5186 },
-    "areaServed": { "@type": "City", "name": "Mount Juliet", "sameAs": "https://en.wikipedia.org/wiki/Mount_Juliet,_Tennessee" },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "08:00",
-      "closes": "18:00"
+    "areaServed": {
+      "@type": "City",
+      "name": "Mount Juliet",
+      "sameAs": "https://en.wikipedia.org/wiki/Mount_Juliet,_Tennessee"
     },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "TV Mounting Services in Mount Juliet",
-      "itemListElement": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Standard TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fireplace TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cable Concealment" } }
-      ]
-    }
+    "url": "https://www.primetvnashville.com/tv-mounting-mount-juliet"
   };
 
   return (

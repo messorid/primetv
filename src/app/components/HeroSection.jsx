@@ -176,8 +176,9 @@ export default function HeroSection() {
                   src="/images/tvinstallation.jpg"
                   alt="Licensed technician mounting a flat screen TV on a wall in Nashville"
                   fill
-                  sizes="(max-width: 768px) 100vw, 580px"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 580px"
                   priority
+                  quality={82}
                   className="object-cover"
                 />
                 {/* Gradient overlay bottom */}

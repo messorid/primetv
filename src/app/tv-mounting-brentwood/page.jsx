@@ -11,8 +11,8 @@ import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
-  title: "TV Mounting in Brentwood TN | Professional TV Installation",
-  description: "Professional TV mounting and installation services in Brentwood, Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes and businesses.",
+  title: "TV Mounting in Brentwood TN | PrimeTvNashville",
+  description: "Professional TV mounting in Brentwood, TN. Secure wall mounting, cable concealment and fireplace TV installs for homes and businesses. Same-day available.",
   keywords: ["TV mounting Brentwood TN", "TV installation Brentwood", "TV mount Brentwood Tennessee", "TV wall mount Brentwood"],
   openGraph: {
     title: "TV Mounting Brentwood TN | PrimeTvNashville",
@@ -31,37 +31,23 @@ export const viewport = { width: "device-width", initialScale: 1, maximumScale: 
 export default function TvMountingBrentwoodPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "HomeAndConstructionBusiness",
-    "name": "PrimeTvNashville",
-    "image": "https://www.primetvnashville.com/opengraph-image",
-    "@id": "https://www.primetvnashville.com",
-    "url": "https://www.primetvnashville.com/tv-mounting-brentwood",
-    "telephone": "+1-615-669-0251",
-    "priceRange": "$$",
+    "@type": "Service",
+    "name": "TV Mounting in Brentwood, TN",
+    "serviceType": "TV Mounting",
     "description": "Professional TV mounting and installation services in Brentwood, Tennessee.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Brentwood",
-      "addressRegion": "TN",
-      "addressCountry": "US"
+    "provider": {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": "https://www.primetvnashville.com",
+      "name": "PrimeTvNashville",
+      "url": "https://www.primetvnashville.com",
+      "telephone": "+1-615-669-0251"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 36.0331, "longitude": -86.7828 },
-    "areaServed": { "@type": "City", "name": "Brentwood", "sameAs": "https://en.wikipedia.org/wiki/Brentwood,_Tennessee" },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "08:00",
-      "closes": "18:00"
+    "areaServed": {
+      "@type": "City",
+      "name": "Brentwood",
+      "sameAs": "https://en.wikipedia.org/wiki/Brentwood,_Tennessee"
     },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "TV Mounting Services in Brentwood",
-      "itemListElement": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Standard TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fireplace TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cable Concealment" } }
-      ]
-    }
+    "url": "https://www.primetvnashville.com/tv-mounting-brentwood"
   };
 
   return (

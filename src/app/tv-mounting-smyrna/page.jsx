@@ -11,8 +11,8 @@ import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
-  title: "TV Mounting in Smyrna TN | Professional TV Installation",
-  description: "Professional TV mounting and installation services in Smyrna, Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes and businesses.",
+  title: "TV Mounting in Smyrna TN | PrimeTvNashville",
+  description: "Professional TV mounting in Smyrna, TN. Secure wall mounting, cable concealment and fireplace TV installs for homes and businesses. Same-day available.",
   keywords: ["TV mounting Smyrna TN", "TV installation Smyrna", "TV mount Smyrna Tennessee", "TV wall mount Smyrna"],
   openGraph: {
     title: "TV Mounting Smyrna TN | PrimeTvNashville",
@@ -31,37 +31,23 @@ export const viewport = { width: "device-width", initialScale: 1, maximumScale: 
 export default function TvMountingSmyrnaPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "HomeAndConstructionBusiness",
-    "name": "PrimeTvNashville",
-    "image": "https://www.primetvnashville.com/opengraph-image",
-    "@id": "https://www.primetvnashville.com",
-    "url": "https://www.primetvnashville.com/tv-mounting-smyrna",
-    "telephone": "+1-615-669-0251",
-    "priceRange": "$$",
+    "@type": "Service",
+    "name": "TV Mounting in Smyrna, TN",
+    "serviceType": "TV Mounting",
     "description": "Professional TV mounting and installation services in Smyrna, Tennessee.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Smyrna",
-      "addressRegion": "TN",
-      "addressCountry": "US"
+    "provider": {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": "https://www.primetvnashville.com",
+      "name": "PrimeTvNashville",
+      "url": "https://www.primetvnashville.com",
+      "telephone": "+1-615-669-0251"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 35.9826, "longitude": -86.5186 },
-    "areaServed": { "@type": "City", "name": "Smyrna", "sameAs": "https://en.wikipedia.org/wiki/Smyrna,_Tennessee" },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "08:00",
-      "closes": "18:00"
+    "areaServed": {
+      "@type": "City",
+      "name": "Smyrna",
+      "sameAs": "https://en.wikipedia.org/wiki/Smyrna,_Tennessee"
     },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "TV Mounting Services in Smyrna",
-      "itemListElement": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Standard TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fireplace TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cable Concealment" } }
-      ]
-    }
+    "url": "https://www.primetvnashville.com/tv-mounting-smyrna"
   };
 
   return (

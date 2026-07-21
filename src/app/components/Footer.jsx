@@ -9,7 +9,7 @@ const serviceLinks = [
 ]
 
 const areaLinks = [
-  { label: "Nashville", href: "/tv-mounting-nashville" },
+  { label: "Nashville", href: "/" },
   { label: "Brentwood", href: "/tv-mounting-brentwood" },
   { label: "Franklin", href: "/tv-mounting-franklin" },
   { label: "Murfreesboro", href: "/tv-mounting-murfreesboro" },

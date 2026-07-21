@@ -44,13 +44,17 @@ export default async function BlogPost({ params }) {
   const { slug } = await params
   const { content, data } = getPostBySlug(slug)
 
+  const absoluteImage = data.image?.startsWith("http")
+    ? data.image
+    : `${BASE}${data.image}`
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": data.title,
       "description": data.description,
-      "image": data.image,
+      "image": absoluteImage,
       "datePublished": data.date,
       "dateModified": data.date,
       "url": `${BASE}/blog/${slug}`,
@@ -63,7 +67,7 @@ export default async function BlogPost({ params }) {
         "@type": "Organization",
         "name": "PrimeTvNashville",
         "url": BASE,
-        "logo": { "@type": "ImageObject", "url": `${BASE}/opengraph-image` },
+        "logo": { "@type": "ImageObject", "url": `${BASE}/logo.webp`, "width": 200, "height": 60 },
       },
       "mainEntityOfPage": { "@type": "WebPage", "@id": `${BASE}/blog/${slug}` },
     },

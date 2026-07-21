@@ -252,7 +252,7 @@ export default function SamsungFrameInstallPage() {
 
           {/* Internal links */}
           <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">
-            <Link href="/tv-mounting-nashville" className="hover:text-white/70 transition">Nashville</Link>
+            <Link href="/" className="hover:text-white/70 transition">Nashville</Link>
             <span>·</span>
             <Link href="/tv-mounting-brentwood" className="hover:text-white/70 transition">Brentwood</Link>
             <span>·</span>

@@ -11,8 +11,8 @@ import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
-  title: "TV Mounting in Goodlettsville TN | Professional TV Installation",
-  description: "Professional TV mounting and installation services in Goodlettsville, Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes and businesses.",
+  title: "TV Mounting Goodlettsville TN | PrimeTvNashville",
+  description: "Professional TV mounting in Goodlettsville, TN. Secure wall mounting, cable concealment and fireplace TV installs for homes and businesses. Same-day available.",
   keywords: ["TV mounting Goodlettsville TN", "TV installation Goodlettsville", "TV mount Goodlettsville Tennessee", "TV wall mount Goodlettsville"],
   openGraph: {
     title: "TV Mounting Goodlettsville TN | PrimeTvNashville",
@@ -31,37 +31,23 @@ export const viewport = { width: "device-width", initialScale: 1, maximumScale: 
 export default function TvMountingGoodlettsvillePage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "HomeAndConstructionBusiness",
-    "name": "PrimeTvNashville",
-    "image": "https://www.primetvnashville.com/opengraph-image",
-    "@id": "https://www.primetvnashville.com",
-    "url": "https://www.primetvnashville.com/tv-mounting-goodlettsville",
-    "telephone": "+1-615-669-0251",
-    "priceRange": "$$",
+    "@type": "Service",
+    "name": "TV Mounting in Goodlettsville, TN",
+    "serviceType": "TV Mounting",
     "description": "Professional TV mounting and installation services in Goodlettsville, Tennessee.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Goodlettsville",
-      "addressRegion": "TN",
-      "addressCountry": "US"
+    "provider": {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": "https://www.primetvnashville.com",
+      "name": "PrimeTvNashville",
+      "url": "https://www.primetvnashville.com",
+      "telephone": "+1-615-669-0251"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 36.3229, "longitude": -86.7133 },
-    "areaServed": { "@type": "City", "name": "Goodlettsville", "sameAs": "https://en.wikipedia.org/wiki/Goodlettsville,_Tennessee" },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "08:00",
-      "closes": "18:00"
+    "areaServed": {
+      "@type": "City",
+      "name": "Goodlettsville",
+      "sameAs": "https://en.wikipedia.org/wiki/Goodlettsville,_Tennessee"
     },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "TV Mounting Services in Goodlettsville",
-      "itemListElement": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Standard TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fireplace TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cable Concealment" } }
-      ]
-    }
+    "url": "https://www.primetvnashville.com/tv-mounting-goodlettsville"
   };
 
   return (

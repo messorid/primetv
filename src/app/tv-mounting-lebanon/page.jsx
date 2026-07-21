@@ -11,8 +11,8 @@ import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
 
 export const metadata = {
-  title: "TV Mounting in Lebanon TN | Professional TV Installation",
-  description: "Professional TV mounting and installation services in Lebanon, Tennessee. Secure wall mounting, cable concealment and fireplace TV installation for homes and businesses.",
+  title: "TV Mounting in Lebanon TN | PrimeTvNashville",
+  description: "Professional TV mounting in Lebanon, TN. Secure wall mounting, cable concealment and fireplace TV installs for homes and businesses. Same-day available.",
   keywords: ["TV mounting Lebanon TN", "TV installation Lebanon", "TV mount Lebanon Tennessee", "TV wall mount Lebanon"],
   openGraph: {
     title: "TV Mounting Lebanon TN | PrimeTvNashville",
@@ -31,37 +31,23 @@ export const viewport = { width: "device-width", initialScale: 1, maximumScale: 
 export default function TvMountingLebanonPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "HomeAndConstructionBusiness",
-    "name": "PrimeTvNashville",
-    "image": "https://www.primetvnashville.com/opengraph-image",
-    "@id": "https://www.primetvnashville.com",
-    "url": "https://www.primetvnashville.com/tv-mounting-lebanon",
-    "telephone": "+1-615-669-0251",
-    "priceRange": "$$",
+    "@type": "Service",
+    "name": "TV Mounting in Lebanon, TN",
+    "serviceType": "TV Mounting",
     "description": "Professional TV mounting and installation services in Lebanon, Tennessee.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Lebanon",
-      "addressRegion": "TN",
-      "addressCountry": "US"
+    "provider": {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": "https://www.primetvnashville.com",
+      "name": "PrimeTvNashville",
+      "url": "https://www.primetvnashville.com",
+      "telephone": "+1-615-669-0251"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 36.2081, "longitude": -86.2911 },
-    "areaServed": { "@type": "City", "name": "Lebanon", "sameAs": "https://en.wikipedia.org/wiki/Lebanon,_Tennessee" },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "08:00",
-      "closes": "18:00"
+    "areaServed": {
+      "@type": "City",
+      "name": "Lebanon",
+      "sameAs": "https://en.wikipedia.org/wiki/Lebanon,_Tennessee"
     },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "TV Mounting Services in Lebanon",
-      "itemListElement": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Standard TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fireplace TV Mounting" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cable Concealment" } }
-      ]
-    }
+    "url": "https://www.primetvnashville.com/tv-mounting-lebanon"
   };
 
   return (

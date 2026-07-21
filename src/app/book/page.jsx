@@ -1,8 +1,8 @@
 ﻿import BookingFormSection from "@/app/components/BookingFormSection"
 
 export const metadata = {
-  title: "Book TV Mounting in Nashville | Schedule Your Installation | PrimeTvNashville",
-  description: "Book your professional TV mounting or installation appointment in Nashville TN. Fast scheduling, same-day availability. PrimeTvNashville — trusted by hundreds of Nashville homeowners.",
+  title: "Book TV Mounting in Nashville | PrimeTvNashville",
+  description: "Book your TV mounting or installation appointment in Nashville TN online. Same-day availability, upfront pricing. Homes, apartments and businesses welcome.",
   keywords: ["book TV mounting Nashville", "schedule TV installation Nashville", "TV mount appointment Nashville"],
   openGraph: {
     title: "Book TV Mounting in Nashville | PrimeTvNashville",

@@ -3,7 +3,7 @@ import { getAllPosts } from "./lib/blog"
 const BASE = "https://www.primetvnashville.com"
 
 const CITIES = [
-  "nashville", "brentwood", "franklin", "gallatin", "goodlettsville",
+  "brentwood", "franklin", "gallatin", "goodlettsville",
   "hendersonville", "la-vergne", "lebanon", "mount-juliet", "murfreesboro",
   "nolensville", "smyrna", "spring-hill",
 ]

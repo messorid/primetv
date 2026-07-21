@@ -124,6 +124,8 @@ export default function HeroReusable({
               width={1040}
               height={800}
               priority
+              quality={82}
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 580px"
               className="relative z-10 w-full h-auto rounded-2xl shadow-xl object-cover"
             />
 

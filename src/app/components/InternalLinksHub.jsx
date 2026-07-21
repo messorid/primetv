@@ -37,7 +37,7 @@ const CITIES = [
   { href: "/tv-mounting-gallatin",      label: "Gallatin" },
   { href: "/tv-mounting-nolensville",   label: "Nolensville" },
   { href: "/tv-mounting-spring-hill",   label: "Spring Hill" },
-  { href: "/tv-mounting-nashville",     label: "Nashville" },
+  { href: "/",     label: "Nashville" },
 ]
 
 export default function InternalLinksHub() {

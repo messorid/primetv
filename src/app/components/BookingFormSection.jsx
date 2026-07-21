@@ -1,6 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+
+function gtag(...args) {
+  if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
+}
 import { motion, AnimatePresence } from "framer-motion"
 import { validateCoupon } from "@/app/lib/coupons"
 import { MiniCalendar, TimeSlots } from "./DateTimePicker"
@@ -143,6 +147,13 @@ export default function BookingFormSection() {
         }),
       })
       if (!res.ok) throw new Error()
+      gtag("event", "booking_complete", {
+        event_category: "conversion",
+        page_path: "/book",
+        service: selectedPromo || (tvs[0]?.size ?? "custom"),
+        city: address.city || "Nashville",
+        form_name: "booking_form",
+      })
       setStatus("ok")
     } catch {
       setStatus("error")

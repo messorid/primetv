@@ -2,9 +2,8 @@
 import CallToAction from "../components/CallToAction"
 
 export const metadata = {
-  title: "About PrimeTvNashville | Professional TV Installation in Nashville",
-  description:
-    "Learn more about PrimeTvNashville, our mission and why we are trusted by hundreds for TV mounting and installation services in Nashville TN.",
+  title: "About PrimeTvNashville | TV Mounting Experts Nashville",
+  description: "Learn about PrimeTvNashville — our mission and why homeowners across Nashville trust us for TV mounting, cable concealment and home theater installation.",
   keywords: ["about PrimeTvNashville", "TV mounting company Nashville", "professional TV installers Nashville TN", "local TV installation experts"],
   openGraph: {
     title: "About PrimeTvNashville",

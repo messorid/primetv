@@ -24,7 +24,7 @@ export default function StickyActionBar() {
           <Link
             href="/book"
             aria-label="Book installation"
-            onClick={() => gtag("event", "booking_start", { event_category: "engagement", event_label: "sticky_bar" })}
+            onClick={() => gtag("event", "booking_start", { event_category: "engagement", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar", form_name: "booking_form" })}
             className="flex items-center justify-center rounded-lg bg-[#E50914] px-3 py-2 text-xs font-semibold text-white active:scale-[0.97]"
           >
             Book
@@ -33,7 +33,7 @@ export default function StickyActionBar() {
           <Link
             href="#quick-quote"
             aria-label="Get quick quote"
-            onClick={() => gtag("event", "quote_form_start", { event_category: "engagement", event_label: "sticky_bar" })}
+            onClick={() => gtag("event", "quote_form_start", { event_category: "engagement", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar", form_name: "quick_quote" })}
             className="flex items-center justify-center rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold text-black hover:bg-black/5 active:scale-[0.97]"
           >
             Quote
@@ -44,7 +44,7 @@ export default function StickyActionBar() {
         <div className="flex justify-center gap-2 pb-1">
           <a
             href={`tel:${PHONE}`}
-            onClick={() => gtag("event", "phone_click", { event_category: "contact", event_label: "sticky_bar" })}
+            onClick={() => gtag("event", "phone_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" })}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Call
@@ -52,7 +52,7 @@ export default function StickyActionBar() {
 
           <a
             href={`sms:${PHONE}`}
-            onClick={() => gtag("event", "sms_click", { event_category: "contact", event_label: "sticky_bar" })}
+            onClick={() => gtag("event", "sms_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" })}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Text
