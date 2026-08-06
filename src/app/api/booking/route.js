@@ -7,7 +7,12 @@ import { neon } from "@neondatabase/serverless"
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { date, timePreference, tvs, address, info, selectedPromo, couponCode, appliedCouponLabel, couponComment, couponHidden, moreTvs, moreTvsComment } = body
+    const {
+      date, timePreference, tvs, address, info,
+      bookingMode, selectedPromo, cableConcealment, comboDetails,
+      couponCode, appliedCouponLabel, couponComment, couponHidden,
+      moreTvs, moreTvsComment,
+    } = body
 
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
@@ -30,11 +35,15 @@ export async function POST(request) {
       `${safe(address.city)}, ${safe(address.state)} ${safe(address.zip)}`,
     ].filter(Boolean).join(", ")
 
-    const tvList = (tvs || [])
-    const hasPromo = !!selectedPromo
+    const tvList    = (tvs || [])
+    const isStandard = !bookingMode || bookingMode === "standard"
+    const isPromo    = bookingMode === "promo"
+    const isCombo    = bookingMode === "bundle"
+    const hasPromo   = isPromo && !!selectedPromo
     const promoPrice = hasPromo
       ? (selectedPromo.includes("55") ? "$199" : "$260")
       : ""
+    const cableLine  = cableConcealment ? " + Cable Concealment (+$60)" : ""
 
     const tvRows = tvList.map((tv, idx) => `
       <tr style="background:${idx % 2 ? "#fafafa" : "#fff"};">
@@ -111,7 +120,10 @@ export async function POST(request) {
             ${brow("Date Requested", date)}
             ${brow("Time Preference", timePreference)}
             ${brow("Service Address", fullAddress)}
-            ${hasPromo ? brow("Promo Selected", `${selectedPromo} — <strong>${promoPrice}</strong>`) : ""}
+            ${brow("Booking Mode", isCombo ? "Combinados (custom)" : isPromo ? "Promo Package" : "Standard")}
+            ${hasPromo ? brow("Promo Selected", `${selectedPromo}${cableLine} — <strong>${promoPrice}${cableConcealment ? " + $60" : ""}</strong>`) : ""}
+            ${isCombo && comboDetails ? brow("Job Description", safe(comboDetails)) : ""}
+            ${isStandard && cableConcealment ? brow("Cable Concealment", "Yes — +$60") : ""}
             ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
             ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
             ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
@@ -120,7 +132,12 @@ export async function POST(request) {
             ${brow("Payment Method", info.payment)}
           </table>
 
-          ${hasPromo ? `
+          ${isCombo ? `
+            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:16px;">
+              <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Combinados — Custom Job</p>
+              <p style="margin:8px 0 0;font-size:14px;color:#78350f;">${safe(comboDetails || "-")}</p>
+            </div>
+          ` : hasPromo ? `
             <p style="margin:20px 0 8px;font-size:13px;color:#888;font-style:italic;">
               Package promo — TV details not required.
             </p>
@@ -138,6 +155,11 @@ export async function POST(request) {
               <tbody>${tvRows}</tbody>
             </table>
           `}
+          ${cableConcealment && !isCombo ? `
+            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:12px;">
+              <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8;">🔌 Cable Concealment Add-on: +$60</p>
+            </div>
+          ` : ""}
 
           <p style="margin-top:28px;font-size:12px;color:#aaa;">
             Submitted from PrimeTvNashville.com
@@ -172,12 +194,15 @@ export async function POST(request) {
               ${crow("Date", date)}
               ${crow("Time Window", timePreference)}
               ${crow("Address", fullAddress)}
-              ${hasPromo
+              ${isCombo
+                ? crow("Service", "Custom Installation")
+                : hasPromo
                 ? crow("Package", selectedPromo)
                 : moreTvs
                 ? crow("TVs", "3+ TVs — custom quote")
                 : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
               }
+              ${cableConcealment && !isCombo ? crow("Add-on", "Cable Concealment (+$60)") : ""}
             </table>
           </div>
 
@@ -201,31 +226,37 @@ export async function POST(request) {
       const sql = neon(process.env.DATABASE_URL)
       await sql`
         CREATE TABLE IF NOT EXISTS bookings (
-          id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          first_name     TEXT, last_name TEXT, email TEXT, phone TEXT,
-          referral       TEXT, payment TEXT, date TEXT, time_pref TEXT,
-          address        JSONB, promo TEXT, coupon_code TEXT,
-          coupon_label   TEXT, coupon_comment TEXT, tvs JSONB,
-          more_tvs       BOOLEAN DEFAULT FALSE, more_tvs_comment TEXT,
-          status         TEXT DEFAULT 'pending', notes TEXT,
-          created_at     TIMESTAMPTZ DEFAULT NOW()
+          id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          first_name        TEXT, last_name TEXT, email TEXT, phone TEXT,
+          referral          TEXT, payment TEXT, date TEXT, time_pref TEXT,
+          address           JSONB, promo TEXT, coupon_code TEXT,
+          coupon_label      TEXT, coupon_comment TEXT, tvs JSONB,
+          more_tvs          BOOLEAN DEFAULT FALSE, more_tvs_comment TEXT,
+          booking_mode      TEXT DEFAULT 'standard',
+          cable_concealment BOOLEAN DEFAULT FALSE,
+          combo_details     TEXT,
+          status            TEXT DEFAULT 'pending', notes TEXT,
+          created_at        TIMESTAMPTZ DEFAULT NOW()
         )
       `
-      // Add columns if they didn't exist in a previous version of the table
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs BOOLEAN DEFAULT FALSE`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_mode TEXT DEFAULT 'standard'`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cable_concealment BOOLEAN DEFAULT FALSE`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS combo_details TEXT`
       await sql`
         INSERT INTO bookings
           (first_name, last_name, email, phone, referral, payment, date, time_pref,
            address, promo, coupon_code, coupon_label, coupon_comment, tvs,
-           more_tvs, more_tvs_comment)
+           more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details)
         VALUES
           (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
            ${info.referral}, ${info.payment}, ${date}, ${timePreference},
            ${JSON.stringify(address)}, ${selectedPromo || ""},
            ${couponCode || ""}, ${appliedCouponLabel || ""},
            ${couponComment || ""}, ${JSON.stringify(tvList)},
-           ${!!moreTvs}, ${moreTvsComment || ""})
+           ${!!moreTvs}, ${moreTvsComment || ""},
+           ${bookingMode || "standard"}, ${!!cableConcealment}, ${comboDetails || ""})
       `
     } catch (dbErr) {
       console.error("DB save error", dbErr)

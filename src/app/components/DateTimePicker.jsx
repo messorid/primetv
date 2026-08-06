@@ -81,9 +81,9 @@ export function MiniCalendar({ selectedDate, minDate, onChange }) {
 
 export function TimeSlots({ selected, onChange }) {
   const slots = []
-  for (let h = 8; h <= 18; h++) {
+  for (let h = 7; h <= 20; h++) {
     for (let m = 0; m < 60; m += 30) {
-      if (h === 18 && m > 0) break
+      if (h === 20 && m > 0) break
       const h12  = h > 12 ? h - 12 : h === 0 ? 12 : h
       const ampm = h >= 12 ? "PM" : "AM"
       const mStr = m === 0 ? "00" : "30"
