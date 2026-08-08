@@ -26,8 +26,9 @@ const WALL_TYPES = [
 ]
 
 const PROMOS = [
-  { label: '1 TV up to 55"', price: "$150" },
-  { label: '1 TV up to 65"', price: "$230" },
+  { label: '2 TVs up to 55"',                    price: "$199" },
+  { label: '2 TVs up to 70"',                    price: "$250" },
+  { label: '1 TV up to 55" + 1 TV up to 70"',   price: "$230" },
 ]
 
 const REFERRAL_OPTIONS = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Other"]
