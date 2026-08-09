@@ -5,7 +5,6 @@ import Image from "next/image"
 
 const PHOTOS = [
   { src: "/images/work-1.jpeg", alt: "TV mounted on wall — Nashville installation" },
-  { src: "/images/work-2.jpeg", alt: "Living room TV wall mount — PrimeTvNashville" },
   { src: "/images/work-3.jpeg", alt: "TV installation over fireplace — Nashville" },
   { src: "/images/work-4.jpeg", alt: "Clean cable concealment — TV mounting Nashville" },
   { src: "/images/work-5.jpeg", alt: "Bedroom TV wall mount — PrimeTvNashville" },
