@@ -6,6 +6,7 @@ import BookingSteps from "./components/BookingSteps";
 import StickyActionBar from "./components/StickyActionBar";
 import CoverageMap from "./components/CoverageMap";
 import WhyChooseSection from "./components/WhyChooseSection";
+import GallerySection from "./components/GallerySection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
 import InternalLinksHub from "./components/InternalLinksHub";
 
@@ -105,6 +106,7 @@ export default function HomePage() {
         <HeroSection />
         <ServicesSection />
         <WhyChooseSection />
+        <GallerySection />
         <PricingSection />
         <BookingSteps />
         <CoverageMap />
