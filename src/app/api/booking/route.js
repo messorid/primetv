@@ -35,15 +35,22 @@ export async function POST(request) {
       `${safe(address.city)}, ${safe(address.state)} ${safe(address.zip)}`,
     ].filter(Boolean).join(", ")
 
-    const tvList    = (tvs || [])
+    const PROMO_PRICES = {
+      '2 TVs up to 55"':                  "$199",
+      '2 TVs up to 70"':                  "$250",
+      '1 TV up to 55" + 1 TV up to 70"': "$230",
+    }
+
+    const tvList     = (tvs || [])
     const isStandard = !bookingMode || bookingMode === "standard"
     const isPromo    = bookingMode === "promo"
     const isCombo    = bookingMode === "bundle"
     const hasPromo   = isPromo && !!selectedPromo
-    const promoPrice = hasPromo
-      ? (selectedPromo.includes("55") ? "$199" : "$260")
-      : ""
-    const cableLine  = cableConcealment ? " + Cable Concealment (+$60)" : ""
+    const promoPrice = hasPromo ? (PROMO_PRICES[selectedPromo] || "See quote") : ""
+
+    const cableQty   = parseInt(cableConcealment) || 0
+    const cableTotal = cableQty * 60
+    const cableLine  = cableQty > 0 ? ` + Cable Concealment ×${cableQty} (+$${cableTotal})` : ""
 
     const tvRows = tvList.map((tv, idx) => `
       <tr style="background:${idx % 2 ? "#fafafa" : "#fff"};">
@@ -56,12 +63,15 @@ export async function POST(request) {
 
     // ── Price / promo block for client email ──────────────────────────────────
     const promoPriceBlock = hasPromo ? `
-      <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Package Price</p>
-          <p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(selectedPromo)}</p>
+      <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Package Price</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(selectedPromo)}</p>
+          </div>
+          <span style="font-size:28px;font-weight:900;color:#e50914;">${promoPrice}</span>
         </div>
-        <span style="font-size:28px;font-weight:900;color:#e50914;">${promoPrice}</span>
+        ${cableQty > 0 ? `<p style="margin:10px 0 0;font-size:13px;color:#e50914;font-weight:600;">🔌 + Cable Concealment ×${cableQty}: +$${cableTotal}</p>` : ""}
       </div>
     ` : ""
 
@@ -120,10 +130,11 @@ export async function POST(request) {
             ${brow("Date Requested", date)}
             ${brow("Time Preference", timePreference)}
             ${brow("Service Address", fullAddress)}
-            ${brow("Booking Mode", isCombo ? "Combinados (custom)" : isPromo ? "Promo Package" : "Standard")}
-            ${hasPromo ? brow("Promo Selected", `${selectedPromo}${cableLine} — <strong>${promoPrice}${cableConcealment ? " + $60" : ""}</strong>`) : ""}
+            ${brow("Booking Mode", isCombo ? "Bundle (custom)" : isPromo ? "Promo Package" : "Standard")}
+            ${hasPromo ? brow("Promo Selected", `${safe(selectedPromo)} — <strong>${promoPrice}</strong>`) : ""}
             ${isCombo && comboDetails ? brow("Job Description", safe(comboDetails)) : ""}
-            ${isStandard && cableConcealment ? brow("Cable Concealment", "Yes — +$60") : ""}
+            ${isStandard && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
+            ${isPromo && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
             ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
             ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
             ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
@@ -155,9 +166,9 @@ export async function POST(request) {
               <tbody>${tvRows}</tbody>
             </table>
           `}
-          ${cableConcealment && !isCombo ? `
+          ${cableQty > 0 && !isCombo ? `
             <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:12px;">
-              <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8;">🔌 Cable Concealment Add-on: +$60</p>
+              <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8;">🔌 Cable Concealment ×${cableQty} — +$${cableTotal}</p>
             </div>
           ` : ""}
 
@@ -202,7 +213,7 @@ export async function POST(request) {
                 ? crow("TVs", "3+ TVs — custom quote")
                 : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
               }
-              ${cableConcealment && !isCombo ? crow("Add-on", "Cable Concealment (+$60)") : ""}
+              ${cableQty > 0 && !isCombo ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
             </table>
           </div>
 
@@ -233,7 +244,7 @@ export async function POST(request) {
           coupon_label      TEXT, coupon_comment TEXT, tvs JSONB,
           more_tvs          BOOLEAN DEFAULT FALSE, more_tvs_comment TEXT,
           booking_mode      TEXT DEFAULT 'standard',
-          cable_concealment BOOLEAN DEFAULT FALSE,
+          cable_concealment INT DEFAULT 0,
           combo_details     TEXT,
           status            TEXT DEFAULT 'pending', notes TEXT,
           created_at        TIMESTAMPTZ DEFAULT NOW()
@@ -242,7 +253,7 @@ export async function POST(request) {
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs BOOLEAN DEFAULT FALSE`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_mode TEXT DEFAULT 'standard'`
-      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cable_concealment BOOLEAN DEFAULT FALSE`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cable_concealment INT DEFAULT 0`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS combo_details TEXT`
       await sql`
         INSERT INTO bookings
@@ -256,7 +267,7 @@ export async function POST(request) {
            ${couponCode || ""}, ${appliedCouponLabel || ""},
            ${couponComment || ""}, ${JSON.stringify(tvList)},
            ${!!moreTvs}, ${moreTvsComment || ""},
-           ${bookingMode || "standard"}, ${!!cableConcealment}, ${comboDetails || ""})
+           ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""})
       `
     } catch (dbErr) {
       console.error("DB save error", dbErr)

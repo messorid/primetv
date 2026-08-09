@@ -70,7 +70,7 @@ export default function BookingFormSection() {
   const [bookingMode,      setBookingMode]      = useState("standard") // "standard" | "promo" | "bundle"
   const [tvs,              setTvs]              = useState([emptyTv()])
   const [selectedPromo,    setSelectedPromo]    = useState("")
-  const [cableConcealment, setCableConcealment] = useState(false)
+  const [cableConcealment, setCableConcealment] = useState(0) // number of hidden cable runs
   const [bundleDetails,    setBundleDetails]    = useState("")
 
   // Steps 2 & 3
@@ -448,7 +448,7 @@ export default function BookingFormSection() {
                           + Add Another TV
                         </button>
 
-                        <CableToggle checked={cableConcealment} onChange={setCableConcealment} />
+                        <CableToggle count={cableConcealment} onChange={setCableConcealment} />
                         <CouponField
                           appliedCoupon={appliedCoupon} couponCode={couponCode}
                           couponStatus={couponStatus} couponComment={couponComment}
@@ -502,7 +502,7 @@ export default function BookingFormSection() {
                           <p className="mt-3 text-xs text-black/40">Select the promo that fits your installation</p>
                         )}
 
-                        <CableToggle checked={cableConcealment} onChange={setCableConcealment} />
+                        <CableToggle count={cableConcealment} onChange={setCableConcealment} />
                         <CouponField
                           appliedCoupon={appliedCoupon} couponCode={couponCode}
                           couponStatus={couponStatus} couponComment={couponComment}
@@ -662,25 +662,42 @@ export default function BookingFormSection() {
 
 /* ── Sub-components ───────────────────────────────────────────────────────── */
 
-function CableToggle({ checked, onChange }) {
+function CableToggle({ count, onChange }) {
+  const total = count * 60
   return (
     <div className="mt-4 rounded-xl border border-black/10 bg-gray-50 px-4 py-3">
-      <label className="flex items-center justify-between gap-3 cursor-pointer">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <span className="text-sm font-bold flex items-center gap-1.5">
-            🔌 Add Cable Concealment
-          </span>
+          <span className="text-sm font-bold">🔌 Cable Concealment</span>
           <span className="block text-xs text-black/50 mt-0.5">
-            In-wall routing or surface raceway — <strong className="text-black/70">+$60</strong> add-on
+            In-wall routing or raceway — <strong className="text-black/70">$60 per run</strong>
           </span>
         </div>
-        <div
-          onClick={() => onChange(!checked)}
-          className={`relative w-10 h-6 rounded-full transition-colors flex-none ${checked ? "bg-[#E50914]" : "bg-black/20"}`}
-        >
-          <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${checked ? "left-5" : "left-1"}`} />
+        <div className="flex items-center gap-2 flex-none">
+          <button
+            type="button"
+            onClick={() => onChange(Math.max(0, count - 1))}
+            disabled={count === 0}
+            className="w-8 h-8 rounded-full border border-black/20 flex items-center justify-center text-lg font-bold hover:bg-black/10 transition disabled:opacity-25 disabled:cursor-not-allowed"
+          >
+            −
+          </button>
+          <span className="w-6 text-center text-sm font-bold">{count}</span>
+          <button
+            type="button"
+            onClick={() => onChange(Math.min(10, count + 1))}
+            className="w-8 h-8 rounded-full border border-black/20 flex items-center justify-center text-lg font-bold hover:bg-black/10 transition"
+          >
+            +
+          </button>
         </div>
-      </label>
+      </div>
+      {count > 0 && (
+        <div className="mt-2 flex items-center justify-between rounded-lg bg-[#E50914]/8 border border-[#E50914]/20 px-3 py-2">
+          <span className="text-xs text-[#E50914] font-semibold">{count} hidden cable run{count > 1 ? "s" : ""}</span>
+          <span className="text-sm font-extrabold text-[#E50914]">+${total}</span>
+        </div>
+      )}
     </div>
   )
 }
