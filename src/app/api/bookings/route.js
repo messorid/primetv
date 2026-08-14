@@ -33,6 +33,16 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS materials_cost NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS company_profit NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS profit_type TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS profit_value NUMERIC(10,2)`
+}
+
+// profitType: "percent" (profitValue is a % of charged-materials) or "fixed" ($ amount)
+function computeFinancials({ charged, materials, profitType, profitValue }) {
+  const subtotal      = charged - materials
+  const companyProfit = profitType === "fixed" ? profitValue : subtotal * (profitValue / 100)
+  const amountPaidWorkers = subtotal - companyProfit
+  return { companyProfit, amountPaidWorkers }
 }
 
 export async function GET() {
@@ -117,11 +127,38 @@ export async function PATCH(request) {
     // ── Update materials cost ─────────────────────────────────────────────────
     if (body.updateMaterials) {
       const materials = parseFloat(body.materialsCost) || 0
-      const [b] = await sql`SELECT amount_charged, amount_paid_workers FROM bookings WHERE id=${id}`
+      const [b] = await sql`SELECT amount_charged, profit_type, profit_value FROM bookings WHERE id=${id}`
       if (b) {
-        const profit = (parseFloat(b.amount_charged) || 0) - (parseFloat(b.amount_paid_workers) || 0) - materials
-        await sql`UPDATE bookings SET materials_cost=${materials}, company_profit=${profit} WHERE id=${id}`
-        return Response.json({ ok: true, profit })
+        const charged     = parseFloat(b.amount_charged) || 0
+        const profitType  = b.profit_type || "fixed"
+        const profitValue = parseFloat(b.profit_value) || 0
+        const { companyProfit, amountPaidWorkers } = computeFinancials({ charged, materials, profitType, profitValue })
+        await sql`
+          UPDATE bookings
+          SET materials_cost=${materials}, amount_paid_workers=${amountPaidWorkers}, company_profit=${companyProfit}
+          WHERE id=${id}
+        `
+        return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
+      }
+      return Response.json({ ok: false }, { status: 404 })
+    }
+
+    // ── Update profit target (percent or fixed $) ────────────────────────────
+    if (body.updateProfit) {
+      const profitType  = body.profitType === "fixed" ? "fixed" : "percent"
+      const profitValue = parseFloat(body.profitValue) || 0
+      const [b] = await sql`SELECT amount_charged, materials_cost FROM bookings WHERE id=${id}`
+      if (b) {
+        const charged   = parseFloat(b.amount_charged) || 0
+        const materials = parseFloat(b.materials_cost) || 0
+        const { companyProfit, amountPaidWorkers } = computeFinancials({ charged, materials, profitType, profitValue })
+        await sql`
+          UPDATE bookings
+          SET profit_type=${profitType}, profit_value=${profitValue},
+              amount_paid_workers=${amountPaidWorkers}, company_profit=${companyProfit}
+          WHERE id=${id}
+        `
+        return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
       }
       return Response.json({ ok: false }, { status: 404 })
     }
@@ -134,19 +171,21 @@ export async function PATCH(request) {
 
     // ── Complete with financial data ───────────────────────────────────────────
     if (status === "completed" && body.amountCharged !== undefined) {
-      const charged   = parseFloat(body.amountCharged) || 0
-      const paid      = parseFloat(body.amountPaidWorkers) || 0
-      const materials = parseFloat(body.materialsCost) || 0
-      const profit    = charged - paid - materials
+      const charged     = parseFloat(body.amountCharged) || 0
+      const materials    = parseFloat(body.materialsCost) || 0
+      const profitType  = body.profitType === "fixed" ? "fixed" : "percent"
+      const profitValue = parseFloat(body.profitValue) || 0
+      const { companyProfit, amountPaidWorkers } = computeFinancials({ charged, materials, profitType, profitValue })
       await sql`
         UPDATE bookings
         SET status='completed', amount_charged=${charged},
-            amount_paid_workers=${paid}, materials_cost=${materials},
-            company_profit=${profit}, completed_at=NOW()
+            amount_paid_workers=${amountPaidWorkers}, materials_cost=${materials},
+            profit_type=${profitType}, profit_value=${profitValue},
+            company_profit=${companyProfit}, completed_at=NOW()
             ${notes !== undefined ? sql`, notes=${notes}` : sql``}
         WHERE id=${id}
       `
-      return Response.json({ ok: true, profit })
+      return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
     }
 
     // ── Update status / notes ──────────────────────────────────────────────────
@@ -379,6 +418,8 @@ function toBooking(row) {
     amountPaidWorkers:  row.amount_paid_workers,
     materialsCost:      row.materials_cost,
     companyProfit:      row.company_profit,
+    profitType:         row.profit_type,
+    profitValue:        row.profit_value,
     completedAt:        row.completed_at,
     createdAt:          row.created_at,
   }

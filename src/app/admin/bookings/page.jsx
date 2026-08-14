@@ -52,7 +52,7 @@ export default function BookingsPage() {
 
   // Modals
   const [completeModal,  setCompleteModal]  = useState(null)
-  const [completeForm,   setCompleteForm]   = useState({ amountCharged: "", amountPaidWorkers: "", materialsCost: "" })
+  const [completeForm,   setCompleteForm]   = useState({ amountCharged: "", materialsCost: "", profitType: "percent", profitValue: "" })
   const [completing,     setCompleting]     = useState(false)
 
   const [newModal,       setNewModal]       = useState(false)
@@ -145,32 +145,37 @@ export default function BookingsPage() {
   }
 
   // ── Complete ─────────────────────────────────────────────────────────────────
-  function openCompleteModal(id, name) { setCompleteModal({ id, name }); setCompleteForm({ amountCharged: "", amountPaidWorkers: "", materialsCost: "" }) }
+  function openCompleteModal(id, name) { setCompleteModal({ id, name }); setCompleteForm({ amountCharged: "", materialsCost: "", profitType: "percent", profitValue: "" }) }
 
   async function handleComplete() {
     if (!completeModal) return
     setCompleting(true)
-    const charged   = parseFloat(completeForm.amountCharged) || 0
-    const paid      = parseFloat(completeForm.amountPaidWorkers) || 0
-    const materials = parseFloat(completeForm.materialsCost) || 0
-    const profit    = charged - paid - materials
+    const charged     = parseFloat(completeForm.amountCharged) || 0
+    const materials    = parseFloat(completeForm.materialsCost) || 0
+    const profitType  = completeForm.profitType
+    const profitValue = parseFloat(completeForm.profitValue) || 0
     const res  = await fetch("/api/bookings", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, amountPaidWorkers: paid, materialsCost: materials }),
+      body: JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, materialsCost: materials, profitType, profitValue }),
     })
     const data = await res.json()
     if (data.ok) {
       setBookings(prev => prev.map(b => b._id === completeModal.id
-        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: paid, materialsCost: materials, companyProfit: profit, completedAt: new Date().toISOString() } : b
+        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: data.amountPaidWorkers, materialsCost: materials,
+            profitType, profitValue, companyProfit: data.profit, completedAt: new Date().toISOString() } : b
       ))
       setCompleteModal(null)
     }
     setCompleting(false)
   }
 
-  // ── Update materials cost ────────────────────────────────────────────────────
-  function updateMaterials(id, materialsCost, companyProfit) {
-    setBookings(prev => prev.map(b => b._id === id ? { ...b, materialsCost, companyProfit } : b))
+  // ── Update materials cost / profit target ────────────────────────────────────
+  function updateMaterials(id, materialsCost, companyProfit, amountPaidWorkers) {
+    setBookings(prev => prev.map(b => b._id === id ? { ...b, materialsCost, companyProfit, amountPaidWorkers } : b))
+  }
+
+  function updateProfit(id, profitType, profitValue, companyProfit, amountPaidWorkers) {
+    setBookings(prev => prev.map(b => b._id === id ? { ...b, profitType, profitValue, companyProfit, amountPaidWorkers } : b))
   }
 
   // ── Resend installer email ───────────────────────────────────────────────────
@@ -259,9 +264,13 @@ export default function BookingsPage() {
   }), [bookings])
 
   const todayISO  = isoDate(new Date())
-  const profit    = completeForm.amountCharged || completeForm.amountPaidWorkers || completeForm.materialsCost
-    ? (parseFloat(completeForm.amountCharged) || 0) - (parseFloat(completeForm.amountPaidWorkers) || 0) - (parseFloat(completeForm.materialsCost) || 0)
-    : null
+  const ccCharged   = parseFloat(completeForm.amountCharged) || 0
+  const ccMaterials = parseFloat(completeForm.materialsCost) || 0
+  const ccSubtotal  = ccCharged - ccMaterials
+  const ccProfitVal = parseFloat(completeForm.profitValue) || 0
+  const ccProfit    = completeForm.profitType === "fixed" ? ccProfitVal : ccSubtotal * (ccProfitVal / 100)
+  const ccWorkerPay = ccSubtotal - ccProfit
+  const showPreview = completeForm.amountCharged || completeForm.materialsCost || completeForm.profitValue
 
   // Calendar grid
   const firstDow    = new Date(calYear, calMonth, 1).getDay()
@@ -490,6 +499,7 @@ export default function BookingsPage() {
               onEditSchedule={() => openSchedModal(b)}
               onResend={() => resendInstallerEmail(b._id)}
               onMaterialsUpdate={updateMaterials}
+              onProfitUpdate={updateProfit}
             />
           ))}
         </div>
@@ -665,18 +675,50 @@ export default function BookingsPage() {
             <div className="space-y-4">
               <AmountField label="Amount Charged to Customer" value={completeForm.amountCharged}
                 onChange={v => setCompleteForm(f => ({ ...f, amountCharged: v }))} />
-              <AmountField label="Amount Paid to Workers" value={completeForm.amountPaidWorkers}
-                onChange={v => setCompleteForm(f => ({ ...f, amountPaidWorkers: v }))} />
               <AmountField label="Materials & Tools Used" value={completeForm.materialsCost}
                 onChange={v => setCompleteForm(f => ({ ...f, materialsCost: v }))}
-                hint="Mounts, cables, hardware, etc." />
-              {profit !== null && (
-                <div className={`rounded-xl border p-4 ${profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Charged − Workers − Materials</span>
+                hint="Mounts, cables, hardware, etc. — subtracted from the total first" />
+
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company Profit</label>
+                <p className="text-[10px] text-gray-400 mt-0.5">The rest goes to the worker(s)</p>
+                <div className="flex gap-2 mt-1.5">
+                  <div className="flex rounded-xl border border-gray-200 overflow-hidden flex-none">
+                    {["percent", "fixed"].map(t => (
+                      <button key={t} type="button" onClick={() => setCompleteForm(f => ({ ...f, profitType: t }))}
+                        className={`px-3 py-2.5 text-sm font-bold transition ${
+                          completeForm.profitType === t ? "bg-[#E50914] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                        }`}>
+                        {t === "percent" ? "%" : "$"}
+                      </button>
+                    ))}
                   </div>
-                  <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Net Profit</p>
-                  <p className={`text-3xl font-extrabold ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>${profit.toFixed(2)}</p>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">
+                      {completeForm.profitType === "fixed" ? "$" : "%"}
+                    </span>
+                    <input type="number" step="0.01" value={completeForm.profitValue}
+                      onChange={e => setCompleteForm(f => ({ ...f, profitValue: e.target.value }))}
+                      placeholder={completeForm.profitType === "fixed" ? "0.00" : "35"}
+                      className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                  </div>
+                </div>
+              </div>
+
+              {showPreview && (
+                <div className={`rounded-xl border p-4 space-y-1.5 ${ccProfit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Subtotal (Charged − Materials)</span>
+                    <span className="font-semibold text-gray-700">${ccSubtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Worker Pay</span>
+                    <span className="font-semibold text-gray-700">${ccWorkerPay.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline border-t border-emerald-200 pt-1.5 mt-0.5">
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${ccProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Company Profit</p>
+                    <p className={`text-2xl font-extrabold ${ccProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>${ccProfit.toFixed(2)}</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -740,7 +782,7 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onMaterialsUpdate }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [assigning,         setAssigning]         = useState(false)
   const [resending,         setResending]         = useState(false)
@@ -748,6 +790,10 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
   const [editMaterials,     setEditMaterials]     = useState(false)
   const [materialsVal,      setMaterialsVal]      = useState("")
   const [savingMat,         setSavingMat]         = useState(false)
+  const [editProfit,        setEditProfit]        = useState(false)
+  const [profitTypeVal,     setProfitTypeVal]     = useState("percent")
+  const [profitValueVal,    setProfitValueVal]    = useState("")
+  const [savingProfit,      setSavingProfit]      = useState(false)
 
   async function handleResend() {
     setResending(true); setResendOk(false)
@@ -765,10 +811,25 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
     })
     const data = await res.json()
     if (data.ok) {
-      onMaterialsUpdate(b._id, val, data.profit)
+      onMaterialsUpdate(b._id, val, data.profit, data.amountPaidWorkers)
       setEditMaterials(false)
     }
     setSavingMat(false)
+  }
+
+  async function handleSaveProfit() {
+    setSavingProfit(true)
+    const val = parseFloat(profitValueVal) || 0
+    const res  = await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: b._id, updateProfit: true, profitType: profitTypeVal, profitValue: val }),
+    })
+    const data = await res.json()
+    if (data.ok) {
+      onProfitUpdate(b._id, profitTypeVal, val, data.profit, data.amountPaidWorkers)
+      setEditProfit(false)
+    }
+    setSavingProfit(false)
   }
 
   async function handleAssign() {
@@ -1003,9 +1064,50 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                       )}
                     </div>
 
-                    <div className="flex justify-between text-sm border-t border-emerald-200 pt-1.5 mt-0.5">
-                      <span className="font-bold text-emerald-700">Profit</span>
-                      <span className="font-extrabold text-emerald-700">${Number(b.companyProfit).toFixed(2)}</span>
+                    <div className="flex items-center justify-between text-sm border-t border-emerald-200 pt-1.5 mt-0.5">
+                      <span className="font-bold text-emerald-700">
+                        Profit{b.profitType && b.profitValue != null
+                          ? ` (${b.profitType === "fixed" ? `$${Number(b.profitValue).toFixed(0)}` : `${Number(b.profitValue).toFixed(0)}%`})`
+                          : ""}
+                      </span>
+                      {editProfit ? (
+                        <div className="flex items-center gap-1">
+                          <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                            {["percent", "fixed"].map(t => (
+                              <button key={t} onClick={() => setProfitTypeVal(t)}
+                                className={`px-1.5 py-1 text-[10px] font-bold transition ${
+                                  profitTypeVal === t ? "bg-[#E50914] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                                }`}>
+                                {t === "percent" ? "%" : "$"}
+                              </button>
+                            ))}
+                          </div>
+                          <input
+                            type="number" step="0.01" min="0"
+                            value={profitValueVal}
+                            onChange={e => setProfitValueVal(e.target.value)}
+                            className="w-16 rounded-lg border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-red-300"
+                            autoFocus
+                          />
+                          <button onClick={handleSaveProfit} disabled={savingProfit}
+                            className="rounded-lg bg-emerald-500 text-white text-xs font-bold px-2 py-1 hover:bg-emerald-600 transition disabled:opacity-40">
+                            {savingProfit ? "…" : "✓"}
+                          </button>
+                          <button onClick={() => setEditProfit(false)}
+                            className="rounded-lg border border-gray-200 text-gray-400 text-xs px-2 py-1 hover:bg-gray-100 transition">
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-emerald-700">${Number(b.companyProfit).toFixed(2)}</span>
+                          <button
+                            onClick={() => { setProfitTypeVal(b.profitType || "percent"); setProfitValueVal(String(b.profitValue ?? "")); setEditProfit(true) }}
+                            className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                            edit
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
