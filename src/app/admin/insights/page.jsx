@@ -102,11 +102,11 @@ export default function InsightsPage() {
   }, [filteredBookings, sortBy])
 
   const filteredExpenses = useMemo(() => {
-    const startISO = range.start.toISOString().split("T")[0]
-    const endISO   = range.end.toISOString().split("T")[0]
     return expenses.filter(e => {
-      const d = typeof e.date === "string" ? e.date.split("T")[0] : ""
-      return d >= startISO && d <= endISO
+      const dateStr = typeof e.date === "string" ? e.date.split("T")[0] : ""
+      if (!dateStr) return false
+      const d = new Date(dateStr + "T12:00:00")
+      return d >= range.start && d <= range.end
     })
   }, [expenses, range])
 
