@@ -89,6 +89,12 @@ export default function ReportePage() {
         const key = sizeLabel(b.customTvSize)
         map[key] = (map[key] || 0) + (parseInt(b.customTvQty) || 1)
       }
+      // Promo packages don't have an exact per-TV size (just a "up to" cap),
+      // so count the package itself rather than guessing a size bucket.
+      if (b.selectedPromo) {
+        const key = `📦 ${b.selectedPromo}`
+        map[key] = (map[key] || 0) + 1
+      }
     })
     return Object.entries(map)
       .map(([label, value]) => ({ label, value }))
@@ -208,7 +214,7 @@ export default function ReportePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <RankedBarChart
               title="TV Sizes"
-              subtitle={`Most-mounted sizes — ${rangeLabel}`}
+              subtitle={`Most-mounted sizes & promo packages — ${rangeLabel}`}
               data={tvSizeCounts}
               hue="#E50914"
               emptyText="No TV size data for this period yet."
@@ -239,7 +245,7 @@ function StatCard({ label, value, bg, color, hint }) {
   return (
     <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm h-full`}>
       <p className="text-xs text-gray-500 font-medium">{label}</p>
-      <p className={`font-extrabold mt-1 text-xl sm:text-2xl ${color || "text-gray-900"}`}>{value}</p>
+      <p className={`font-extrabold mt-1 text-xl sm:text-2xl break-words leading-tight ${color || "text-gray-900"}`}>{value}</p>
       {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
     </div>
   )
