@@ -4,6 +4,15 @@ import { useState, useEffect, useMemo } from "react"
 const PERIODS = ["Today", "This Week", "This Month", "This Year", "All Time"]
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+// New bookings store a bare number ("65") from the searchable size picker —
+// append the inch mark for display. Bookings made before that picker existed
+// stored a full range label ("60" – 70"") which already reads fine as-is;
+// appending another quote to those produced a stray double-quote.
+function sizeLabel(size) {
+  const s = String(size)
+  return /^\d+$/.test(s) ? `${s}"` : s
+}
+
 // Promo labels read like "2 TVs up to 55"" or "1 TV up to 55" + 1 TV up to 70"" —
 // sum every "<n> TV(s)" match so the count stays correct even if promos change.
 function countFromPromoLabel(label) {
@@ -73,11 +82,11 @@ export default function ReportePage() {
     filtered.forEach(b => {
       ;(b.tvs || []).forEach(tv => {
         if (!tv.size) return
-        const key = `${tv.size}"`
+        const key = sizeLabel(tv.size)
         map[key] = (map[key] || 0) + 1
       })
       if (b.customQuote && b.customMode === "sized" && b.customTvSize) {
-        const key = `${b.customTvSize}"`
+        const key = sizeLabel(b.customTvSize)
         map[key] = (map[key] || 0) + (parseInt(b.customTvQty) || 1)
       }
     })
