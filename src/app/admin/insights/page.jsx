@@ -390,7 +390,7 @@ export default function InsightsPage() {
                         <p className="text-xs text-gray-400 mt-0.5">
                           <span className="capitalize">{e.category}</span>
                           {" · "}
-                          {new Date(e.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                          {fmtDate(e.date)}
                         </p>
                       </div>
                       <p className="text-sm font-bold text-red-600 flex-none">

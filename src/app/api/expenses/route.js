@@ -18,12 +18,23 @@ async function ensureTable(sql) {
   `
 }
 
+// The Postgres driver parses DATE columns into JS Date objects at UTC midnight,
+// which then serialize to a full ISO timestamp — shifting the calendar day
+// backward once the client formats it in a timezone behind UTC. Force it back
+// to a plain YYYY-MM-DD string here so it round-trips unambiguously.
+function toDateStr(d) {
+  return d instanceof Date ? d.toISOString().split("T")[0] : d
+}
+function normalize(row) {
+  return { ...row, date: toDateStr(row.date) }
+}
+
 export async function GET() {
   try {
     const sql = db()
     await ensureTable(sql)
     const rows = await sql`SELECT * FROM expenses ORDER BY date DESC, created_at DESC`
-    return Response.json({ ok: true, expenses: rows })
+    return Response.json({ ok: true, expenses: rows.map(normalize) })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -40,7 +51,7 @@ export async function POST(request) {
       VALUES (${category || "marketing"}, ${description || ""}, ${amount}, ${date || new Date().toISOString().split("T")[0]})
       RETURNING *
     `
-    return Response.json({ ok: true, expense: row })
+    return Response.json({ ok: true, expense: normalize(row) })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
