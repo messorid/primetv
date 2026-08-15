@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { validateCoupon } from "@/app/lib/coupons"
+import { TV_SIZES, priceHintForSize } from "@/app/lib/tvSizes"
 import { MiniCalendar, TimeSlots } from "./DateTimePicker"
 
 function gtag(...args) {
@@ -10,12 +11,6 @@ function gtag(...args) {
 }
 
 const STEPS = ["Date & Time", "TV Details", "Address", "Your Info"]
-
-const TV_SIZES = [
-  { label: '20" – 55"', price: "$110" },
-  { label: '60" – 70"', price: "$150" },
-  { label: '75"+',      price: "Ask price" },
-]
 
 const WALL_TYPES = [
   { label: "Drywall",       surcharge: 0  },
@@ -41,7 +36,7 @@ const US_STATES = [
 ]
 
 function emptyTv() {
-  return { size: "", exactSize: "", wallType: "", comments: "" }
+  return { size: "", wallType: "", comments: "" }
 }
 
 export default function BookingFormSection() {
@@ -398,30 +393,8 @@ export default function BookingFormSection() {
 
                               <div>
                                 <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">TV Size</label>
-                                <div className="mt-1.5 grid grid-cols-3 gap-2">
-                                  {TV_SIZES.map(s => (
-                                    <button key={s.label} type="button" onClick={() => updateTv(i, "size", s.label)}
-                                      className={`rounded-xl border py-2 px-2 text-left transition ${
-                                        tv.size === s.label
-                                          ? "bg-[#E50914] text-white border-[#E50914]"
-                                          : "border-black/15 bg-white hover:bg-black/5"
-                                      }`}>
-                                      <span className="block text-xs font-semibold">{s.label}</span>
-                                      <span className={`block text-[11px] mt-0.5 ${tv.size === s.label ? "text-white/80" : "text-black/45"}`}>
-                                        {s.price}
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                                <div className="mt-2 flex items-center gap-2">
-                                  <input
-                                    type="number" min="20" max="120"
-                                    value={tv.exactSize}
-                                    onChange={e => updateTv(i, "exactSize", e.target.value)}
-                                    placeholder='Exact size (e.g. 65")'
-                                    className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-                                  />
-                                  <span className="text-sm text-black/50 whitespace-nowrap">inches</span>
+                                <div className="mt-1.5">
+                                  <TvSizeSelect value={tv.size} onChange={v => updateTv(i, "size", v)} />
                                 </div>
                               </div>
 
@@ -725,6 +698,63 @@ function CableToggle({ count, onChange }) {
   )
 }
 
+// Single-choice (radio-style) TV size picker with a search box — always picks
+// exactly one value from TV_SIZES, so every submission stores the same
+// normalized size string for later reporting (Admin → Reporte).
+function TvSizeSelect({ value, onChange, tone = "red" }) {
+  const [query, setQuery] = useState("")
+  const [open,  setOpen]  = useState(false)
+  const wrapRef = useRef(null)
+
+  useEffect(() => {
+    function onOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onOutside)
+    return () => document.removeEventListener("mousedown", onOutside)
+  }, [])
+
+  const digits   = query.replace(/[^0-9]/g, "")
+  const filtered = TV_SIZES.filter(s => String(s).includes(digits))
+
+  const ring   = tone === "emerald" ? "focus:ring-emerald-300" : "focus:ring-red-300"
+  const border = tone === "emerald" ? "border-emerald-200" : "border-black/15"
+  const active = tone === "emerald" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-[#E50914]"
+  const hover  = tone === "emerald" ? "hover:bg-emerald-50" : "hover:bg-red-50"
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <input
+        type="text"
+        value={open ? query : (value ? `${value}"` : "")}
+        onFocus={() => { setOpen(true); setQuery("") }}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search TV size…"
+        className={`w-full rounded-xl border ${border} bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${ring}`}
+      />
+      {open && (
+        <div className={`absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border ${border} bg-white shadow-lg`}>
+          {filtered.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-black/40">No matches</p>
+          ) : filtered.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => { onChange(String(s)); setOpen(false); setQuery("") }}
+              className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition ${hover} ${
+                value === String(s) ? `${active} font-semibold` : "text-black/80"
+              }`}
+            >
+              <span>{s}&quot;</span>
+              <span className="text-xs text-black/40">{priceHintForSize(s)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CouponField({
   appliedCoupon, couponCode, couponStatus, couponComment, onCodeChange, onApply, onClear, onCommentChange,
   customMode, onCustomModeChange, customTvSize, onCustomTvSizeChange, customTvQty, onCustomTvQtyChange,
@@ -768,13 +798,9 @@ function CouponField({
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-emerald-800">TV Size</label>
-                    <input
-                      type="text"
-                      value={customTvSize}
-                      onChange={e => onCustomTvSizeChange(e.target.value)}
-                      placeholder='e.g. 85" or 2× 55"'
-                      className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                    />
+                    <div className="mt-1">
+                      <TvSizeSelect value={customTvSize} onChange={onCustomTvSizeChange} tone="emerald" />
+                    </div>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-emerald-800">Qty</label>
