@@ -28,6 +28,9 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs BOOLEAN DEFAULT FALSE`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS more_tvs_comment TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_mode TEXT DEFAULT 'standard'`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cable_concealment INT DEFAULT 0`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS combo_details TEXT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_charged NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_paid_workers NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS materials_cost NUMERIC(10,2)`
@@ -407,6 +410,9 @@ function toBooking(row) {
     timePreference:     row.time_pref,
     address:            row.address,
     selectedPromo:      row.promo,
+    bookingMode:        row.booking_mode,
+    cableConcealment:   row.cable_concealment,
+    comboDetails:       row.combo_details,
     couponCode:         row.coupon_code,
     appliedCouponLabel: row.coupon_label,
     couponComment:      row.coupon_comment,

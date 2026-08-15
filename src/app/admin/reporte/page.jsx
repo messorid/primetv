@@ -4,6 +4,15 @@ import { useState, useEffect, useMemo } from "react"
 const PERIODS = ["Today", "This Week", "This Month", "This Year", "All Time"]
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+// Promo labels read like "2 TVs up to 55"" or "1 TV up to 55" + 1 TV up to 70"" —
+// sum every "<n> TV(s)" match so the count stays correct even if promos change.
+function countFromPromoLabel(label) {
+  if (!label) return 0
+  const matches = [...label.matchAll(/(\d+)\s*TVs?/gi)]
+  if (matches.length === 0) return 2 // fallback: today's promos are all 2-TV bundles
+  return matches.reduce((sum, m) => sum + parseInt(m[1]), 0)
+}
+
 function periodStart(period) {
   const now = new Date()
   if (period === "Today") return new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -103,11 +112,28 @@ export default function ReportePage() {
       .sort((a, b) => b.value - a.value)
   }, [filtered])
 
-  const totalTvs = useMemo(() => filtered.reduce((s, b) => {
-    const standard = (b.tvs || []).length
-    const custom   = b.customQuote && b.customMode === "sized" ? (parseInt(b.customTvQty) || 1) : 0
-    return s + standard + custom
-  }, 0), [filtered])
+  // Standard TVs + promo packages (2 TVs each, parsed from the promo label) +
+  // sized custom quotes all have a known count. Bundle / 3+ TV jobs are free-text
+  // ("comboDetails" / "moreTvsComment") with no reliable count — tallied
+  // separately instead of guessed, so the total never fabricates a number.
+  const { totalTvs, uncountedJobs } = useMemo(() => {
+    let tvs = 0, uncounted = 0
+    filtered.forEach(b => {
+      if (b.customQuote && b.customMode === "sized") {
+        tvs += parseInt(b.customTvQty) || 1
+      } else if (b.customQuote) {
+        // comment-only custom quote — no TV count on file
+        uncounted += 1
+      } else if (b.selectedPromo) {
+        tvs += countFromPromoLabel(b.selectedPromo)
+      } else if (b.moreTvs || b.bookingMode === "bundle") {
+        uncounted += 1
+      } else {
+        tvs += (b.tvs || []).length
+      }
+    })
+    return { totalTvs: tvs, uncountedJobs: uncounted }
+  }, [filtered])
 
   const topSize = tvSizeCounts[0]?.label ?? "—"
   const topDay  = useMemo(() => {
@@ -164,7 +190,8 @@ export default function ReportePage() {
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <StatCard label="Bookings"        value={filtered.length} bg="bg-blue-50"   color="text-blue-700" />
-            <StatCard label="TVs Mounted"     value={totalTvs}        bg="bg-orange-50" color="text-orange-600" />
+            <StatCard label="TVs Mounted"     value={totalTvs}        bg="bg-orange-50" color="text-orange-600"
+              hint={uncountedJobs > 0 ? `+${uncountedJobs} bundle/3+ TV job${uncountedJobs !== 1 ? "s" : ""} not counted` : undefined} />
             <StatCard label="Top TV Size"     value={topSize}         bg="bg-red-50"    color="text-[#E50914]" />
             <StatCard label="Busiest Day"     value={topDay}          bg="bg-purple-50" color="text-purple-700" />
           </div>
@@ -199,11 +226,12 @@ export default function ReportePage() {
   )
 }
 
-function StatCard({ label, value, bg, color }) {
+function StatCard({ label, value, bg, color, hint }) {
   return (
     <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm h-full`}>
       <p className="text-xs text-gray-500 font-medium">{label}</p>
       <p className={`font-extrabold mt-1 text-xl sm:text-2xl ${color || "text-gray-900"}`}>{value}</p>
+      {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
     </div>
   )
 }
