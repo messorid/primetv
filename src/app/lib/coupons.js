@@ -11,12 +11,12 @@
 
 export const COUPON_CODES = {
 
-  BALUMVP: {
-    offer:            "Special VIP deal — write your custom offer here",   // ← EDIT THIS LINE freely
-    note:             "Personal code — customize the offer before sending",
-    skipTvDetails:    true,
-    hideCodeFromClient: true,   // client does NOT see "BALUMVP" in their email, only the offer text
-    active:           true,
+  MESSORID: {
+    offer:              "Custom installation quote",
+    note:               "Personal code — use to manually quote jobs that aren't in the standard form (custom TV size/qty/price, or a plain job comment + price)",
+    customQuote:        true,   // reveals TV size+qty+price fields, or a comment-only+price mode
+    hideCodeFromClient: true,   // client does NOT see "MESSORID" in their email, only the price/details
+    active:             true,
   },
 
   "2POR199": {

@@ -952,6 +952,21 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   {b.couponComment && <p className="mt-1 text-sm text-emerald-700 italic">"{b.couponComment}"</p>}
                 </div>
               )}
+              {b.customQuote && (
+                <div className="mt-2 rounded-xl bg-red-50 border border-red-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide">
+                      Custom Quote{b.customMode === "sized" ? " — TV Size & Qty" : " — Comment Only"}
+                    </p>
+                    {b.customPrice != null && (
+                      <p className="text-lg font-extrabold text-[#E50914]">${Number(b.customPrice).toFixed(2)}</p>
+                    )}
+                  </div>
+                  {b.customMode === "sized" && b.customTvSize && (
+                    <p className="text-sm text-gray-800 mt-1">{b.customTvSize}{b.customTvQty ? ` × ${b.customTvQty}` : ""}</p>
+                  )}
+                </div>
+              )}
             </section>
 
             {/* Col 3 — Installer + Status + Notes */}

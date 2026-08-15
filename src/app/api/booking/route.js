@@ -11,6 +11,7 @@ export async function POST(request) {
       date, timePreference, tvs, address, info,
       bookingMode, selectedPromo, cableConcealment, comboDetails,
       couponCode, appliedCouponLabel, couponComment, couponHidden,
+      customQuote, customMode, customTvSize, customTvQty, customPrice,
       moreTvs, moreTvsComment,
     } = body
 
@@ -76,11 +77,27 @@ export async function POST(request) {
     ` : ""
 
     // Client sees offer text only; code name hidden if couponHidden
-    const couponBlock = (couponCode && appliedCouponLabel) ? `
+    const couponBlock = (couponCode && appliedCouponLabel && !customQuote) ? `
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-top:12px;">
         ${!couponHidden ? `<p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(couponCode)}</p>` : ""}
         <p style="margin:${couponHidden ? "0" : "6px"} 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(appliedCouponLabel)}</p>
         ${couponComment ? `<p style="margin:8px 0 0;font-size:13px;color:#166534;font-style:italic;">"${safe(couponComment)}"</p>` : ""}
+      </div>
+    ` : ""
+
+    // Custom quote — manual price/size override entered by the business.
+    // The coupon code itself never appears here, only the resulting price/details.
+    const customPriceNum = customQuote && customPrice != null && customPrice !== "" ? parseFloat(customPrice) : null
+    const customQuoteBlock = customQuote ? `
+      <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Installation Price</p>
+            ${customMode === "sized" && customTvSize ? `<p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(customTvSize)}${customTvQty ? ` × ${customTvQty}` : ""}</p>` : ""}
+          </div>
+          ${customPriceNum != null ? `<span style="font-size:28px;font-weight:900;color:#e50914;">$${customPriceNum.toFixed(2)}</span>` : ""}
+        </div>
+        ${couponComment ? `<p style="margin:10px 0 0;font-size:13px;color:#78350f;font-style:italic;">"${safe(couponComment)}"</p>` : ""}
       </div>
     ` : ""
 
@@ -136,6 +153,9 @@ export async function POST(request) {
             ${isStandard && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
             ${isPromo && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
             ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
+            ${customQuote ? brow("Custom Quote Mode", customMode === "sized" ? "TV Size & Qty" : "Comment Only") : ""}
+            ${customQuote && customMode === "sized" && customTvSize ? brow("Custom TV Size", `${safe(customTvSize)}${customTvQty ? ` × ${customTvQty}` : ""}`) : ""}
+            ${customQuote && customPriceNum != null ? brow("Custom Price", `<strong>$${customPriceNum.toFixed(2)}</strong>`) : ""}
             ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
             ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
             ${moreTvsComment ? brow("TV Details", safe(moreTvsComment)) : ""}
@@ -218,6 +238,7 @@ export async function POST(request) {
           </div>
 
           ${promoPriceBlock}
+          ${customQuoteBlock}
           ${couponBlock}
           ${moreTvsBlock}
 
@@ -255,11 +276,17 @@ export async function POST(request) {
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_mode TEXT DEFAULT 'standard'`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cable_concealment INT DEFAULT 0`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS combo_details TEXT`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_quote BOOLEAN DEFAULT FALSE`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_mode TEXT`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_size TEXT`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
       await sql`
         INSERT INTO bookings
           (first_name, last_name, email, phone, referral, payment, date, time_pref,
            address, promo, coupon_code, coupon_label, coupon_comment, tvs,
-           more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details)
+           more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details,
+           custom_quote, custom_mode, custom_tv_size, custom_tv_qty, custom_price)
         VALUES
           (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
            ${info.referral}, ${info.payment}, ${date}, ${timePreference},
@@ -267,7 +294,10 @@ export async function POST(request) {
            ${couponCode || ""}, ${appliedCouponLabel || ""},
            ${couponComment || ""}, ${JSON.stringify(tvList)},
            ${!!moreTvs}, ${moreTvsComment || ""},
-           ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""})
+           ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""},
+           ${!!customQuote}, ${customMode || null}, ${customTvSize || null},
+           ${customQuote && customMode === "sized" ? (parseInt(customTvQty) || null) : null},
+           ${customPriceNum})
       `
     } catch (dbErr) {
       console.error("DB save error", dbErr)

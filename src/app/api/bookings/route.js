@@ -35,6 +35,11 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS profit_type TEXT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS profit_value NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_quote BOOLEAN DEFAULT FALSE`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_mode TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_size TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
 }
 
 // profitType: "percent" (profitValue is a % of charged-materials) or "fixed" ($ amount)
@@ -405,6 +410,11 @@ function toBooking(row) {
     couponCode:         row.coupon_code,
     appliedCouponLabel: row.coupon_label,
     couponComment:      row.coupon_comment,
+    customQuote:        row.custom_quote,
+    customMode:         row.custom_mode,
+    customTvSize:       row.custom_tv_size,
+    customTvQty:        row.custom_tv_qty,
+    customPrice:        row.custom_price,
     moreTvs:            row.more_tvs,
     moreTvsComment:     row.more_tvs_comment,
     tvs:                row.tvs || [],

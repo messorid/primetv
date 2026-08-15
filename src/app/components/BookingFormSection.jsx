@@ -67,6 +67,10 @@ export default function BookingFormSection() {
   const [couponStatus,     setCouponStatus]     = useState("idle")
   const [appliedCoupon,    setAppliedCoupon]    = useState(null)
   const [couponComment,    setCouponComment]    = useState("")
+  const [customMode,       setCustomMode]       = useState("sized") // "sized" | "commentOnly"
+  const [customTvSize,     setCustomTvSize]     = useState("")
+  const [customTvQty,      setCustomTvQty]      = useState(1)
+  const [customPrice,      setCustomPrice]      = useState("")
   const [bookingMode,      setBookingMode]      = useState("standard") // "standard" | "promo" | "bundle"
   const [tvs,              setTvs]              = useState([emptyTv()])
   const [selectedPromo,    setSelectedPromo]    = useState("")
@@ -83,7 +87,10 @@ export default function BookingFormSection() {
   const today = new Date().toISOString().split("T")[0]
 
   // Step 1 validity per mode
-  const step1Valid = moreTvs
+  const step1Valid = appliedCoupon?.customQuote
+    ? customPrice !== "" && !isNaN(parseFloat(customPrice)) &&
+      (customMode === "sized" ? customTvSize.trim().length > 0 : couponComment.trim().length > 0)
+    : moreTvs
     ? true
     : bookingMode === "standard"
     ? tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType)
@@ -127,6 +134,7 @@ export default function BookingFormSection() {
 
   function clearCoupon() {
     setCouponCode(""); setCouponStatus("idle"); setAppliedCoupon(null); setCouponComment("")
+    setCustomMode("sized"); setCustomTvSize(""); setCustomTvQty(1); setCustomPrice("")
   }
 
   async function submit() {
@@ -144,8 +152,13 @@ export default function BookingFormSection() {
           cableConcealment,
           couponCode:         appliedCoupon ? couponCode : "",
           appliedCouponLabel: appliedCoupon?.offer ?? "",
-          couponComment:      appliedCoupon?.skipTvDetails ? couponComment : "",
+          couponComment:      appliedCoupon?.skipTvDetails || appliedCoupon?.customQuote ? couponComment : "",
           couponHidden:       !!appliedCoupon?.hideCodeFromClient,
+          customQuote:        !!appliedCoupon?.customQuote,
+          customMode:         appliedCoupon?.customQuote ? customMode : "",
+          customTvSize:       appliedCoupon?.customQuote && customMode === "sized" ? customTvSize : "",
+          customTvQty:        appliedCoupon?.customQuote && customMode === "sized" ? (parseInt(customTvQty) || 1) : null,
+          customPrice:        appliedCoupon?.customQuote && customPrice !== "" ? parseFloat(customPrice) : null,
           moreTvs,
           moreTvsComment,
           date,
@@ -334,6 +347,10 @@ export default function BookingFormSection() {
                         onApply={applyCoupon}
                         onClear={clearCoupon}
                         onCommentChange={setCouponComment}
+                        customMode={customMode} onCustomModeChange={setCustomMode}
+                        customTvSize={customTvSize} onCustomTvSizeChange={setCustomTvSize}
+                        customTvQty={customTvQty} onCustomTvQtyChange={setCustomTvQty}
+                        customPrice={customPrice} onCustomPriceChange={setCustomPrice}
                       />
                     </div>
                   )}
@@ -536,6 +553,10 @@ export default function BookingFormSection() {
                         couponStatus={couponStatus} couponComment={couponComment}
                         onCodeChange={v => { setCouponCode(v.toUpperCase()); setCouponStatus("idle") }}
                         onApply={applyCoupon} onClear={clearCoupon} onCommentChange={setCouponComment}
+                        customMode={customMode} onCustomModeChange={setCustomMode}
+                        customTvSize={customTvSize} onCustomTvSizeChange={setCustomTvSize}
+                        customTvQty={customTvQty} onCustomTvQtyChange={setCustomTvQty}
+                        customPrice={customPrice} onCustomPriceChange={setCustomPrice}
                       />
                     )}
                   </div>
@@ -704,7 +725,11 @@ function CableToggle({ count, onChange }) {
   )
 }
 
-function CouponField({ appliedCoupon, couponCode, couponStatus, couponComment, onCodeChange, onApply, onClear, onCommentChange }) {
+function CouponField({
+  appliedCoupon, couponCode, couponStatus, couponComment, onCodeChange, onApply, onClear, onCommentChange,
+  customMode, onCustomModeChange, customTvSize, onCustomTvSizeChange, customTvQty, onCustomTvQtyChange,
+  customPrice, onCustomPriceChange,
+}) {
   return (
     <div className="mt-4 pt-4 border-t border-black/8">
       <label className="text-xs font-semibold text-black/60">Coupon Code (optional)</label>
@@ -722,7 +747,77 @@ function CouponField({ appliedCoupon, couponCode, couponStatus, couponComment, o
               Remove
             </button>
           </div>
-          {appliedCoupon.skipTvDetails && (
+
+          {appliedCoupon.customQuote && (
+            <div className="border-t border-emerald-200 px-3 pb-3 pt-2.5 bg-white/60 space-y-3">
+              <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/50 p-1">
+                {[
+                  { id: "sized",       label: "TV Size & Qty" },
+                  { id: "commentOnly", label: "Comment Only"  },
+                ].map(m => (
+                  <button key={m.id} type="button" onClick={() => onCustomModeChange(m.id)}
+                    className={`rounded-lg py-1.5 text-xs font-bold transition ${
+                      customMode === m.id ? "bg-white shadow text-emerald-800" : "text-emerald-700/50 hover:text-emerald-700"
+                    }`}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {customMode === "sized" && (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <label className="text-xs font-semibold text-emerald-800">TV Size</label>
+                    <input
+                      type="text"
+                      value={customTvSize}
+                      onChange={e => onCustomTvSizeChange(e.target.value)}
+                      placeholder='e.g. 85" or 2× 55"'
+                      className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-emerald-800">Qty</label>
+                    <input
+                      type="number" min="1"
+                      value={customTvQty}
+                      onChange={e => onCustomTvQtyChange(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold text-emerald-800">Installation Price ($)</label>
+                <input
+                  type="number" step="0.01" min="0"
+                  value={customPrice}
+                  onChange={e => onCustomPriceChange(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-emerald-800">
+                  {customMode === "commentOnly" ? "Job Description" : "Additional comments"}
+                  {customMode === "sized" && <span className="font-normal text-black/40"> (optional)</span>}
+                </label>
+                <textarea
+                  rows={3}
+                  value={couponComment}
+                  onChange={e => onCommentChange(e.target.value)}
+                  placeholder={customMode === "commentOnly"
+                    ? "Describe the job — what's being installed and where…"
+                    : "Anything you'd like us to know about the installation…"}
+                  className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {appliedCoupon.skipTvDetails && !appliedCoupon.customQuote && (
             <div className="border-t border-emerald-200 px-3 pb-3 pt-2.5 bg-white/60">
               <label className="text-xs font-semibold text-emerald-800">
                 Additional comments <span className="font-normal text-black/40">(optional)</span>
