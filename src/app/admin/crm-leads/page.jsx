@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 const STATUS_LABELS = {
   NEW: 'Nuevo',
@@ -38,18 +38,23 @@ export default function CrmLeadsPage() {
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [savingId, setSavingId] = useState(null);
+  const [contactEvents, setContactEvents] = useState([]);
 
   useEffect(() => {
-    async function fetchLeads() {
+    async function fetchAll() {
       try {
-        const res = await fetch('/api/crm-leads');
-        const data = await res.json();
-        if (data.success) {
-          setLeads(data.leads);
-          setFilteredLeads(data.leads);
+        const [leadsRes, eventsRes] = await Promise.all([
+          fetch('/api/crm-leads'),
+          fetch('/api/events'),
+        ]);
+        const [leadsData, evData] = await Promise.all([leadsRes.json(), eventsRes.json()]);
+        if (leadsData.success) {
+          setLeads(leadsData.leads);
+          setFilteredLeads(leadsData.leads);
         } else {
-          setError(data.error || 'No se pudieron cargar los leads del CRM.');
+          setError(leadsData.error || 'No se pudieron cargar los leads del CRM.');
         }
+        if (evData.ok) setContactEvents(evData.events);
       } catch (err) {
         console.error('Error al cargar leads del CRM', err);
         setError('No se pudieron cargar los leads del CRM.');
@@ -57,8 +62,11 @@ export default function CrmLeadsPage() {
         setLoading(false);
       }
     }
-    fetchLeads();
+    fetchAll();
   }, []);
+
+  const phoneCalls = useMemo(() => contactEvents.filter(e => e.type === "call_button").length, [contactEvents]);
+  const textClicks = useMemo(() => contactEvents.filter(e => e.type === "text_button").length, [contactEvents]);
 
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
@@ -115,10 +123,34 @@ export default function CrmLeadsPage() {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-1">Leads del CRM</h1>
-      <p className="text-gray-500 mb-6 text-sm">
+      <p className="text-gray-500 mb-4 text-sm">
         Leads de Meta Lead Ads, Messenger, Instagram DM y entradas manuales, sincronizados
         desde el Sistema Leads PrimeTV.
       </p>
+
+      {/* Contact Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="bg-green-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500 font-medium">📞 Phone Calls</p>
+          <p className="text-2xl font-extrabold text-green-700 mt-1">{phoneCalls}</p>
+          <p className="text-[10px] text-gray-400 mt-1">Call button clicks (all time)</p>
+        </div>
+        <div className="bg-blue-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500 font-medium">💬 Text Messages</p>
+          <p className="text-2xl font-extrabold text-blue-700 mt-1">{textClicks}</p>
+          <p className="text-[10px] text-gray-400 mt-1">SMS button clicks (all time)</p>
+        </div>
+        <div className="bg-violet-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500 font-medium">📲 Total Contact</p>
+          <p className="text-2xl font-extrabold text-violet-700 mt-1">{phoneCalls + textClicks}</p>
+          <p className="text-[10px] text-gray-400 mt-1">Calls + texts combined</p>
+        </div>
+        <div className="bg-amber-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500 font-medium">📋 Total Leads</p>
+          <p className="text-2xl font-extrabold text-amber-700 mt-1">{leads.length}</p>
+          <p className="text-[10px] text-gray-400 mt-1">All CRM leads</p>
+        </div>
+      </div>
 
       <input
         type="text"

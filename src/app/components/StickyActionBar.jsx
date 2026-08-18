@@ -53,7 +53,7 @@ export default function StickyActionBar() {
         <div className="flex justify-center gap-2 pb-1">
           <a
             href={`tel:${PHONE}`}
-            onClick={() => { gtag("event", "phone_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("phone_click") }}
+            onClick={() => { gtag("event", "call_button", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("call_button") }}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Call
@@ -61,7 +61,7 @@ export default function StickyActionBar() {
 
           <a
             href={`sms:${PHONE}`}
-            onClick={() => { gtag("event", "sms_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("sms_click") }}
+            onClick={() => { gtag("event", "text_button", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("text_button") }}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Text
