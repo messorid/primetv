@@ -26,6 +26,12 @@ export const COUPON_CODES = {
     active:        true,
   },
 
+  PRIMETV5: {
+    offer:  "5% discount applied to your installation",
+    note:   "5% off — general promo code",
+    active: true,
+  },
+
   // Add more codes below as needed:
   // SUMMER25: {
   //   offer:  "Summer special — 25% off your installation",
