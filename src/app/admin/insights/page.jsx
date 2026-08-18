@@ -49,20 +49,27 @@ export default function InsightsPage() {
   const [addingExp,      setAddingExp]      = useState(false)
   const [expErr,         setExpErr]         = useState("")
 
-  const [allBookings, setAllBookings] = useState([])
+  const [allBookings,    setAllBookings]    = useState([])
+  const [contactEvents,  setContactEvents]  = useState([])
 
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
-    const [bRes, eRes, iRes] = await Promise.all([fetch("/api/bookings"), fetch("/api/expenses"), fetch("/api/installers")])
-    const [bData, eData, iData] = await Promise.all([bRes.json(), eRes.json(), iRes.json()])
+    const [bRes, eRes, iRes, evRes] = await Promise.all([
+      fetch("/api/bookings"), fetch("/api/expenses"),
+      fetch("/api/installers"), fetch("/api/events"),
+    ])
+    const [bData, eData, iData, evData] = await Promise.all([
+      bRes.json(), eRes.json(), iRes.json(), evRes.json(),
+    ])
     if (bData.ok) {
       setAllBookings(bData.bookings)
       setBookings(bData.bookings.filter(b => b.status === "completed" && b.amountCharged != null))
     }
-    if (eData.ok) setExpenses(eData.expenses)
-    if (iData.ok) setInstallers(iData.installers)
+    if (eData.ok)  setExpenses(eData.expenses)
+    if (iData.ok)  setInstallers(iData.installers)
+    if (evData.ok) setContactEvents(evData.events)
     setLoading(false)
   }
 
@@ -114,6 +121,15 @@ export default function InsightsPage() {
       return d >= range.start && d <= range.end
     })
   }, [expenses, range])
+
+  // Contact events in range
+  const filteredEvents = useMemo(() => contactEvents.filter(e => {
+    const d = new Date(e.created_at)
+    return d >= range.start && d <= range.end
+  }), [contactEvents, range])
+
+  const phoneCalls = filteredEvents.filter(e => e.type === "phone_click").length
+  const textClicks = filteredEvents.filter(e => e.type === "sms_click").length
 
   // Lead sources — all bookings in range (not just completed)
   const filteredAllBookings = useMemo(() => allBookings.filter(b => {
@@ -268,6 +284,30 @@ export default function InsightsPage() {
               color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
               hint="After workers, materials & expenses"
             />
+          </div>
+
+          {/* Contact Actions */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="bg-green-50 rounded-2xl border border-gray-200 p-4 shadow-sm col-span-2 sm:col-span-1">
+              <p className="text-xs text-gray-500 font-medium">📞 Phone Calls</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-green-700 mt-1">{phoneCalls}</p>
+              <p className="text-[10px] text-gray-400 mt-1">Call button clicks</p>
+            </div>
+            <div className="bg-blue-50 rounded-2xl border border-gray-200 p-4 shadow-sm col-span-2 sm:col-span-1">
+              <p className="text-xs text-gray-500 font-medium">💬 Text Messages</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-blue-700 mt-1">{textClicks}</p>
+              <p className="text-[10px] text-gray-400 mt-1">SMS button clicks</p>
+            </div>
+            <div className="bg-violet-50 rounded-2xl border border-gray-200 p-4 shadow-sm col-span-2 sm:col-span-1">
+              <p className="text-xs text-gray-500 font-medium">📲 Total Contact</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-violet-700 mt-1">{phoneCalls + textClicks}</p>
+              <p className="text-[10px] text-gray-400 mt-1">Calls + texts combined</p>
+            </div>
+            <div className="bg-amber-50 rounded-2xl border border-gray-200 p-4 shadow-sm col-span-2 sm:col-span-1">
+              <p className="text-xs text-gray-500 font-medium">📋 All Bookings</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-amber-700 mt-1">{filteredAllBookings.length}</p>
+              <p className="text-[10px] text-gray-400 mt-1">Form submissions</p>
+            </div>
           </div>
 
           {/* Lead Sources */}

@@ -8,6 +8,15 @@ function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
 }
 
+function trackEvent(type) {
+  const page = typeof window !== "undefined" ? window.location.pathname : "/"
+  fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, page }),
+  }).catch(() => {})
+}
+
 export default function StickyActionBar() {
   return (
     <div
@@ -44,7 +53,7 @@ export default function StickyActionBar() {
         <div className="flex justify-center gap-2 pb-1">
           <a
             href={`tel:${PHONE}`}
-            onClick={() => gtag("event", "phone_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" })}
+            onClick={() => { gtag("event", "phone_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("phone_click") }}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Call
@@ -52,7 +61,7 @@ export default function StickyActionBar() {
 
           <a
             href={`sms:${PHONE}`}
-            onClick={() => gtag("event", "sms_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" })}
+            onClick={() => { gtag("event", "sms_click", { event_category: "contact", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar" }); trackEvent("sms_click") }}
             className="rounded-full border border-black/15 px-2.5 py-1 text-[11px] font-medium hover:bg-black/5"
           >
             Text
