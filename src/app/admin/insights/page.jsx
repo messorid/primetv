@@ -49,13 +49,18 @@ export default function InsightsPage() {
   const [addingExp,      setAddingExp]      = useState(false)
   const [expErr,         setExpErr]         = useState("")
 
+  const [allBookings, setAllBookings] = useState([])
+
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
     const [bRes, eRes, iRes] = await Promise.all([fetch("/api/bookings"), fetch("/api/expenses"), fetch("/api/installers")])
     const [bData, eData, iData] = await Promise.all([bRes.json(), eRes.json(), iRes.json()])
-    if (bData.ok) setBookings(bData.bookings.filter(b => b.status === "completed" && b.amountCharged != null))
+    if (bData.ok) {
+      setAllBookings(bData.bookings)
+      setBookings(bData.bookings.filter(b => b.status === "completed" && b.amountCharged != null))
+    }
     if (eData.ok) setExpenses(eData.expenses)
     if (iData.ok) setInstallers(iData.installers)
     setLoading(false)
@@ -109,6 +114,38 @@ export default function InsightsPage() {
       return d >= range.start && d <= range.end
     })
   }, [expenses, range])
+
+  // Lead sources — all bookings in range (not just completed)
+  const filteredAllBookings = useMemo(() => allBookings.filter(b => {
+    const d = new Date(b.createdAt || b.date)
+    return d >= range.start && d <= range.end
+  }), [allBookings, range])
+
+  const leadSources = useMemo(() => {
+    const SOURCE_META = {
+      Google:    { color: "#4285F4", icon: "🔍" },
+      Instagram: { color: "#E1306C", icon: "📸" },
+      Facebook:  { color: "#1877F2", icon: "👥" },
+      TikTok:    { color: "#000000", icon: "🎵" },
+      YouTube:   { color: "#FF0000", icon: "▶️"  },
+      Friend:    { color: "#10B981", icon: "🤝" },
+      Other:     { color: "#6B7280", icon: "❓" },
+    }
+    const counts = {}
+    for (const b of filteredAllBookings) {
+      const src = b.referral || "Other"
+      counts[src] = (counts[src] || 0) + 1
+    }
+    const total = filteredAllBookings.length
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({
+        name,
+        count,
+        pct: total > 0 ? Math.round((count / total) * 100) : 0,
+        ...( SOURCE_META[name] || { color: "#6B7280", icon: "❓" }),
+      }))
+  }, [filteredAllBookings])
 
   const totalRevenue    = filteredBookings.reduce((s, b) => s + Number(b.amountCharged    || 0), 0)
   const totalWorkers    = filteredBookings.reduce((s, b) => s + Number(b.amountPaidWorkers || 0), 0)
@@ -231,6 +268,60 @@ export default function InsightsPage() {
               color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
               hint="After workers, materials & expenses"
             />
+          </div>
+
+          {/* Lead Sources */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-gray-800">Lead Sources</h2>
+                <p className="text-xs text-gray-400 mt-0.5">All bookings in period — where customers found you</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-700">{filteredAllBookings.length} total</span>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
+              </div>
+            </div>
+
+            {filteredAllBookings.length === 0 ? (
+              <p className="text-center py-10 text-gray-400 text-sm">No bookings for this period.</p>
+            ) : (
+              <div className="p-6">
+                {/* Bar chart rows */}
+                <div className="space-y-3 mb-6">
+                  {leadSources.map(src => (
+                    <div key={src.name} className="flex items-center gap-3">
+                      <div className="w-24 flex-none flex items-center gap-1.5">
+                        <span className="text-base leading-none">{src.icon}</span>
+                        <span className="text-xs font-semibold text-gray-700 truncate">{src.name}</span>
+                      </div>
+                      <div className="flex-1 relative h-7 bg-gray-100 rounded-lg overflow-hidden">
+                        <div
+                          className="h-full rounded-lg transition-all duration-700"
+                          style={{ width: `${src.pct}%`, backgroundColor: src.color, opacity: 0.85 }}
+                        />
+                      </div>
+                      <div className="flex-none flex items-center gap-2 w-20 justify-end">
+                        <span className="text-xs font-bold text-gray-700">{src.count}</span>
+                        <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5 font-medium">{src.pct}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pill summary */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                  {leadSources.map(src => (
+                    <div key={src.name} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
+                      style={{ backgroundColor: src.color }}>
+                      <span>{src.icon}</span>
+                      <span>{src.name}</span>
+                      <span className="opacity-75">· {src.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Completed Jobs */}
