@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-const PHONE = process.env.NEXT_PUBLIC_PRIMETV_PHONE || "+1-615-669-0251"
+const PHONE = "+16156690251"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)

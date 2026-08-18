@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 
-const PHONE = process.env.NEXT_PUBLIC_PRIMETV_PHONE || "+16156690251"
+const PHONE = "+16156690251"
 
 export default function ContactOptions() {
   const smsHref = useMemo(() => {
