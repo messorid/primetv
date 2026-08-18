@@ -1,99 +1,153 @@
-﻿export const metadata = {
+export const metadata = {
+  title: "Terms and Conditions | PrimeTvNashville",
+  description: "Read the official Terms and Conditions of PrimeTvNashville. Important liability notice for TV mounting and cable concealment services in Nashville, TN.",
+  alternates: { canonical: "https://www.primetvnashville.com/terms" },
+  openGraph: {
     title: "Terms and Conditions | PrimeTvNashville",
-    description: "Read the official Terms and Conditions of Prime TV Nashville's website and services. Updated policies for booking, liability, privacy, and more.",
-    alternates: {
-      canonical: "https://www.primetvnashville.com/terms"
-    },
-    openGraph: {
-      title: "Terms and Conditions | PrimeTvNashville",
-      description: "Official policies and service terms for Prime TV Nashville customers.",
-      url: "https://www.primetvnashville.com/terms",
-      siteName: "PrimeTvNashville",
-      locale: "en_US",
-      type: "website"
-    }
-  }
-  
-  export default function TermsPage() {
-    return (
-      <section className="bg-white py-20">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-black mb-8">Terms & Conditions</h1>
-  
-          <div className="space-y-8 text-gray-700 text-base leading-relaxed">
-            <div>
-              <h2 className="font-semibold text-lg">1. Introduction</h2>
-              <p>
-                Welcome to Prime TV Nashville. These Terms and Conditions outline the rules and regulations for the use of our website, located at www.primetvnashville.com, and the services provided by Prime TV Nashville.
-              </p>
-              <p>
-                By accessing this website and/or booking our services, we assume you accept these terms and conditions. Do not continue to use Prime TV Nashville’s services if you do not agree to all the terms and conditions stated on this page.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">2. Services</h2>
-              <p>
-                Prime TV Nashville specializes in TV installation, audio setup, and smart home integration services. By booking our services, you agree to provide accurate information and ensure that the installation area is ready for our technicians. The scope of work and pricing for each service will be clearly communicated prior to starting the project.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">3. Booking and Payment</h2>
-              <p>
-                All bookings for services must be made via our website, phone, or email. Payment for services must be completed upon service completion unless otherwise arranged. We accept various payment methods, including credit cards, debit cards, and bank transfers.
-              </p>
-              <p>
-                Additional fees may apply for services beyond the initial scope (e.g., additional materials, unforeseen installation complexities).
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">4. Cancellation Policy</h2>
-              <p>
-                You may cancel your booking up to 24 hours before the scheduled service for a full refund. Cancellations made within 24 hours of the scheduled service will incur a cancellation fee of 20% of the total service cost.
-              </p>
-              <p>
-                Prime TV Nashville reserves the right to reschedule services due to unforeseen circumstances such as weather, technician availability, or equipment issues. We will notify you as soon as possible and work to reschedule at your convenience.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">5. Liability and Warranties</h2>
-              <p>
-                Prime TV Nashville is not liable for any damages caused by misuse, tampering, or improper handling of equipment after installation. We offer a 30-day warranty for all installations. If there are any issues directly related to our installation services within 30 days, we will address them at no additional cost.
-              </p>
-              <p>
-                Any damages to property or equipment must be reported to Prime TV Nashville within 24 hours of service completion. We will assess the situation and take appropriate action.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">6. Use of Content</h2>
-              <p>
-                All content on this website, including but not limited to text, images, logos, and videos, is the property of Prime TV Nashville or used with permission. Unauthorized reproduction or redistribution of this content is strictly prohibited.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">7. Privacy Policy</h2>
-              <p>
-                Prime TV Nashville is committed to protecting your privacy. Any personal information collected through our website or booking process will be used solely for the purpose of delivering our services. We will not share your information with third parties without your explicit consent, except where required by law.
-              </p>
-              <p>
-                For detailed information, please refer to our Privacy Policy.
-              </p>
-            </div>
-  
-            <div>
-              <h2 className="font-semibold text-lg">8. Changes to Terms and Conditions</h2>
-              <p>
-                Prime TV Nashville reserves the right to update or modify these Terms and Conditions at any time. Any changes will be posted on this page, and continued use of our services constitutes acceptance of the updated terms.
-              </p>
-            </div>
+    description: "Official policies and service terms for PrimeTvNashville customers.",
+    url: "https://www.primetvnashville.com/terms",
+    siteName: "PrimeTvNashville",
+    locale: "en_US",
+    type: "website",
+  },
+}
+
+export default function TermsPage() {
+  return (
+    <section className="bg-white py-20">
+      <div className="max-w-3xl mx-auto px-5">
+
+        <h1 className="text-3xl md:text-4xl font-extrabold text-black mb-2">
+          Terms &amp; Conditions
+        </h1>
+        <p className="text-sm text-black/40 mb-10">
+          Last updated: August 2026 · PrimeTvNashville · Nashville, TN
+        </p>
+
+        {/* ── WALL LIABILITY WARNING — FIRST AND PROMINENT ── */}
+        <div className="rounded-2xl border-2 border-[#E50914] bg-red-50 p-6 mb-12">
+          <div className="flex items-start gap-3 mb-3">
+            <span className="text-2xl leading-none mt-0.5">⚠️</span>
+            <h2 className="text-lg font-extrabold text-[#E50914] uppercase tracking-wide">
+              Important Liability Notice — Please Read Before Booking
+            </h2>
           </div>
+
+          <p className="text-sm text-gray-800 leading-relaxed mb-3">
+            <strong>This notice applies to all TV mounting services and all hidden cable concealment (in-wall cable routing) services.</strong>
+          </p>
+
+          <p className="text-sm text-gray-800 leading-relaxed mb-3">
+            Before any work begins, <strong>the customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, structural beams, or any other obstructions inside or behind the wall</strong> where the TV will be mounted or where cables will be routed.
+          </p>
+
+          <p className="text-sm text-gray-800 leading-relaxed mb-3">
+            PrimeTvNashville technicians <strong>cannot see inside walls</strong> and therefore <strong>cannot guarantee the absence of hidden hazards</strong>. Our team proceeds with the work based on the customer&apos;s request and the customer&apos;s assurance that the wall area is safe.
+          </p>
+
+          <div className="rounded-xl bg-[#E50914]/10 border border-[#E50914]/30 px-4 py-3 my-4">
+            <p className="text-sm font-bold text-[#E50914]">
+              PrimeTvNashville is NOT responsible for any damage to:
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-gray-800">
+              <li className="flex items-center gap-2"><span className="text-[#E50914] font-bold">•</span> Electrical wiring or conduits inside walls</li>
+              <li className="flex items-center gap-2"><span className="text-[#E50914] font-bold">•</span> Water pipes, plumbing lines, or any fluid-carrying tubes</li>
+              <li className="flex items-center gap-2"><span className="text-[#E50914] font-bold">•</span> Gas lines or ventilation ducts</li>
+              <li className="flex items-center gap-2"><span className="text-[#E50914] font-bold">•</span> Structural elements such as beams or joists</li>
+              <li className="flex items-center gap-2"><span className="text-[#E50914] font-bold">•</span> Any other material or infrastructure concealed within the wall</li>
+            </ul>
+          </div>
+
+          <p className="text-sm text-gray-800 leading-relaxed">
+            By booking our services, the customer acknowledges and accepts full responsibility for any damage that may occur to in-wall infrastructure during the TV mounting or cable concealment process.
+            If you are unsure about what is inside your walls, we strongly recommend consulting a licensed contractor or using a stud/wire detector before scheduling the service.
+          </p>
         </div>
-      </section>
-    )
-  }
-  
+
+        {/* ── TERMS BODY ── */}
+        <div className="space-y-8 text-gray-700 text-sm leading-relaxed">
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">1. Introduction</h2>
+            <p>
+              Welcome to PrimeTvNashville. These Terms and Conditions outline the rules and regulations for the use of our website at www.primetvnashville.com and the services provided by PrimeTvNashville.
+            </p>
+            <p className="mt-2">
+              By accessing this website and/or booking our services, you accept these terms in full. Do not use PrimeTvNashville&apos;s services if you do not agree to all of the terms stated here.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">2. Scope of Services</h2>
+            <p>
+              PrimeTvNashville specializes in TV wall mounting, cable concealment, soundbar installation, and related home installation services. By booking, you agree to provide accurate information and ensure the installation area is accessible and ready for our technicians. Scope of work and pricing will be communicated before work begins.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">3. Wall Liability — TV Mounting &amp; Cable Concealment</h2>
+            <p>
+              As described in the notice above, the customer bears full responsibility for confirming the safety of the wall space prior to installation. This applies to:
+            </p>
+            <ul className="mt-2 space-y-1 pl-4">
+              <li><strong>TV Mounting:</strong> Any drilling or anchoring into walls, studs, or surfaces.</li>
+              <li><strong>Hidden Cable Concealment:</strong> Any in-wall routing of HDMI, power, or other cables through walls, ceilings, or floors.</li>
+            </ul>
+            <p className="mt-2">
+              PrimeTvNashville technicians will take reasonable precautions, but cannot be held liable for damage to any existing infrastructure inside walls, including but not limited to: electrical wiring, plumbing, gas lines, or structural elements.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">4. Booking and Payment</h2>
+            <p>
+              All bookings must be made via our website, phone, or email. Payment is due upon service completion unless otherwise arranged. We accept cash, Zelle, card, PayPal, Venmo, and other agreed methods.
+            </p>
+            <p className="mt-2">
+              Additional fees may apply for services beyond the initial scope, including additional materials, unforeseen installation complexities, or wall type surcharges (brick, tile, concrete, metal +$25).
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">5. Cancellation Policy</h2>
+            <p>
+              Cancellations made more than 24 hours before the scheduled appointment are accepted at no charge. Cancellations within 24 hours of the appointment may incur a fee of up to 20% of the total service cost.
+            </p>
+            <p className="mt-2">
+              PrimeTvNashville reserves the right to reschedule appointments due to weather, technician availability, or equipment issues. We will notify you as soon as possible.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">6. Warranty</h2>
+            <p>
+              We offer a 30-day workmanship warranty on all installations. If an issue arises that is directly related to the quality of our work within 30 days of service, we will address it at no additional cost. This warranty does not cover damage caused by misuse, tampering, customer modifications, or pre-existing wall conditions.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">7. Privacy</h2>
+            <p>
+              Any personal information collected through our website or booking process is used solely to deliver our services. We do not share customer information with third parties without explicit consent, except where required by law.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">8. Changes to These Terms</h2>
+            <p>
+              PrimeTvNashville reserves the right to update these Terms and Conditions at any time. Changes will be posted on this page. Continued use of our services constitutes acceptance of the updated terms.
+            </p>
+          </div>
+
+          <div className="pt-6 border-t border-gray-200 text-xs text-gray-400">
+            Questions? Contact us at{" "}
+            <a href="tel:+16156690251" className="text-[#E50914] font-semibold">(615) 669-0251</a>
+            {" "}or{" "}
+            <a href="mailto:info@primetvnashville.com" className="text-[#E50914] font-semibold">info@primetvnashville.com</a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}

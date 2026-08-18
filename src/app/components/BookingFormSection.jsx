@@ -602,13 +602,35 @@ export default function BookingFormSection() {
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 cursor-pointer mt-1">
+                  {/* Wall liability notice */}
+                  <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+                    <p className="text-xs font-extrabold text-amber-800 uppercase tracking-wide mb-2">
+                      ⚠️ Important — Please Read
+                    </p>
+                    <p className="text-xs text-amber-900 leading-relaxed">
+                      For all <strong>TV mounting</strong> and <strong>hidden cable concealment</strong> services, the customer is responsible for verifying that no electrical wires, water pipes, or other obstructions are inside the wall before installation.{" "}
+                      <strong>PrimeTvNashville is not responsible</strong> for damage to any in-wall infrastructure (wiring, plumbing, gas lines, etc.) during the service.
+                    </p>
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 text-xs font-bold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+                    >
+                      Read full Terms &amp; Conditions →
+                    </a>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" checked={info.agreed}
                       onChange={e => setInfo(i => ({ ...i, agreed: e.target.checked }))}
                       className="mt-0.5 h-4 w-4 accent-[#E50914] flex-none" />
                     <span className="text-sm text-black/65 leading-snug">
-                      I agree to the <span className="font-semibold text-black">Terms & Conditions</span> and
-                      authorize PrimeTvNashville to perform the requested services.
+                      I have read and agree to the{" "}
+                      <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-black underline underline-offset-1">
+                        Terms &amp; Conditions
+                      </a>
+                      {" "}including the wall liability notice, and authorize PrimeTvNashville to perform the requested services.
                     </span>
                   </label>
                 </div>

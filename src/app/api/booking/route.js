@@ -246,8 +246,24 @@ export async function POST(request) {
             Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
           </p>
 
-          <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
-            PrimeTvNashville — Expert TV Mounting in Nashville, TN
+          <!-- Liability notice -->
+          <div style="margin-top:28px;border:2px solid #e50914;border-radius:12px;padding:18px 20px;background:#fff5f5;">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
+              ⚠️ Important — Wall Liability Notice
+            </p>
+            <p style="margin:0 0 8px;font-size:13px;color:#555;line-height:1.6;">
+              <strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.
+            </p>
+            <p style="margin:0;font-size:13px;color:#555;">
+              By booking this service, you acknowledge and accept these conditions. Please read our full
+              <a href="https://www.primetvnashville.com/terms" style="color:#e50914;font-weight:600;">Terms &amp; Conditions</a>
+              for complete details.
+            </p>
+          </div>
+
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
+            PrimeTvNashville — Expert TV Mounting in Nashville, TN ·
+            <a href="https://www.primetvnashville.com/terms" style="color:#aaa;">Terms &amp; Conditions</a>
           </div>
         </div>
       `,
