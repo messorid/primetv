@@ -24,9 +24,9 @@ export default function Layout({ children }) {
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        {/* Google Analytics */}
+        {/* Google Analytics + Google Ads */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-QJMH27JB3N"
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18358938788"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -35,6 +35,7 @@ export default function Layout({ children }) {
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-QJMH27JB3N');
+            gtag('config', 'AW-18358938788');
           `}
         </Script>
       </head>
