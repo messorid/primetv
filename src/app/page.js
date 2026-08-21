@@ -9,6 +9,8 @@ import WhyChooseSection from "./components/WhyChooseSection";
 import GallerySection from "./components/GallerySection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
 import InternalLinksHub from "./components/InternalLinksHub";
+import MoreThanTVSection from "./components/MoreThanTVSection";
+import CrossSellSection from "./components/CrossSellSection";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
 export const metadata = {
@@ -109,6 +111,8 @@ export default function HomePage() {
         <GallerySection />
         <PricingSection />
         <BookingSteps />
+        <CrossSellSection />
+        <MoreThanTVSection />
         <CoverageMap />
         <InternalLinksHub />
         <QuickQuoteForm />

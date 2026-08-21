@@ -13,8 +13,17 @@ const services = [
   { label: "All Services", href: "/services", desc: "View everything we offer" },
 ]
 
+const installations = [
+  { label: "Furniture Assembly", href: "/furniture-assembly-nashville", desc: "IKEA, office & home furniture" },
+  { label: "Picture & Mirror Hanging", href: "/picture-mirror-hanging-nashville", desc: "Art, mirrors & gallery walls" },
+  { label: "Shelves & Wall Installation", href: "/wall-installation-services-nashville", desc: "Shelves, rods, blinds & cabinets" },
+  { label: "Gazebo Assembly", href: "/gazebo-installation-nashville", desc: "Gazebos, pergolas & outdoor structures" },
+  { label: "All Installation Services", href: "/home-installation-services-nashville", desc: "View all services" },
+]
+
 const navLinks = [
-  { label: "Services", href: "/services", hasDropdown: true },
+  { label: "Services", href: "/services", hasDropdown: "services" },
+  { label: "Home Installations", href: "/home-installation-services-nashville", hasDropdown: "installations" },
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Blog", href: "/blog" },
@@ -26,8 +35,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [installationsOpen, setInstallationsOpen] = useState(false)
   const [announcementVisible, setAnnouncementVisible] = useState(true)
   const dropdownRef = useRef(null)
+  const installationsRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -46,8 +57,19 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    const handler = (e) => {
+      if (installationsRef.current && !installationsRef.current.contains(e.target)) {
+        setInstallationsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  useEffect(() => {
     setMobileOpen(false)
     setDropdownOpen(false)
+    setInstallationsOpen(false)
   }, [pathname])
 
   return (
@@ -117,10 +139,10 @@ export default function Navbar() {
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) =>
-              link.hasDropdown ? (
+              link.hasDropdown === "services" ? (
                 <div key={link.href} className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setDropdownOpen((v) => !v)}
+                    onClick={() => { setDropdownOpen((v) => !v); setInstallationsOpen(false) }}
                     className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname.startsWith("/services")
                         ? "text-[#E50914]"
@@ -128,12 +150,8 @@ export default function Navbar() {
                     }`}
                   >
                     {link.label}
-                    <ChevronDown
-                      size={14}
-                      className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-                    />
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
                   </button>
-
                   <AnimatePresence>
                     {dropdownOpen && (
                       <motion.div
@@ -144,13 +162,41 @@ export default function Navbar() {
                         className="absolute top-full left-0 mt-2 w-64 rounded-2xl bg-[#111] border border-white/10 shadow-2xl overflow-hidden"
                       >
                         {services.map((s, i) => (
-                          <Link
-                            key={s.href}
-                            href={s.href}
-                            className={`flex flex-col px-4 py-3 hover:bg-white/5 transition-colors ${
-                              i < services.length - 1 ? "border-b border-white/5" : ""
-                            }`}
-                          >
+                          <Link key={s.href} href={s.href}
+                            className={`flex flex-col px-4 py-3 hover:bg-white/5 transition-colors ${i < services.length - 1 ? "border-b border-white/5" : ""}`}>
+                            <span className="text-sm font-semibold text-white">{s.label}</span>
+                            <span className="text-xs text-white/50 mt-0.5">{s.desc}</span>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : link.hasDropdown === "installations" ? (
+                <div key={link.href} className="relative" ref={installationsRef}>
+                  <button
+                    onClick={() => { setInstallationsOpen((v) => !v); setDropdownOpen(false) }}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      pathname.startsWith("/home-installation") || pathname.startsWith("/furniture") || pathname.startsWith("/picture") || pathname.startsWith("/wall-installation") || pathname.startsWith("/gazebo")
+                        ? "text-[#E50914]"
+                        : "text-white/80 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {link.label}
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${installationsOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {installationsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 mt-2 w-72 rounded-2xl bg-[#111] border border-white/10 shadow-2xl overflow-hidden"
+                      >
+                        {installations.map((s, i) => (
+                          <Link key={s.href} href={s.href}
+                            className={`flex flex-col px-4 py-3 hover:bg-white/5 transition-colors ${i < installations.length - 1 ? "border-b border-white/5" : ""}`}>
                             <span className="text-sm font-semibold text-white">{s.label}</span>
                             <span className="text-xs text-white/50 mt-0.5">{s.desc}</span>
                           </Link>
@@ -214,32 +260,39 @@ export default function Navbar() {
             >
               <div className="px-4 py-6 space-y-1">
                 {navLinks.map((link) =>
-                  link.hasDropdown ? (
+                  link.hasDropdown === "services" ? (
                     <div key={link.href}>
                       <p className="px-3 py-2 text-xs font-bold text-white/30 uppercase tracking-widest mt-3 mb-1">
-                        Services
+                        TV Services
                       </p>
                       {services.map((s) => (
-                        <Link
-                          key={s.href}
-                          href={s.href}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-                        >
+                        <Link key={s.href} href={s.href}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors">
+                          <span className="size-1.5 rounded-full bg-[#E50914] shrink-0" />
+                          {s.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : link.hasDropdown === "installations" ? (
+                    <div key={link.href}>
+                      <p className="px-3 py-2 text-xs font-bold text-white/30 uppercase tracking-widest mt-3 mb-1">
+                        Home Installations
+                      </p>
+                      {installations.map((s) => (
+                        <Link key={s.href} href={s.href}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors">
                           <span className="size-1.5 rounded-full bg-[#E50914] shrink-0" />
                           {s.label}
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <Link
-                      key={link.href}
-                      href={link.href}
+                    <Link key={link.href} href={link.href}
                       className={`block px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                         pathname === link.href
                           ? "text-[#E50914] bg-red-500/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
+                      }`}>
                       {link.label}
                     </Link>
                   )
