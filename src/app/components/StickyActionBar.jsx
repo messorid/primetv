@@ -40,7 +40,7 @@ export default function StickyActionBar() {
           </Link>
 
           <Link
-            href="/#quick-quote"
+            href="/quick-quote"
             aria-label="Get quick quote"
             onClick={() => gtag("event", "quote_form_start", { event_category: "engagement", page_path: typeof window !== "undefined" ? window.location.pathname : "/", placement: "sticky_bar", form_name: "quick_quote" })}
             className="flex items-center justify-center rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold text-black hover:bg-black/5 active:scale-[0.97]"
