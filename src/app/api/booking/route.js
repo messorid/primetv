@@ -270,8 +270,30 @@ export async function POST(request) {
     })
 
     // ── Save to Neon Postgres ──────────────────────────────────────────────────
-    try {
-      const sql = neon(process.env.DATABASE_URL)
+    // Fast path is the INSERT alone. The schema migration only runs if the insert
+    // fails, so a normal booking is one round trip instead of twelve — twelve
+    // sequential statements against a cold connection is what made saves time out
+    // while the confirmation emails had already gone out.
+    const insertBooking = (sql) => sql`
+      INSERT INTO bookings
+        (first_name, last_name, email, phone, referral, payment, date, time_pref,
+         address, promo, coupon_code, coupon_label, coupon_comment, tvs,
+         more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details,
+         custom_quote, custom_mode, custom_tv_size, custom_tv_qty, custom_price)
+      VALUES
+        (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
+         ${info.referral}, ${info.payment}, ${date}, ${timePreference},
+         ${JSON.stringify(address)}, ${selectedPromo || ""},
+         ${couponCode || ""}, ${appliedCouponLabel || ""},
+         ${couponComment || ""}, ${JSON.stringify(tvList)},
+         ${!!moreTvs}, ${moreTvsComment || ""},
+         ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""},
+         ${!!customQuote}, ${customMode || null}, ${customTvSize || null},
+         ${customQuote && customMode === "sized" ? (parseInt(customTvQty) || null) : null},
+         ${customPriceNum})
+    `
+
+    async function ensureSchema(sql) {
       await sql`
         CREATE TABLE IF NOT EXISTS bookings (
           id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -297,30 +319,67 @@ export async function POST(request) {
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_size TEXT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
-      await sql`
-        INSERT INTO bookings
-          (first_name, last_name, email, phone, referral, payment, date, time_pref,
-           address, promo, coupon_code, coupon_label, coupon_comment, tvs,
-           more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details,
-           custom_quote, custom_mode, custom_tv_size, custom_tv_qty, custom_price)
-        VALUES
-          (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
-           ${info.referral}, ${info.payment}, ${date}, ${timePreference},
-           ${JSON.stringify(address)}, ${selectedPromo || ""},
-           ${couponCode || ""}, ${appliedCouponLabel || ""},
-           ${couponComment || ""}, ${JSON.stringify(tvList)},
-           ${!!moreTvs}, ${moreTvsComment || ""},
-           ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""},
-           ${!!customQuote}, ${customMode || null}, ${customTvSize || null},
-           ${customQuote && customMode === "sized" ? (parseInt(customTvQty) || null) : null},
-           ${customPriceNum})
-      `
-    } catch (dbErr) {
-      console.error("DB save error", dbErr)
-      // Don't fail — emails already sent
     }
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 })
+    let dbSaved = false
+    let dbErrMsg = ""
+
+    for (let attempt = 1; attempt <= 3 && !dbSaved; attempt++) {
+      try {
+        const sql = neon(process.env.DATABASE_URL)
+        try {
+          await insertBooking(sql)
+        } catch (insertErr) {
+          // Missing table or column — migrate, then retry the insert once.
+          await ensureSchema(sql)
+          await insertBooking(sql)
+        }
+        dbSaved = true
+      } catch (dbErr) {
+        dbErrMsg = dbErr?.message || String(dbErr)
+        console.error(`DB save error (attempt ${attempt}/3)`, dbErr)
+        if (attempt < 3) await new Promise(r => setTimeout(r, 400 * attempt))
+      }
+    }
+
+    // A booking that never reached the database used to disappear silently while
+    // the customer still got a confirmation. Now it always alerts the business.
+    if (!dbSaved) {
+      try {
+        await transporter.sendMail({
+          from: `"PrimeTvNashville Bookings" <${user}>`,
+          to: "tvprimenashville@gmail.com",
+          subject: `⚠️ BOOKING NOT SAVED TO DATABASE — ${fullName} | ${date}`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:2px solid #e50914;border-radius:12px;">
+              <h2 style="color:#e50914;margin:0 0 8px;">⚠️ Booking did NOT save to the database</h2>
+              <p style="color:#444;font-size:14px;margin:0 0 16px;">
+                The customer received their confirmation email, but the record could not be written
+                to the bookings table after 3 attempts. <strong>Add it manually in the admin panel
+                or this job will not appear anywhere.</strong>
+              </p>
+              <table style="width:100%;border-collapse:collapse;">
+                ${brow("Customer", fullName)}
+                ${brow("Email", info.email)}
+                ${brow("Phone", info.phone)}
+                ${brow("Date", date)}
+                ${brow("Time", timePreference)}
+                ${brow("Address", fullAddress)}
+                ${brow("How they found us", info.referral)}
+                ${brow("Payment", info.payment)}
+                ${brow("DB error", safe(dbErrMsg))}
+              </table>
+              <h4 style="margin:24px 0 8px;color:#444;font-size:14px;">Raw payload</h4>
+              <pre style="background:#f6f6f6;padding:14px;border-radius:8px;font-size:11px;white-space:pre-wrap;word-break:break-word;">${safe(JSON.stringify(body, null, 2))}</pre>
+            </div>
+          `,
+        })
+      } catch (alertErr) {
+        console.error("Failed to send DB-failure alert", alertErr)
+      }
+    }
+
+    return new Response(JSON.stringify({ ok: true, saved: dbSaved }), { status: 200 })
   } catch (err) {
     console.error("booking error", err)
     return new Response(JSON.stringify({ ok: false, error: "Server error" }), { status: 500 })
