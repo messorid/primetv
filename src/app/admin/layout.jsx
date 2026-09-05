@@ -19,8 +19,9 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     if (path === "/admin/login") { setReady(true); return }
-    const isAuth = localStorage.getItem("admin-auth") || document.cookie.includes("admin-auth")
-    if (!isAuth) {
+    // Only a UI hint to avoid rendering the shell before redirecting — the
+    // session cookie is httpOnly and unreadable here. Middleware is the gate.
+    if (!localStorage.getItem("admin-auth")) {
       router.push("/admin/login")
     } else {
       setReady(true)
@@ -43,9 +44,10 @@ export default function AdminLayout({ children }) {
     }
   }, [])
 
-  function logout() {
+  async function logout() {
     localStorage.removeItem("admin-auth")
-    document.cookie = "admin-auth=; path=/; max-age=0"
+    // The cookie is httpOnly, so only the server can clear it.
+    await fetch("/api/logout", { method: "POST" }).catch(() => {})
     router.push("/admin/login")
   }
 

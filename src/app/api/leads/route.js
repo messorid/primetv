@@ -1,6 +1,9 @@
 import { connectToDatabase } from '@/lib/mongodb'
 import Lead from '@/models/Lead'
+import { isAdminRequest, unauthorized } from '@/lib/adminSession'
 
+// POST stays public so site forms can create a lead. Reading and deleting the
+// lead list exposes customer contact details, so both require an admin session.
 export async function POST(req) {
   try {
     const body = await req.json()
@@ -13,7 +16,8 @@ export async function POST(req) {
   }
 }
 
-export async function GET() {
+export async function GET(req) {
+  if (!(await isAdminRequest(req))) return unauthorized()
   try {
     await connectToDatabase()
     const leads = await Lead.find().sort({ createdAt: -1 })
@@ -25,6 +29,7 @@ export async function GET() {
 }
 
 export async function DELETE(req) {
+  if (!(await isAdminRequest(req))) return unauthorized()
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

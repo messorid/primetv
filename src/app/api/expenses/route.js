@@ -2,6 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
+import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -29,7 +30,8 @@ function normalize(row) {
   return { ...row, date: toDateStr(row.date) }
 }
 
-export async function GET() {
+export async function GET(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const sql = db()
     await ensureTable(sql)
@@ -42,6 +44,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const { category, description, amount, date } = await request.json()
     const sql = db()
@@ -59,6 +62,7 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")

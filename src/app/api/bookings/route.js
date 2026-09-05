@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic"
 import { neon } from "@neondatabase/serverless"
 import nodemailer from "nodemailer"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
+import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -54,7 +55,11 @@ function computeFinancials({ charged, materials, profitType, profitValue }) {
   return { companyProfit, amountPaidWorkers }
 }
 
-export async function GET() {
+// This route exposes every customer's name, address, phone and the company's
+// financials, so all four methods require an admin session. The public booking
+// form posts to /api/booking (singular), which stays open.
+export async function GET(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const sql = db()
     await ensureTable(sql)
@@ -67,6 +72,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const body = await request.json()
     const {
@@ -101,6 +107,7 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const body = await request.json()
     const { id, status, notes, installerId, installerName, installerEmail } = body
@@ -222,11 +229,19 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
     const sql = db()
     await sql`DELETE FROM bookings WHERE id=${id}`
+    // Photos are in a separate table with no FK, so clean them up here rather
+    // than leaving orphaned base64 behind. Never let this fail the delete.
+    try {
+      await sql`DELETE FROM booking_photos WHERE booking_id=${id}`
+    } catch (photoErr) {
+      console.error("Could not delete photos for booking", id, photoErr)
+    }
     return Response.json({ ok: true })
   } catch (err) {
     console.error(err)

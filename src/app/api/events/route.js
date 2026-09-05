@@ -2,6 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
+import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -30,7 +31,10 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+// POST stays public — the sticky bar on the public site records call and text
+// clicks. Reading the log back is admin-only.
+export async function GET(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
   try {
     const sql = db()
     await ensureTable(sql)

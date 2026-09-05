@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import User from '@/models/User'
 import { connectToDatabase } from '@/lib/mongodb'
+import { ADMIN_COOKIE, createSessionToken, sessionCookieOptions } from '@/lib/adminSession'
 
 
 export async function POST(req) {
@@ -20,15 +21,14 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Contraseña incorrecta' }, { status: 401 })
     }
 
-    // Setear cookie segura (1 día)
+    // Setear cookie segura (1 día) — token firmado, no un valor adivinable
+    const token = await createSessionToken()
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Servidor sin configurar' }, { status: 500 })
+    }
+
     const response = NextResponse.json({ success: true, message: 'Login exitoso' })
-    response.cookies.set('admin-auth', 'true', {
-      httpOnly: true,
-      maxAge: 60 * 60 * 24, // 1 día
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    response.cookies.set(ADMIN_COOKIE, token, sessionCookieOptions())
 
     return response
   } catch (error) {

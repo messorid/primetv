@@ -23,8 +23,9 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (data.ok) {
+        // The session cookie is set by the server (httpOnly + signed). This flag
+        // only drives the sidebar UI; it grants no access on its own.
         localStorage.setItem("admin-auth", "true")
-        document.cookie = "admin-auth=true; path=/; max-age=86400"
         router.push("/admin/bookings")
       } else {
         setError("Email or password incorrect")

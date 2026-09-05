@@ -3,16 +3,13 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, MAX_PHOTOS_PER_BOOKING, MAX_DATA_URL_CHARS } from "./shared"
+import { isAdminRequest } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
-function isAdmin(request) {
-  return Boolean(request.cookies.get("admin-auth")?.value)
-}
-
 // GET /api/bookings/photos?bookingId=<uuid>
 export async function GET(request) {
-  if (!isAdmin(request)) {
+  if (!(await isAdminRequest(request))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
   try {
@@ -43,7 +40,7 @@ export async function GET(request) {
 
 // POST { bookingId, photos: [{ filename, mime, dataUrl }] }
 export async function POST(request) {
-  if (!isAdmin(request)) {
+  if (!(await isAdminRequest(request))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
   try {
@@ -98,7 +95,7 @@ export async function POST(request) {
 
 // DELETE /api/bookings/photos?id=<uuid>
 export async function DELETE(request) {
-  if (!isAdmin(request)) {
+  if (!(await isAdminRequest(request))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
   try {
