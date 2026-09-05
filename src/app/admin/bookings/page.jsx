@@ -1128,6 +1128,8 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
 
+              <JobPhotos bookingId={b._id} active={expanded} />
+
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Internal Notes</label>
               <textarea rows={3} value={noteValue} onChange={e => onNoteChange(e.target.value)}
                 placeholder="Add notes about this booking…"
@@ -1186,6 +1188,153 @@ function AmountField({ label, value, onChange, hint }) {
         <input type="number" step="0.01" value={value} onChange={e => onChange(e.target.value)} placeholder="0.00"
           className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
       </div>
+    </div>
+  )
+}
+
+/* ── Job photos ─────────────────────────────────────────────────────────────── */
+
+// Phone photos come off the camera at 4–8 MB, which would never survive being
+// stored and emailed as base64. Resize and re-encode in the browser first.
+function compressImage(file, maxDim = 1600, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let { width, height } = img
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height)
+        width  = Math.round(width * scale)
+        height = Math.round(height * scale)
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL("image/jpeg", quality))
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Unreadable image")) }
+    img.src = url
+  })
+}
+
+function JobPhotos({ bookingId, active }) {
+  const [photos,    setPhotos]    = useState([])
+  const [loaded,    setLoaded]    = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [err,       setErr]       = useState("")
+  const [preview,   setPreview]   = useState(null)
+
+  useEffect(() => {
+    if (!active || loaded) return
+    let cancelled = false
+    setLoading(true)
+    fetch(`/api/bookings/photos?bookingId=${bookingId}`)
+      .then(r => r.json())
+      .then(d => { if (!cancelled && d.ok) { setPhotos(d.photos); setLoaded(true) } })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [active, loaded, bookingId])
+
+  async function handleFiles(e) {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ""
+    if (!files.length) return
+    setErr("")
+    setUploading(true)
+    try {
+      const encoded = []
+      for (const f of files) {
+        if (!f.type.startsWith("image/")) continue
+        encoded.push({ filename: f.name, mime: "image/jpeg", dataUrl: await compressImage(f) })
+      }
+      if (!encoded.length) { setErr("Select image files only."); return }
+      const res  = await fetch("/api/bookings/photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, photos: encoded }),
+      })
+      const data = await res.json()
+      if (data.ok) setPhotos(prev => [...prev, ...data.photos])
+      else setErr(data.error || "Upload failed.")
+    } catch {
+      setErr("Could not process those images.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function removePhoto(id) {
+    if (!confirm("Delete this photo?")) return
+    setPhotos(prev => prev.filter(p => p.id !== id))
+    await fetch(`/api/bookings/photos?id=${id}`, { method: "DELETE" })
+  }
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Job Photos {photos.length > 0 && <span className="text-gray-400">({photos.length})</span>}
+        </label>
+        {loading && <span className="text-[10px] text-gray-400">Loading…</span>}
+      </div>
+
+      <p className="text-[11px] text-gray-400 mb-2 leading-snug">
+        Photos are attached to the installer&apos;s job email. Upload before assigning, or
+        re-send the email after adding them.
+      </p>
+
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          {photos.map(p => (
+            <div key={p.id} className="relative group aspect-square">
+              <img
+                src={p.dataUrl}
+                alt={p.filename || "Job photo"}
+                onClick={() => setPreview(p.dataUrl)}
+                className="w-full h-full object-cover rounded-lg border border-gray-200 cursor-zoom-in"
+              />
+              <button
+                onClick={() => removePhoto(p.id)}
+                aria-label="Delete photo"
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <label className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-3 py-3 text-xs font-semibold transition cursor-pointer ${
+        uploading
+          ? "border-gray-200 text-gray-400 cursor-wait"
+          : "border-gray-300 text-gray-600 hover:border-[#E50914] hover:text-[#E50914]"
+      }`}>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          disabled={uploading}
+          onChange={handleFiles}
+          className="hidden"
+        />
+        {uploading ? "Uploading…" : "📷 Add Photos"}
+      </label>
+
+      {err && <p className="mt-1.5 text-[11px] font-medium text-red-500">{err}</p>}
+
+      {preview && (
+        <div
+          onClick={() => setPreview(null)}
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 cursor-zoom-out"
+        >
+          <img src={preview} alt="Job photo" className="max-w-full max-h-full rounded-xl" />
+        </div>
+      )}
     </div>
   )
 }
