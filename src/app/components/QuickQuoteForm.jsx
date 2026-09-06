@@ -158,7 +158,11 @@ export default function QuickQuoteForm({ onSubmitted }) {
                     Over 55 in
                   </button>
                 </div>
-                {basePrice && <p className="mt-2 text-xs text-black/60">{basePrice}</p>}
+                {basePrice && (
+                  <p className="mt-2 text-xs text-black/60">
+                    {basePrice} <span className="text-black/40">— approximate</span>
+                  </p>
+                )}
               </div>
 
               <div className="mt-5 space-y-4">
@@ -183,9 +187,18 @@ export default function QuickQuoteForm({ onSubmitted }) {
                 {status === "error" && <p className="text-sm font-medium text-[#E50914]">Something went wrong. Please try again.</p>}
               </div>
 
-              <p className="mt-4 text-xs text-black/55">
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+                <p className="text-[11px] leading-relaxed text-amber-900">
+                  <span className="font-bold">All prices are approximate.</span> They may vary
+                  depending on your TV, wall type and installation conditions. Your final price is
+                  confirmed by one of our sales representatives before any work begins.
+                </p>
+              </div>
+
+              <p className="mt-3 text-xs text-black/55">
                 Drywall has no extra charge. Concrete, tile, stone or metal has a $25 surcharge.
                 Cable concealment is $60 per TV. Fireplace handling from $25 extra.
+                Samsung Frame TV is quoted separately.
               </p>
             </form>
           )}

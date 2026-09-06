@@ -52,11 +52,11 @@ const frameFaqs = [
   },
   {
     q: "Do you install Samsung Frame TVs on brick or stone walls?",
-    a: "Yes. There is a $25 surcharge for hard surfaces (brick, stone, concrete, tile) to cover the specialized anchors and masonry bits required. The result is just as clean and secure.",
+    a: "Yes. Hard surfaces (brick, stone, concrete, tile) require specialized anchors and masonry bits, so they are quoted separately. Your sales representative will confirm the exact price for your wall before we begin. The result is just as clean and secure.",
   },
   {
     q: "Can you mount The Frame TV above a fireplace?",
-    a: "Yes, with proper heat clearance. We check the manufacturer's temperature guidelines and choose the safest mounting height. Fireplace handling starts from $25 extra.",
+    a: "Yes, with proper heat clearance. We check the manufacturer's temperature guidelines and choose the safest mounting height. Fireplace installations are quoted individually — request a quote and we will confirm your price.",
   },
   {
     q: "Do I need a special mount for The Frame TV?",
@@ -88,7 +88,7 @@ const WHAT_WE_HANDLE = [
   { title: "Cable Concealment", desc: "Samsung's transparent cable can go in-wall for a completely invisible finish. Available as an add-on for the cleanest result." },
   { title: "Art Mode Setup", desc: "We connect everything, test all inputs and walk you through Art Mode before we leave — so your TV looks like gallery art from day one." },
   { title: "Fireplace & Gallery Wall Installs", desc: "The Frame is popular above fireplaces and in gallery wall layouts. We handle both with proper heat clearance checks and precise leveling." },
-  { title: "Brick, Stone & Concrete", desc: "We mount on any wall surface with a $25 surcharge for hard materials. The result is just as clean and perfectly secure." },
+  { title: "Brick, Stone & Concrete", desc: "We mount on any wall surface. Hard materials are quoted separately since they need specialized anchors. The result is just as clean and perfectly secure." },
 ]
 
 export default function SamsungFrameInstallPage() {
@@ -169,34 +169,47 @@ export default function SamsungFrameInstallPage() {
       <section className="w-full bg-white py-16">
         <div className="max-w-5xl mx-auto px-5 md:px-6">
           <h2 className="text-3xl font-extrabold text-black">Pricing</h2>
-          <p className="mt-2 text-black/60">Upfront pricing, no hidden fees.</p>
+          <p className="mt-2 text-black/60">
+            Frame TV installations are quoted individually — every Frame model, mount and wall
+            is different. Request a quote and one of our sales representatives will give you
+            an exact price.
+          </p>
 
           <div className="mt-8 grid sm:grid-cols-2 md:grid-cols-3 gap-5">
             {[
-              { service: "Frame TV up to 55\"", price: "$110", note: "Mount + setup included" },
-              { service: "Frame TV 60\" – 70\"", price: "$150", note: "Mount + setup included" },
-              { service: "Cable Concealment", price: "+$60", note: "In-wall or raceway per TV" },
-              { service: "Hard Wall Surcharge", price: "+$25", note: "Brick, stone, concrete, tile" },
-              { service: "Fireplace Install", price: "from +$25", note: "Heat clearance checked" },
-              { service: "75\"+ / Large Frame", price: "Ask", note: "Call for quote" },
+              { service: "Frame TV up to 55\"", price: "Custom quote", note: "Mount + Art Mode setup" },
+              { service: "Frame TV 60\" – 70\"", price: "Custom quote", note: "Mount + Art Mode setup" },
+              { service: "75\"+ / Large Frame",  price: "Custom quote", note: "Two-person handling" },
+              { service: "Cable Concealment",    price: "Custom quote", note: "In-wall or raceway per TV" },
+              { service: "Hard Wall Surface",    price: "Custom quote", note: "Brick, stone, concrete, tile" },
+              { service: "Fireplace Install",    price: "Custom quote", note: "Heat clearance checked" },
             ].map(p => (
               <div key={p.service} className="rounded-2xl border border-black/10 bg-gray-50 p-5">
                 <p className="text-sm font-semibold text-black/70">{p.service}</p>
-                <p className="mt-1 text-3xl font-black text-[#E50914]">{p.price}</p>
+                <p className="mt-1 text-xl font-black text-[#E50914]">{p.price}</p>
                 <p className="mt-1 text-xs text-black/45">{p.note}</p>
               </div>
             ))}
           </div>
 
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-xs leading-relaxed text-amber-900">
+              <span className="font-bold">Frame TV pricing is quote-based.</span> Because The Frame
+              requires a specific slim-fit mount, One Connect Box placement and custom cable routing,
+              we do not publish a flat rate. One of our sales representatives will confirm your exact
+              price before any work begins.
+            </p>
+          </div>
+
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <Link href="/book"
+            <Link href="/quick-quote"
               className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">
-              Book Your Frame TV Install
+              Get Your Frame TV Quote
             </Link>
-            <Link href="/pricing"
+            <a href="tel:+16156690251"
               className="inline-flex items-center justify-center rounded-full border border-black/15 px-8 py-4 font-semibold text-black hover:bg-black/5 transition">
-              Full Pricing Page
-            </Link>
+              Call (615) 669-0251
+            </a>
           </div>
 
           {/* Cross-link */}
@@ -205,7 +218,7 @@ export default function SamsungFrameInstallPage() {
             <Link href="/cable-concealment-nashville" className="font-semibold text-[#E50914] hover:underline underline-offset-2">
               We also offer professional cable concealment in Nashville
             </Link>{" "}
-            — in-wall routing or surface raceway, $60 add-on per TV.
+            — in-wall routing or surface raceway, quoted with your installation.
           </p>
         </div>
       </section>

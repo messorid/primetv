@@ -1,4 +1,6 @@
-﻿import ExtraServices from "../components/ExtraServices"
+﻿import Link from "next/link"
+import ExtraServices from "../components/ExtraServices"
+import PriceDisclaimer from "../components/PriceDisclaimer"
 
 export const metadata = {
     title: "TV Mounting Prices Nashville TN | PrimeTvNashville Pricing",
@@ -82,10 +84,12 @@ const jsonLd = {
       <section className="bg-white py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold text-black mb-4">Pricing</h1>
-          <p className="text-gray-600 mb-12">
-            Transparent rates for high-quality installations. No hidden fees.
+          <p className="text-gray-600 mb-6">
+            Estimated rates for high-quality installations. No hidden fees.
           </p>
-  
+
+          <PriceDisclaimer className="mb-10 max-w-3xl mx-auto text-left" />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {pricingOptions.map((option, index) => (
               <div
@@ -95,9 +99,21 @@ const jsonLd = {
                 <h3 className="text-xl font-bold text-black mb-2">{option.title}</h3>
                 <p className="text-gray-600 mb-4">{option.description}</p>
                 <div className="text-3xl font-extrabold text-[#e50914]">{option.price}</div>
+                <p className="mt-2 text-[11px] text-gray-400">Approximate — confirmed by our sales team</p>
               </div>
             ))}
           </div>
+
+          <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 max-w-3xl mx-auto text-left">
+            <p className="text-sm text-gray-600">
+              <span className="font-bold text-black">Samsung Frame TV:</span> Frame installations
+              are quoted individually and are not covered by the rates above.{" "}
+              <Link href="/samsung-frame-tv-installation-nashville" className="font-semibold text-[#e50914] hover:underline underline-offset-2">
+                See Frame TV installation →
+              </Link>
+            </p>
+          </div>
+
           <ExtraServices />
         </div>
       </section>

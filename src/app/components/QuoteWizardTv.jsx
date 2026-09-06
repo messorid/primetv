@@ -186,8 +186,13 @@ export default function QuoteWizardTv() {
                 <button type="button" onClick={addAnotherTv} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Another TV</button>
 
                 <div className="bg-gray-100 p-4 rounded">
-                  <h4 className="font-semibold text-black">Current Total Estimate: ${totalTvCost.toFixed(2)}</h4>
-                  <p className="text-sm text-black">(Calculated per TV options selected. Prices may vary depending on TV type. Frame TVs may have an extra charge.)</p>
+                  <h4 className="font-semibold text-black">Approximate Estimate: ${totalTvCost.toFixed(2)}</h4>
+                  <p className="text-sm text-black">
+                    This is an approximate estimate based on the options selected. Prices may vary
+                    depending on your TV, wall type and installation conditions. Your final price is
+                    confirmed by one of our sales representatives. Samsung Frame TV installations are
+                    quoted separately.
+                  </p>
                 </div>
 
                 <div className="flex justify-between">

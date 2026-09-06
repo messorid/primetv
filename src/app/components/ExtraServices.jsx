@@ -24,7 +24,11 @@ export default function ExtraServices() {
   
     return (
       <div className="mt-20 text-left">
-        <h2 className="text-2xl font-bold text-black mb-6 text-center">Extra Services</h2>
+        <h2 className="text-2xl font-bold text-black mb-2 text-center">Extra Services</h2>
+        <p className="text-sm text-gray-500 mb-6 text-center max-w-2xl mx-auto">
+          Prices are approximate and may vary depending on your setup. Your final price is
+          confirmed by one of our sales representatives.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {extras.map((item, index) => (
             <div

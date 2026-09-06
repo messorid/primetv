@@ -1,5 +1,6 @@
 ﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
+import PriceDisclaimer from "../components/PriceDisclaimer"
 
 export const metadata = {
   title: "Cable Concealment Nashville TN | Hide TV Wires | PrimeTvNashville",
@@ -92,6 +93,7 @@ export default function CableConcealmentPage() {
             </a>
           </div>
           <p className="mt-5 text-2xl font-black text-[#E50914]">$60 <span className="text-base font-semibold text-black/50">per TV (add-on)</span></p>
+          <PriceDisclaimer className="mt-5 max-w-2xl" />
         </div>
       </section>
 

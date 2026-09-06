@@ -128,6 +128,10 @@ export default function ServicesSlider() {
             <p className="mt-2 text-black/70">
               Choose a service and book in minutes
             </p>
+            <p className="mt-1.5 text-xs text-black/45 max-w-md">
+              Prices shown are approximate. Your final price is confirmed by one of our
+              sales representatives.
+            </p>
           </div>
 
           {/* arrows */}

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
+import PriceDisclaimer from "./PriceDisclaimer"
 
 export default function PricingSection() {
   return (
@@ -16,10 +17,12 @@ export default function PricingSection() {
           </h2>
 
           <p className="mt-2 text-black/70">
-            Simple and clear rates for professional TV mounting. 
+            Estimated rates for professional TV mounting.
             Choose your option and book in minutes.
           </p>
         </header>
+
+        <PriceDisclaimer className="mt-5 max-w-3xl" />
 
         {/* base pricing */}
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -117,6 +120,10 @@ export default function PricingSection() {
         <div className="mt-14 rounded-2xl border border-black/10 bg-white p-5">
 
           <ul className="text-sm text-black/80 list-disc pl-5 space-y-2">
+
+            <li>All prices are approximate — your final price is confirmed by one of our sales representatives</li>
+
+            <li>Samsung Frame TV installations are quoted individually and are not covered by the rates above</li>
 
             <li>Prices do not include the bracket mount</li>
 

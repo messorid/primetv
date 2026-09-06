@@ -1,5 +1,6 @@
 ﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
+import PriceDisclaimer from "../components/PriceDisclaimer"
 
 export const metadata = {
   title: "TV Mounting Over Fireplace Nashville TN | PrimeTvNashville",
@@ -128,7 +129,7 @@ export default function FireplaceTvMountingPage() {
       <section className="w-full bg-white py-16">
         <div className="max-w-5xl mx-auto px-5 md:px-6">
           <h2 className="text-3xl font-extrabold text-black">Pricing</h2>
-          <p className="mt-2 text-black/60">Transparent upfront rates. No surprise charges.</p>
+          <p className="mt-2 text-black/60">Estimated rates. No surprise charges.</p>
           <div className="mt-8 grid sm:grid-cols-2 md:grid-cols-4 gap-5">
             {[
               { item: "TV up to 55\"", price: "$110" },
@@ -144,6 +145,9 @@ export default function FireplaceTvMountingPage() {
               </div>
             ))}
           </div>
+
+          <PriceDisclaimer className="mt-6" />
+
           <Link href="/book" className="mt-8 inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">
             Book Fireplace TV Mounting
           </Link>

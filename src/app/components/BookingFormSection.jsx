@@ -669,7 +669,16 @@ export default function BookingFormSection() {
         </AnimatePresence>
 
         {/* pricing note */}
-        <p className="mt-4 text-xs text-black/40 text-center">
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-[11px] leading-relaxed text-amber-900 text-center">
+            <span className="font-bold">All prices are approximate.</span> They may vary depending
+            on your TV, wall type and installation conditions. Your final price is confirmed by one
+            of our sales representatives before any work begins. Samsung Frame TV installations are
+            quoted separately.
+          </p>
+        </div>
+
+        <p className="mt-3 text-xs text-black/40 text-center">
           Drywall standard · Concrete / Tile / Stone / Metal +$25 · Fireplace from +$25
         </p>
 
