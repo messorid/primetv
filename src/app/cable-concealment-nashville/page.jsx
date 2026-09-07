@@ -39,7 +39,7 @@ const jsonLd = {
 }
 
 const cableQas = [
-  { q: "How much does cable concealment cost in Nashville?", a: "Cable concealment is $60 per TV as an add-on to your mounting service. This covers either in-wall routing using a power bridge kit or a surface raceway depending on your wall type." },
+  { q: "How much does cable concealment cost in Nashville?", a: "Cable concealment starts at $60 per TV as an add-on to your mounting service. This covers either in-wall routing using a power bridge kit or a surface raceway depending on your wall type. The final price depends on the wall type, the length of the run and the difficulty of the job." },
   { q: "What is the difference between in-wall routing and a raceway?", a: "In-wall routing threads cables inside the wall for a completely invisible finish — there's nothing visible on the surface at all. A surface raceway is a slim channel mounted on the wall that covers the cables and can be painted to match. In-wall is cleaner; raceways work for walls where drilling through isn't possible (brick, tile, concrete, rental units)." },
   { q: "Can you hide cables on a brick or stone wall?", a: "Yes. For hard surfaces we use a slim surface raceway that can be painted to blend with the wall. In-wall routing isn't possible through masonry without major renovation, so the raceway is the right solution here. It still looks significantly cleaner than loose cables." },
   { q: "Can you hide cables in an apartment without damaging the wall?", a: "Yes. We use a surface raceway that attaches without drilling into the wall structure — just the mount itself. When you move out, it removes cleanly. In-wall routing requires drilling and is less suitable for rentals." },
@@ -82,7 +82,7 @@ export default function CableConcealmentPage() {
           </h1>
           <p className="mt-5 text-lg text-black/60 max-w-2xl leading-relaxed">
             No more visible wires. We route all TV cables in-wall or through a clean surface raceway —
-            on drywall, brick, stone, tile or any wall type. Included as a $60 add-on per TV.
+            on drywall, brick, stone, tile or any wall type. Available as an add-on starting at $60 per TV.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white shadow-xl shadow-red-500/25 hover:bg-red-700 transition">
@@ -92,7 +92,7 @@ export default function CableConcealmentPage() {
               Call (615) 669-0251
             </a>
           </div>
-          <p className="mt-5 text-2xl font-black text-[#E50914]">$60 <span className="text-base font-semibold text-black/50">per TV (add-on)</span></p>
+          <p className="mt-5 text-2xl font-black text-[#E50914]">From $60 <span className="text-base font-semibold text-black/50">per TV (add-on)</span></p>
           <PriceDisclaimer className="mt-5 max-w-2xl" />
         </div>
       </section>
@@ -176,7 +176,7 @@ export default function CableConcealmentPage() {
           <h2 className="text-3xl md:text-4xl font-extrabold">Clean Cables. Clean Look.</h2>
           <p className="mt-3 text-white/60 text-lg">Add cable concealment to any TV mounting appointment in Nashville.</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">Book Now — $60 Add-On</Link>
+            <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">Book Now — From $60</Link>
             <a href="tel:+16156690251" className="inline-flex items-center justify-center rounded-full border border-white/20 px-8 py-4 font-semibold text-white hover:bg-white/10 transition">Call (615) 669-0251</a>
           </div>
           <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">

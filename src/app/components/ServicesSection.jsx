@@ -11,7 +11,7 @@ const SERVICES = [
     title: "Promo 2 TVs up to 55 in",
     desc: "Same visit and address. Brackets not included",
     img: "/images/tvpromo.png",
-    priceLabel: "$199 total",
+    priceLabel: "From $199",
     time: "Typically 90 to 120 min",
     notes: ["Same visit same address", "Bracket not included", "Drywall no extra"],
     promo: true,
@@ -23,7 +23,7 @@ const SERVICES = [
     title: "Promo 2 TVs over 55 in",
     desc: "Same visit and address. Brackets not included",
     img: "/images/tvpromo2.png",
-    priceLabel: "$260 total",
+    priceLabel: "From $260",
     time: "Typically 120 to 150 min",
     notes: ["Same visit same address", "Bracket not included", "Two person handling"],
     promo: true,
@@ -35,7 +35,7 @@ const SERVICES = [
     title: "TV up to 55 inches",
     desc: "Secure wall mount on drywall with studs",
     img: "/images/tv3.jpeg",
-    priceLabel: "$110 per TV",
+    priceLabel: "From $110 per TV",
     time: "45 to 75 min",
     notes: ["Drywall no extra", "Bracket not included"],
     ctaLabel: "Book this service",
@@ -46,7 +46,7 @@ const SERVICES = [
     title: "TV over 55 inches",
     desc: "Two person handling and precise leveling",
     img: "/images/tv1.jpeg",
-    priceLabel: "$140 per TV",
+    priceLabel: "From $140 per TV",
     time: "60 to 90 min",
     notes: ["Drywall no extra", "Bracket not included"],
     highlight: true,
@@ -70,7 +70,7 @@ const SERVICES = [
     title: "Cable concealment",
     desc: "In wall power kit or external raceway",
     img: "/images/tv2.jpeg",
-    priceLabel: "$60 add on",
+    priceLabel: "From $60 add on",
     time: "30 to 60 min",
     notes: ["Add on per TV"],
     addon: true,
@@ -129,8 +129,8 @@ export default function ServicesSlider() {
               Choose a service and book in minutes
             </p>
             <p className="mt-1.5 text-xs text-black/45 max-w-md">
-              Prices shown are approximate. Your final price is confirmed by one of our
-              sales representatives.
+              Starting prices. Final cost depends on the difficulty of the job, the wall type and
+              the mount installed — mantel mounts are priced separately. Confirmed by our sales team.
             </p>
           </div>
 

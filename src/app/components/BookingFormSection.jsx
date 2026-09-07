@@ -21,9 +21,9 @@ const WALL_TYPES = [
 ]
 
 const PROMOS = [
-  { label: '2 TVs up to 55"',                    price: "$199" },
-  { label: '2 TVs up to 70"',                    price: "$250" },
-  { label: '1 TV up to 55" + 1 TV up to 70"',   price: "$230" },
+  { label: '2 TVs up to 55"',                    price: "From $199" },
+  { label: '2 TVs up to 70"',                    price: "From $250" },
+  { label: '1 TV up to 55" + 1 TV up to 70"',   price: "From $230" },
 ]
 
 const REFERRAL_OPTIONS = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Other"]
@@ -671,15 +671,16 @@ export default function BookingFormSection() {
         {/* pricing note */}
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-[11px] leading-relaxed text-amber-900 text-center">
-            <span className="font-bold">All prices are approximate.</span> They may vary depending
-            on your TV, wall type and installation conditions. Your final price is confirmed by one
-            of our sales representatives before any work begins. Samsung Frame TV installations are
-            quoted separately.
+            <span className="font-bold">Prices start from the amounts shown.</span> Your final price
+            depends on the difficulty of the installation, the wall type and the mount or bracket
+            being installed. Pull-down mantel mounts (MantelMount and similar) and Samsung Frame TV
+            installs are priced separately. One of our sales representatives confirms your exact
+            price before any work begins.
           </p>
         </div>
 
         <p className="mt-3 text-xs text-black/40 text-center">
-          Drywall standard · Concrete / Tile / Stone / Metal +$25 · Fireplace from +$25
+          Drywall standard · Concrete / Tile / Stone / Metal from +$25 · Fireplace from +$25
         </p>
 
       </div>
@@ -697,7 +698,7 @@ function CableToggle({ count, onChange }) {
         <div>
           <span className="text-sm font-bold">🔌 Hidden Cable Concealment</span>
           <span className="block text-xs text-black/50 mt-0.5">
-            In-wall routing or raceway — <strong className="text-black/70">$60 per run</strong>
+            In-wall routing or raceway — <strong className="text-black/70">from $60 per run</strong>
           </span>
         </div>
         <div className="flex items-center gap-2 flex-none">

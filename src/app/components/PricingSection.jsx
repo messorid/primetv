@@ -29,7 +29,7 @@ export default function PricingSection() {
 
           <PriceCard
             title="TV up to 55 inches"
-            price="$110 per TV"
+            price="From $110 per TV"
             features={[
               "Level and secure mount on studs",
               "Safety check and cleanup",
@@ -41,7 +41,7 @@ export default function PricingSection() {
 
           <PriceCard
             title="TV over 55 inches"
-            price="$140 per TV"
+            price="From $140 per TV"
             features={[
               "Two person handling for large panels",
               "Level and secure mount on studs",
@@ -66,23 +66,23 @@ export default function PricingSection() {
 
             <Addon
               label="Cable concealment"
-              value="$60 per TV"
+              value="From $60 per TV"
             />
 
             <Addon
               label="Over fireplace handling"
-              value="from $25 extra"
+              value="From $25 extra"
             />
 
             <Addon
               label="Wall type surcharge"
-              value="$25 for concrete tile stone or metal"
+              value="From $25 for concrete tile stone or metal"
             />
 
           </div>
 
           <p className="mt-3 text-sm text-black/60">
-            Drywall has no extra charge. For concrete, tile, stone or metal walls there is a $25 surcharge.
+            Drywall has no extra charge. For concrete, tile, stone or metal walls the surcharge starts at $25.
           </p>
 
         </div>
@@ -99,14 +99,14 @@ export default function PricingSection() {
 
             <PromoCard
               title="2 TVs up to 55 inches"
-              price="$199 total"
+              price="From $199"
               note="Same visit same address"
               href="/book"
             />
 
             <PromoCard
               title="2 TVs over 55 inches"
-              price="$260 total"
+              price="From $260"
               note="Same visit same address"
               href="/book"
             />
@@ -121,9 +121,13 @@ export default function PricingSection() {
 
           <ul className="text-sm text-black/80 list-disc pl-5 space-y-2">
 
-            <li>All prices are approximate — your final price is confirmed by one of our sales representatives</li>
+            <li>All prices shown are starting prices — the final cost depends on the difficulty of the job, the wall type and the mount being installed</li>
+
+            <li>Pull-down mantel mounts (MantelMount and similar) are priced separately — ask us for a quote</li>
 
             <li>Samsung Frame TV installations are quoted individually and are not covered by the rates above</li>
+
+            <li>Your exact price is confirmed by one of our sales representatives before any work begins</li>
 
             <li>Prices do not include the bracket mount</li>
 

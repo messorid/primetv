@@ -40,20 +40,32 @@ const jsonLd = {
       {
         "@type": "Offer",
         "itemOffered": { "@type": "Service", "name": "Standard TV Mounting (up to 55\")" },
-        "price": "110",
-        "priceCurrency": "USD"
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "minPrice": "110",
+          "priceCurrency": "USD",
+          "valueAddedTaxIncluded": false
+        }
       },
       {
         "@type": "Offer",
         "itemOffered": { "@type": "Service", "name": "2 TV Installation Package" },
-        "price": "199",
-        "priceCurrency": "USD"
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "minPrice": "199",
+          "priceCurrency": "USD",
+          "valueAddedTaxIncluded": false
+        }
       },
       {
         "@type": "Offer",
         "itemOffered": { "@type": "Service", "name": "Large Screen Mounting (60\"-70\")" },
-        "price": "150",
-        "priceCurrency": "USD"
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "minPrice": "140",
+          "priceCurrency": "USD",
+          "valueAddedTaxIncluded": false
+        }
       }
     ]
   }
@@ -63,17 +75,17 @@ const jsonLd = {
     {
       title: "Standard TV Mounting",
       description: "For TVs up to 55 inches",
-      price: "$110"
+      price: "From $110"
     },
     {
       title: "Installation of 2 Televisions",
       description: "Perfect for setups in different rooms",
-      price: "$199"
+      price: "From $199"
     },
     {
       title: "Large Screen Mounting",
       description: "For TVs larger than 55 inches",
-      price: "$140"
+      price: "From $140"
     }
   ]
   
@@ -85,7 +97,7 @@ const jsonLd = {
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold text-black mb-4">Pricing</h1>
           <p className="text-gray-600 mb-6">
-            Estimated rates for high-quality installations. No hidden fees.
+            Starting rates for high-quality installations. No hidden fees.
           </p>
 
           <PriceDisclaimer className="mb-10 max-w-3xl mx-auto text-left" />
@@ -99,7 +111,7 @@ const jsonLd = {
                 <h3 className="text-xl font-bold text-black mb-2">{option.title}</h3>
                 <p className="text-gray-600 mb-4">{option.description}</p>
                 <div className="text-3xl font-extrabold text-[#e50914]">{option.price}</div>
-                <p className="mt-2 text-[11px] text-gray-400">Approximate — confirmed by our sales team</p>
+                <p className="mt-2 text-[11px] text-gray-400">Starting price — varies with difficulty &amp; mount type</p>
               </div>
             ))}
           </div>

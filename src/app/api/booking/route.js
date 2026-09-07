@@ -36,10 +36,12 @@ export async function POST(request) {
       `${safe(address.city)}, ${safe(address.state)} ${safe(address.zip)}`,
     ].filter(Boolean).join(", ")
 
+    // Starting prices — the rep confirms the final figure, so the email must not
+    // promise a flat rate the site no longer advertises.
     const PROMO_PRICES = {
-      '2 TVs up to 55"':                  "$199",
-      '2 TVs up to 70"':                  "$250",
-      '1 TV up to 55" + 1 TV up to 70"': "$230",
+      '2 TVs up to 55"':                  "From $199",
+      '2 TVs up to 70"':                  "From $250",
+      '1 TV up to 55" + 1 TV up to 70"': "From $230",
     }
 
     const tvList     = (tvs || [])

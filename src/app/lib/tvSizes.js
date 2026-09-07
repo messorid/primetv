@@ -11,7 +11,7 @@ export const TV_SIZES = [24, 32, 40, 43, 50, 55, 58, 60, 65, 70, 75, 77, 82, 85,
 export function priceHintForSize(size) {
   const n = parseInt(size)
   if (!n) return ""
-  if (n <= 55) return "~$110"
-  if (n <= 70) return "~$150"
+  if (n <= 55) return "From $110"
+  if (n <= 70) return "From $150"
   return "Ask price"
 }

@@ -161,21 +161,21 @@ export default function QuoteWizardTv() {
 
                     <select name="tvSize" value={tv.tvSize} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select TV Size</option>
-                      <option value="<55">Less than 55 inches ($99)</option>
-                      <option value=">=55">55 inches or larger ($120)</option>
+                      <option value="<55">Less than 55 inches (from $110)</option>
+                      <option value=">=55">55 inches or larger (from $140)</option>
                     </select>
 
                     <select name="wallType" value={tv.wallType} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select Wall Type</option>
                       <option value="Drywall">Drywall</option>
-                      <option value="Brick">Brick (+$25)</option>
-                      <option value="Concrete">Concrete (+$25)</option>
+                      <option value="Brick">Brick (from +$25)</option>
+                      <option value="Concrete">Concrete (from +$25)</option>
                       <option value="Other">Other</option>
                     </select>
 
                     <select name="hideCables" value={tv.hideCables} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Hide Cables?</option>
-                      <option value="Yes">Yes (+$60)</option>
+                      <option value="Yes">Yes (from +$60)</option>
                       <option value="No">No</option>
                     </select>
 

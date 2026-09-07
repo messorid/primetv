@@ -16,7 +16,7 @@ const SERVICES = [
   {
     href: "/cable-concealment-nashville",
     title: "Cable Concealment",
-    desc: "In-wall routing or surface raceway. $60 add-on per TV.",
+    desc: "In-wall routing or surface raceway. Add-on from $60 per TV.",
     icon: "🔌",
   },
   {

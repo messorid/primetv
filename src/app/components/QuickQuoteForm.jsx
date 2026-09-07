@@ -160,7 +160,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
                 </div>
                 {basePrice && (
                   <p className="mt-2 text-xs text-black/60">
-                    {basePrice} <span className="text-black/40">— approximate</span>
+                    {basePrice} <span className="text-black/40">— starting price</span>
                   </p>
                 )}
               </div>
@@ -189,16 +189,18 @@ export default function QuickQuoteForm({ onSubmitted }) {
 
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
                 <p className="text-[11px] leading-relaxed text-amber-900">
-                  <span className="font-bold">All prices are approximate.</span> They may vary
-                  depending on your TV, wall type and installation conditions. Your final price is
-                  confirmed by one of our sales representatives before any work begins.
+                  <span className="font-bold">Prices start from the amounts shown.</span> Your final
+                  price depends on the difficulty of the installation, the wall type and the mount
+                  or bracket being installed. Pull-down mantel mounts (MantelMount and similar) are
+                  priced separately. One of our sales representatives confirms your exact price
+                  before any work begins.
                 </p>
               </div>
 
               <p className="mt-3 text-xs text-black/55">
-                Drywall has no extra charge. Concrete, tile, stone or metal has a $25 surcharge.
-                Cable concealment is $60 per TV. Fireplace handling from $25 extra.
-                Samsung Frame TV is quoted separately.
+                Drywall has no extra charge. Concrete, tile, stone or metal starts at a $25 surcharge.
+                Cable concealment from $60 per TV. Fireplace handling from $25 extra.
+                Samsung Frame TV and mantel mounts are quoted separately.
               </p>
             </form>
           )}
