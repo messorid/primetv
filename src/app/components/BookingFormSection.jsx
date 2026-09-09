@@ -10,14 +10,29 @@ function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
 }
 
-const STEPS = ["Date & Time", "TV Details", "Address", "Your Info"]
+const STEPS = ["Date & Time", "Service Details", "Address", "Your Info"]
 
+// Hard surfaces need specialised anchors and the cost depends on the material
+// and the difficulty, so no figure is published here — a rep quotes it.
 const WALL_TYPES = [
-  { label: "Drywall",       surcharge: 0  },
-  { label: "Brick / Stone", surcharge: 25 },
-  { label: "Concrete",      surcharge: 25 },
-  { label: "Tile",          surcharge: 25 },
-  { label: "Metal / Steel", surcharge: 25 },
+  { label: "Drywall",       note: "Standard" },
+  { label: "Brick / Stone", note: "By quote" },
+  { label: "Concrete",      note: "By quote" },
+  { label: "Tile",          note: "By quote" },
+  { label: "Metal / Steel", note: "By quote" },
+]
+
+const TV_MODELS = [
+  { id: "standard", label: "Standard TV", icon: "📺" },
+  { id: "frame",    label: "Frame TV",    icon: "🖼️" },
+]
+
+const HOME_INSTALL_SERVICES = [
+  { id: "furniture",      label: "Furniture Assembly",       icon: "🪑" },
+  { id: "mirror_picture", label: "Picture / Mirror Hanging", icon: "🪞" },
+  { id: "shelves_wall",   label: "Shelves & Wall Install",   icon: "📐" },
+  { id: "gazebo",         label: "Gazebo / Pergola",         icon: "⛺" },
+  { id: "other",          label: "Other Installation",       icon: "🔧" },
 ]
 
 const PROMOS = [
@@ -36,7 +51,7 @@ const US_STATES = [
 ]
 
 function emptyTv() {
-  return { size: "", wallType: "", comments: "" }
+  return { model: "standard", size: "", measurements: "", wallType: "", comments: "" }
 }
 
 export default function BookingFormSection() {
@@ -66,11 +81,14 @@ export default function BookingFormSection() {
   const [customTvSize,     setCustomTvSize]     = useState("")
   const [customTvQty,      setCustomTvQty]      = useState(1)
   const [customPrice,      setCustomPrice]      = useState("")
-  const [bookingMode,      setBookingMode]      = useState("standard") // "standard" | "promo" | "bundle"
+  // "standard" | "promo" | "bundle" | "homeinstall"
+  const [bookingMode,      setBookingMode]      = useState("standard")
   const [tvs,              setTvs]              = useState([emptyTv()])
   const [selectedPromo,    setSelectedPromo]    = useState("")
   const [cableConcealment, setCableConcealment] = useState(0) // number of hidden cable runs
   const [bundleDetails,    setBundleDetails]    = useState("")
+  const [homeInstallService, setHomeInstallService] = useState("")
+  const [homeInstallDetails, setHomeInstallDetails] = useState("")
 
   // Steps 2 & 3
   const [address, setAddress] = useState({ street: "", apt: "", city: "", state: "TN", zip: "" })
@@ -81,6 +99,11 @@ export default function BookingFormSection() {
 
   const today = new Date().toISOString().split("T")[0]
 
+  // A Frame TV is quoted from its measurements, so those are required in place
+  // of the price the standard flow would show.
+  const tvValid = tv =>
+    tv.wallType && (tv.model === "frame" ? tv.measurements.trim().length > 0 : !!tv.size)
+
   // Step 1 validity per mode
   const step1Valid = appliedCoupon?.customQuote
     ? customPrice !== "" && !isNaN(parseFloat(customPrice)) &&
@@ -88,9 +111,11 @@ export default function BookingFormSection() {
     : moreTvs
     ? true
     : bookingMode === "standard"
-    ? tvs.length > 0 && tvs.every(tv => tv.size && tv.wallType)
+    ? tvs.length > 0 && tvs.every(tvValid)
     : bookingMode === "promo"
     ? selectedPromo !== ""
+    : bookingMode === "homeinstall"
+    ? homeInstallService !== "" && homeInstallDetails.trim().length > 0
     : bundleDetails.trim().length > 0 // "bundle" mode
 
   const stepValid = [
@@ -119,6 +144,8 @@ export default function BookingFormSection() {
   function switchMode(mode) {
     setBookingMode(mode)
     if (mode !== "promo") setSelectedPromo("")
+    // Cable concealment is a TV add-on; it makes no sense on a home install.
+    if (mode === "homeinstall") setCableConcealment(0)
   }
 
   function applyCoupon() {
@@ -143,6 +170,8 @@ export default function BookingFormSection() {
           bookingMode,
           selectedPromo:      bookingMode === "promo"   ? selectedPromo   : "",
           comboDetails:       bookingMode === "bundle"  ? bundleDetails   : "",
+          homeInstallService: bookingMode === "homeinstall" ? homeInstallService : "",
+          homeInstallDetails: bookingMode === "homeinstall" ? homeInstallDetails : "",
           tvs:                bookingMode === "standard" && !moreTvs ? tvs : [],
           cableConcealment,
           couponCode:         appliedCoupon ? couponCode : "",
@@ -294,13 +323,26 @@ export default function BookingFormSection() {
             {/* ── STEP 1 — TV Details ── */}
             {step === 1 && (
               <div>
-                <StepHeader title="TV Details" sub="Tell us about your installation" />
+                <StepHeader title="Service Details" sub="Tell us about your installation" />
 
                 {/* 3+ TVs toggle */}
                 <div className="mb-5 rounded-xl border border-black/10 bg-gray-50 p-3">
                   <button
                     type="button"
-                    onClick={() => { setMoreTvs(p => !p); setCableConcealment(0) }}
+                    onClick={() => {
+                      const next = !moreTvs
+                      setMoreTvs(next)
+                      setCableConcealment(0)
+                      // The mode tabs disappear while this is on, so reset to the
+                      // TV flow rather than submitting a stale promo or home-install
+                      // selection the customer can no longer see.
+                      if (next) {
+                        setBookingMode("standard")
+                        setSelectedPromo("")
+                        setHomeInstallService("")
+                        setHomeInstallDetails("")
+                      }
+                    }}
                     className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
                       moreTvs
                         ? "bg-gray-900 border-gray-900 text-white"
@@ -354,11 +396,12 @@ export default function BookingFormSection() {
                 {/* Mode tabs — shown only when NOT 3+ TVs */}
                 {!moreTvs && (
                   <div>
-                    <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-black/10 bg-gray-50 p-1.5 mb-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-2xl border border-black/10 bg-gray-50 p-1.5 mb-5">
                       {[
-                        { id: "standard", label: "Standard" },
-                        { id: "promo",    label: "Promos"   },
-                        { id: "bundle",   label: "Bundle"   },
+                        { id: "standard",    label: "Standard"     },
+                        { id: "promo",       label: "Promos"       },
+                        { id: "bundle",      label: "Bundle"       },
+                        { id: "homeinstall", label: "Home Install" },
                       ].map(m => (
                         <button
                           key={m.id}
@@ -391,12 +434,63 @@ export default function BookingFormSection() {
                                 )}
                               </div>
 
+                              {/* TV model */}
                               <div>
-                                <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">TV Size</label>
-                                <div className="mt-1.5">
-                                  <TvSizeSelect value={tv.size} onChange={v => updateTv(i, "size", v)} />
+                                <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">TV Model</label>
+                                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                                  {TV_MODELS.map(m => (
+                                    <button key={m.id} type="button" onClick={() => updateTv(i, "model", m.id)}
+                                      className={`rounded-xl border py-2.5 px-2 transition ${
+                                        tv.model === m.id
+                                          ? "bg-[#E50914] text-white border-[#E50914]"
+                                          : "border-black/15 bg-white hover:bg-black/5"
+                                      }`}>
+                                      <span className="block text-base leading-none mb-1">{m.icon}</span>
+                                      <span className="block text-xs font-semibold">{m.label}</span>
+                                    </button>
+                                  ))}
                                 </div>
                               </div>
+
+                              {tv.model === "frame" && (
+                                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                                  <strong>Frame TV installs are quoted individually.</strong> The slim-fit mount,
+                                  One Connect Box placement and cable routing all affect the price, so we don&apos;t
+                                  publish a flat rate. Give us the measurements and details below and a sales
+                                  representative will confirm your exact price.
+                                </p>
+                              )}
+
+                              <div>
+                                <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
+                                  TV Size {tv.model === "frame" && <span className="normal-case font-normal">(optional)</span>}
+                                </label>
+                                <div className="mt-1.5">
+                                  <TvSizeSelect
+                                    value={tv.size}
+                                    onChange={v => updateTv(i, "size", v)}
+                                    showPrice={tv.model !== "frame"}
+                                  />
+                                </div>
+                              </div>
+
+                              {tv.model === "frame" && (
+                                <div>
+                                  <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
+                                    Measurements <span className="text-[#E50914]">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={tv.measurements}
+                                    onChange={e => updateTv(i, "measurements", e.target.value)}
+                                    placeholder='e.g. 48" wide x 28" tall — Samsung Frame 55" (2024)'
+                                    className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                                  />
+                                  <p className="mt-1 text-[11px] text-black/40">
+                                    Width and height of the TV, plus the model or year if you know it.
+                                  </p>
+                                </div>
+                              )}
 
                               <div>
                                 <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">Wall Type</label>
@@ -410,22 +504,28 @@ export default function BookingFormSection() {
                                       }`}>
                                       <span className="block text-xs font-semibold">{w.label}</span>
                                       <span className={`block text-[11px] mt-0.5 ${tv.wallType === w.label ? "text-white/80" : "text-black/45"}`}>
-                                        {w.surcharge === 0 ? "Standard" : `+$${w.surcharge}`}
+                                        {w.note}
                                       </span>
                                     </button>
                                   ))}
                                 </div>
+                                <p className="mt-1.5 text-[11px] text-black/40">
+                                  Surfaces other than drywall are quoted based on the material and difficulty.
+                                </p>
                               </div>
 
                               <div>
                                 <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
-                                  Comments <span className="normal-case font-normal">(optional)</span>
+                                  {tv.model === "frame" ? "Description" : "Comments"}{" "}
+                                  <span className="normal-case font-normal">(optional)</span>
                                 </label>
                                 <textarea
                                   rows={2}
                                   value={tv.comments}
                                   onChange={e => updateTv(i, "comments", e.target.value)}
-                                  placeholder="Fireplace, high wall, specific location…"
+                                  placeholder={tv.model === "frame"
+                                    ? "Mount you have, One Connect Box location, Art Mode setup, wall finish…"
+                                    : "Fireplace, high wall, specific location…"}
                                   className="mt-1.5 w-full rounded-xl border border-black/15 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none bg-white"
                                 />
                               </div>
@@ -511,8 +611,58 @@ export default function BookingFormSection() {
                       </div>
                     )}
 
+                    {/* ── Home Installations ── */}
+                    {bookingMode === "homeinstall" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
+                            What do you need installed? <span className="text-[#E50914]">*</span>
+                          </label>
+                          <div className="mt-2 space-y-2">
+                            {HOME_INSTALL_SERVICES.map(s => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setHomeInstallService(prev => prev === s.id ? "" : s.id)}
+                                className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                                  homeInstallService === s.id
+                                    ? "bg-[#E50914] text-white border-[#E50914]"
+                                    : "border-black/15 bg-white hover:bg-black/5"
+                                }`}
+                              >
+                                <span className="text-lg leading-none">{s.icon}</span>
+                                <span className="text-sm font-semibold flex-1">{s.label}</span>
+                                {homeInstallService === s.id && <span className="text-sm">✓</span>}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-black/10 bg-gray-50 p-4">
+                          <label className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
+                            Describe what you need <span className="text-[#E50914]">*</span>
+                          </label>
+                          <p className="text-xs text-black/40 mb-3 leading-relaxed">
+                            Item, quantity, brand or model, approximate size, and anything else that helps us
+                            quote it accurately.
+                          </p>
+                          <textarea
+                            rows={5}
+                            value={homeInstallDetails}
+                            onChange={e => setHomeInstallDetails(e.target.value)}
+                            placeholder="e.g. IKEA PAX wardrobe, 2 units, already delivered. Also a 40 lb mirror to hang on a drywall hallway wall."
+                            className="w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                          />
+                          <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium">
+                            Home installations are priced by quote. We&apos;ll review your request and reach out
+                            with pricing before the appointment — no payment required now.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Add-ons (Standard + Promos only) ── */}
-                    {bookingMode !== "bundle" && (
+                    {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
                       <div className="mt-5 rounded-2xl border-2 border-dashed border-black/15 bg-gray-50 p-4">
                         <p className="text-xs font-bold text-black/40 uppercase tracking-widest mb-3">Add-ons</p>
                         <CableToggle count={cableConcealment} onChange={setCableConcealment} />
@@ -520,7 +670,7 @@ export default function BookingFormSection() {
                     )}
 
                     {/* ── Coupon ── */}
-                    {bookingMode !== "bundle" && (
+                    {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
                       <CouponField
                         appliedCoupon={appliedCoupon} couponCode={couponCode}
                         couponStatus={couponStatus} couponComment={couponComment}
@@ -680,7 +830,8 @@ export default function BookingFormSection() {
         </div>
 
         <p className="mt-3 text-xs text-black/40 text-center">
-          Drywall standard · Concrete / Tile / Stone / Metal from +$25 · Fireplace from +$25
+          Drywall standard · Concrete / Tile / Stone / Metal by quote · Fireplace by quote ·
+          Frame TV &amp; home installations by quote
         </p>
 
       </div>
@@ -733,7 +884,7 @@ function CableToggle({ count, onChange }) {
 // Single-choice (radio-style) TV size picker with a search box — always picks
 // exactly one value from TV_SIZES, so every submission stores the same
 // normalized size string for later reporting (Admin → Reporte).
-function TvSizeSelect({ value, onChange, tone = "red" }) {
+function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
   const [query, setQuery] = useState("")
   const [open,  setOpen]  = useState(false)
   const wrapRef = useRef(null)
@@ -778,7 +929,9 @@ function TvSizeSelect({ value, onChange, tone = "red" }) {
               }`}
             >
               <span>{s}&quot;</span>
-              <span className="text-xs text-black/40">{priceHintForSize(s)}</span>
+              <span className="text-xs text-black/40">
+                {showPrice ? priceHintForSize(s) : "By quote"}
+              </span>
             </button>
           ))}
         </div>

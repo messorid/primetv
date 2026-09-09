@@ -31,6 +31,22 @@ const STATUS_CONFIG = {
 
 const STATUS_FLOW = ["pending", "confirmed", "completed", "cancelled"]
 
+// Keyed by the exact promo label the booking form sends. Matching on a substring
+// mislabels the mixed package, which contains both sizes.
+const PROMO_PRICES = {
+  '2 TVs up to 55"':                  "From $199",
+  '2 TVs up to 70"':                  "From $250",
+  '1 TV up to 55" + 1 TV up to 70"': "From $230",
+}
+
+const HOME_INSTALL_LABELS = {
+  furniture:      "Furniture Assembly",
+  mirror_picture: "Picture / Mirror Hanging",
+  shelves_wall:   "Shelves & Wall Installation",
+  gazebo:         "Gazebo / Pergola Assembly",
+  other:          "Other Installation",
+}
+
 function pad(n) { return String(n).padStart(2, "0") }
 function isoDate(d) {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
@@ -920,27 +936,60 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               </div>
 
+              {b.bookingMode === "homeinstall" && (
+                <div className="mt-2 rounded-xl bg-blue-50 border border-blue-200 p-3">
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">
+                    🔧 Home Installation — Quote Based
+                  </p>
+                  <p className="text-sm font-semibold text-blue-900">
+                    {HOME_INSTALL_LABELS[b.homeInstallService] || b.homeInstallService || "Installation"}
+                  </p>
+                  {b.comboDetails && (
+                    <p className="mt-1 text-sm text-blue-800 whitespace-pre-line">{b.comboDetails}</p>
+                  )}
+                </div>
+              )}
+              {b.bookingMode === "bundle" && b.comboDetails && (
+                <div className="mt-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Bundle — Job Description</p>
+                  <p className="text-sm text-amber-900 whitespace-pre-line">{b.comboDetails}</p>
+                </div>
+              )}
               {b.selectedPromo && (
                 <div className="mt-2 rounded-xl bg-red-50 border border-red-100 p-3">
                   <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide mb-1">Promo Package</p>
                   <p className="text-sm font-semibold text-gray-800">{b.selectedPromo}</p>
-                  <p className="text-lg font-extrabold text-[#E50914] mt-1">{b.selectedPromo.includes("55") ? "$199" : "$260"}</p>
+                  <p className="text-lg font-extrabold text-[#E50914] mt-1">{PROMO_PRICES[b.selectedPromo] || "See quote"}</p>
                 </div>
               )}
               {b.moreTvs && (
                 <div className="mt-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
                   <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">3+ TVs — Custom Quote</p>
-                  {b.moreTvsComment && <p className="text-sm text-amber-800 italic">"{b.moreTvsComment}"</p>}
+                  {b.moreTvsComment && <p className="text-sm text-amber-800 italic">&quot;{b.moreTvsComment}&quot;</p>}
                 </div>
               )}
               {!b.selectedPromo && !b.moreTvs && b.tvs?.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {b.tvs.map((tv, i) => (
-                    <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
-                      <p className="text-xs font-bold text-gray-500 mb-1">TV #{i + 1}</p>
-                      <p className="text-sm font-semibold">{tv.size}{tv.exactSize ? ` (${tv.exactSize}")` : ""}</p>
+                    <div key={i} className={`rounded-xl border p-3 ${
+                      tv.model === "frame" ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-100"
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-xs font-bold text-gray-500">TV #{i + 1}</p>
+                        {tv.model === "frame" && (
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-[#E50914] bg-white border border-red-200 rounded-full px-2 py-0.5">
+                            🖼️ Frame TV — quote
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold">
+                        {tv.size ? `${tv.size}"` : "Size n/a"}{tv.exactSize ? ` (${tv.exactSize}")` : ""}
+                      </p>
+                      {tv.measurements && (
+                        <p className="text-xs font-medium text-[#E50914] mt-0.5">📐 {tv.measurements}</p>
+                      )}
                       <p className="text-xs text-gray-500 mt-0.5">{tv.wallType}</p>
-                      {tv.comments && <p className="text-xs text-gray-400 mt-0.5 italic">"{tv.comments}"</p>}
+                      {tv.comments && <p className="text-xs text-gray-400 mt-0.5 italic">&quot;{tv.comments}&quot;</p>}
                     </div>
                   ))}
                 </div>

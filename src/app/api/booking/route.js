@@ -10,6 +10,7 @@ export async function POST(request) {
     const {
       date, timePreference, tvs, address, info,
       bookingMode, selectedPromo, cableConcealment, comboDetails,
+      homeInstallService, homeInstallDetails,
       couponCode, appliedCouponLabel, couponComment, couponHidden,
       customQuote, customMode, customTvSize, customTvQty, customPrice,
       moreTvs, moreTvsComment,
@@ -44,25 +45,74 @@ export async function POST(request) {
       '1 TV up to 55" + 1 TV up to 70"': "From $230",
     }
 
-    const tvList     = (tvs || [])
-    const isStandard = !bookingMode || bookingMode === "standard"
-    const isPromo    = bookingMode === "promo"
-    const isCombo    = bookingMode === "bundle"
-    const hasPromo   = isPromo && !!selectedPromo
-    const promoPrice = hasPromo ? (PROMO_PRICES[selectedPromo] || "See quote") : ""
+    const HOME_INSTALL_LABELS = {
+      furniture:      "Furniture Assembly",
+      mirror_picture: "Picture / Mirror Hanging",
+      shelves_wall:   "Shelves & Wall Installation",
+      gazebo:         "Gazebo / Pergola Assembly",
+      other:          "Other Installation",
+    }
+
+    const tvList      = (tvs || [])
+    const isStandard  = !bookingMode || bookingMode === "standard"
+    const isPromo     = bookingMode === "promo"
+    const isCombo     = bookingMode === "bundle"
+    const isHomeInst  = bookingMode === "homeinstall"
+    const hasPromo    = isPromo && !!selectedPromo
+    const promoPrice  = hasPromo ? (PROMO_PRICES[selectedPromo] || "See quote") : ""
+    const homeInstLbl = isHomeInst
+      ? (HOME_INSTALL_LABELS[homeInstallService] || homeInstallService || "Installation")
+      : ""
 
     const cableQty   = parseInt(cableConcealment) || 0
     const cableTotal = cableQty * 60
     const cableLine  = cableQty > 0 ? ` + Cable Concealment ×${cableQty} (+$${cableTotal})` : ""
 
+    const isFrameTv = tv => tv?.model === "frame"
+    const anyFrameTv = tvList.some(isFrameTv)
+
     const tvRows = tvList.map((tv, idx) => `
       <tr style="background:${idx % 2 ? "#fafafa" : "#fff"};">
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${idx + 1}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${safe(tv.size)}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">
+          ${isFrameTv(tv)
+            ? `<strong style="color:#e50914;">Frame TV</strong>`
+            : "Standard"}
+        </td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">
+          ${tv.size ? `${safe(tv.size)}"` : "-"}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""}
+          ${tv.measurements ? `<br><span style="font-size:12px;color:#b45309;">${safe(tv.measurements)}</span>` : ""}
+        </td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${safe(tv.wallType)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;">${safe(tv.comments) || "-"}</td>
       </tr>
     `).join("")
+
+    // Home installation request — always quote-based, never a published rate.
+    const homeInstallBlock = isHomeInst ? `
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:16px 20px;margin-top:20px;">
+        <p style="margin:0;font-size:12px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.05em;">
+          🔧 Home Installation — Quote Based
+        </p>
+        <p style="margin:8px 0 0;font-size:15px;font-weight:700;color:#1e3a8a;">${safe(homeInstLbl)}</p>
+        ${homeInstallDetails ? `<p style="margin:8px 0 0;font-size:13px;color:#1e40af;">${safe(homeInstallDetails).replace(/\n/g, "<br>")}</p>` : ""}
+        <p style="margin:10px 0 0;font-size:12px;color:#3b82f6;">
+          We will review this request and contact you with pricing before the appointment.
+        </p>
+      </div>
+    ` : ""
+
+    const frameTvBlock = anyFrameTv ? `
+      <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin-top:12px;">
+        <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
+          🖼️ Frame TV — Quote Based
+        </p>
+        <p style="margin:6px 0 0;font-size:13px;color:#7f1d1d;">
+          Frame TV installations are quoted individually based on the measurements, the mount and the
+          wall. One of our sales representatives will confirm your exact price before the appointment.
+        </p>
+      </div>
+    ` : ""
 
     // ── Price / promo block for client email ──────────────────────────────────
     const promoPriceBlock = hasPromo ? `
@@ -149,8 +199,11 @@ export async function POST(request) {
             ${brow("Date Requested", date)}
             ${brow("Time Preference", timePreference)}
             ${brow("Service Address", fullAddress)}
-            ${brow("Booking Mode", isCombo ? "Bundle (custom)" : isPromo ? "Promo Package" : "Standard")}
+            ${brow("Booking Mode", isHomeInst ? "Home Installation" : isCombo ? "Bundle (custom)" : isPromo ? "Promo Package" : "Standard")}
             ${hasPromo ? brow("Promo Selected", `${safe(selectedPromo)} — <strong>${promoPrice}</strong>`) : ""}
+            ${isHomeInst ? brow("Service Requested", `<strong>${safe(homeInstLbl)}</strong> — quote based`) : ""}
+            ${isHomeInst && homeInstallDetails ? brow("Job Description", safe(homeInstallDetails)) : ""}
+            ${anyFrameTv ? brow("Frame TV", "Yes — quote based") : ""}
             ${isCombo && comboDetails ? brow("Job Description", safe(comboDetails)) : ""}
             ${isStandard && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
             ${isPromo && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
@@ -165,9 +218,9 @@ export async function POST(request) {
             ${brow("Payment Method", info.payment)}
           </table>
 
-          ${isCombo ? `
+          ${isHomeInst ? homeInstallBlock : isCombo ? `
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:16px;">
-              <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Combinados — Custom Job</p>
+              <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Bundle — Custom Job</p>
               <p style="margin:8px 0 0;font-size:14px;color:#78350f;">${safe(comboDetails || "-")}</p>
             </div>
           ` : hasPromo ? `
@@ -180,13 +233,15 @@ export async function POST(request) {
               <thead>
                 <tr style="background:#f0f0f0;">
                   <th style="padding:8px 12px;text-align:left;">#</th>
-                  <th style="padding:8px 12px;text-align:left;">Size</th>
+                  <th style="padding:8px 12px;text-align:left;">Model</th>
+                  <th style="padding:8px 12px;text-align:left;">Size / Measurements</th>
                   <th style="padding:8px 12px;text-align:left;">Wall Type</th>
                   <th style="padding:8px 12px;text-align:left;">Comments</th>
                 </tr>
               </thead>
               <tbody>${tvRows}</tbody>
             </table>
+            ${frameTvBlock}
           `}
           ${cableQty > 0 && !isCombo ? `
             <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:12px;">
@@ -227,7 +282,9 @@ export async function POST(request) {
               ${crow("Date", date)}
               ${crow("Time Window", timePreference)}
               ${crow("Address", fullAddress)}
-              ${isCombo
+              ${isHomeInst
+                ? crow("Service", `${safe(homeInstLbl)} — quote based`)
+                : isCombo
                 ? crow("Service", "Custom Installation")
                 : hasPromo
                 ? crow("Package", selectedPromo)
@@ -235,7 +292,7 @@ export async function POST(request) {
                 ? crow("TVs", "3+ TVs — custom quote")
                 : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
               }
-              ${cableQty > 0 && !isCombo ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
+              ${cableQty > 0 && !isCombo && !isHomeInst ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
             </table>
           </div>
 
@@ -243,6 +300,8 @@ export async function POST(request) {
           ${customQuoteBlock}
           ${couponBlock}
           ${moreTvsBlock}
+          ${isHomeInst ? homeInstallBlock : ""}
+          ${frameTvBlock}
 
           <p style="margin-top:24px;color:#444;font-size:14px;">
             Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
@@ -276,11 +335,17 @@ export async function POST(request) {
     // fails, so a normal booking is one round trip instead of twelve — twelve
     // sequential statements against a cold connection is what made saves time out
     // while the confirmation emails had already gone out.
+    // A home installation carries its own free-text description; it lands in
+    // combo_details so every quote-based job description reads from one column,
+    // with booking_mode telling the two apart.
+    const jobDescription = isHomeInst ? (homeInstallDetails || "") : (comboDetails || "")
+
     const insertBooking = (sql) => sql`
       INSERT INTO bookings
         (first_name, last_name, email, phone, referral, payment, date, time_pref,
          address, promo, coupon_code, coupon_label, coupon_comment, tvs,
          more_tvs, more_tvs_comment, booking_mode, cable_concealment, combo_details,
+         home_install_service,
          custom_quote, custom_mode, custom_tv_size, custom_tv_qty, custom_price)
       VALUES
         (${info.firstName}, ${info.lastName}, ${info.email}, ${info.phone},
@@ -289,7 +354,8 @@ export async function POST(request) {
          ${couponCode || ""}, ${appliedCouponLabel || ""},
          ${couponComment || ""}, ${JSON.stringify(tvList)},
          ${!!moreTvs}, ${moreTvsComment || ""},
-         ${bookingMode || "standard"}, ${cableQty}, ${comboDetails || ""},
+         ${bookingMode || "standard"}, ${cableQty}, ${jobDescription},
+         ${isHomeInst ? (homeInstallService || "") : ""},
          ${!!customQuote}, ${customMode || null}, ${customTvSize || null},
          ${customQuote && customMode === "sized" ? (parseInt(customTvQty) || null) : null},
          ${customPriceNum})
@@ -321,6 +387,7 @@ export async function POST(request) {
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_size TEXT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
+      await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
     }
 
     let dbSaved = false

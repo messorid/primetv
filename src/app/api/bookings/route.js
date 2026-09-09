@@ -45,6 +45,7 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_size TEXT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
 }
 
 // profitType: "percent" (profitValue is a % of charged-materials) or "fixed" ($ amount)
@@ -287,8 +288,21 @@ function buildICS({ uid, date, timePref, summary, description, location, organiz
 // Every free-text field the customer or office can fill in. These were being
 // dropped from the work order, so an installer arrived without the wall notes,
 // the bundle description or the custom-quote instructions.
+const HOME_INSTALL_LABELS = {
+  furniture:      "Furniture Assembly",
+  mirror_picture: "Picture / Mirror Hanging",
+  shelves_wall:   "Shelves & Wall Installation",
+  gazebo:         "Gazebo / Pergola Assembly",
+  other:          "Other Installation",
+}
+
 function buildServiceDetail(b) {
   const parts = []
+
+  if (b.booking_mode === "homeinstall") {
+    const label = HOME_INSTALL_LABELS[b.home_install_service] || b.home_install_service || "Installation"
+    parts.push(`<strong>🔧 Home Installation:</strong> ${safe(label)}`)
+  }
 
   if (b.promo) parts.push(`<strong>Package:</strong> ${safe(b.promo)}`)
 
@@ -298,10 +312,16 @@ function buildServiceDetail(b) {
 
   const tvs = Array.isArray(b.tvs) ? b.tvs : []
   if (tvs.length) {
-    parts.push(tvs.map((tv, i) =>
-      `TV #${i + 1}: ${safe(tv.size)}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""} · ${safe(tv.wallType)}` +
-      (tv.comments ? `<br><span style="color:#b45309;">↳ ${safe(tv.comments)}</span>` : "")
-    ).join("<br>"))
+    parts.push(tvs.map((tv, i) => {
+      // A Frame TV needs the slim-fit mount and One Connect Box handled, so the
+      // installer has to see the model and measurements, not just the size.
+      const isFrame = tv.model === "frame"
+      const head = `TV #${i + 1}: ${isFrame ? '<strong style="color:#e50914;">Frame TV</strong> · ' : ""}` +
+        `${tv.size ? `${safe(tv.size)}"` : "size n/a"}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""} · ${safe(tv.wallType)}`
+      const meas = tv.measurements ? `<br><span style="color:#b45309;">↳ Measurements: ${safe(tv.measurements)}</span>` : ""
+      const note = tv.comments ? `<br><span style="color:#b45309;">↳ ${safe(tv.comments)}</span>` : ""
+      return head + meas + note
+    }).join("<br>"))
   }
 
   if (b.more_tvs) parts.push(`<strong>3 or more TVs</strong> — custom quote`)
@@ -316,7 +336,7 @@ function buildServiceDetail(b) {
 // be skimmed past.
 function buildCustomerNotes(b) {
   const notes = [
-    ["Job description", b.combo_details],
+    [b.booking_mode === "homeinstall" ? "Installation request" : "Job description", b.combo_details],
     ["TV details (3+ TVs)", b.more_tvs_comment],
     ["Quote note", b.coupon_comment],
   ].filter(([, v]) => v && String(v).trim())
@@ -529,6 +549,7 @@ function toBooking(row) {
     bookingMode:        row.booking_mode,
     cableConcealment:   row.cable_concealment,
     comboDetails:       row.combo_details,
+    homeInstallService: row.home_install_service,
     couponCode:         row.coupon_code,
     appliedCouponLabel: row.coupon_label,
     couponComment:      row.coupon_comment,
