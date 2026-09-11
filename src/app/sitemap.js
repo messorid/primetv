@@ -27,6 +27,7 @@ const STATIC_PAGES = [
   // Home installation services
   { path: "/home-installation-services-nashville",     priority: 0.85, freq: "monthly", date: "2026-09-10" },
   { path: "/playset-installation-nashville",           priority: 0.85, freq: "monthly", date: "2026-09-10" },
+  { path: "/playground-installation-nashville",         priority: 0.85, freq: "monthly", date: "2026-09-10" },
   { path: "/furniture-assembly-nashville",             priority: 0.80, freq: "monthly", date: "2026-09-10" },
   { path: "/picture-mirror-hanging-nashville",         priority: 0.80, freq: "monthly", date: "2026-09-10" },
   { path: "/wall-installation-services-nashville",     priority: 0.80, freq: "monthly", date: "2026-09-10" },

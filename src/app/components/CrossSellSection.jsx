@@ -6,7 +6,7 @@ const EXTRAS = [
   { label: "Picture Hanging", href: "/picture-mirror-hanging-nashville", emoji: "🖼️", desc: "Art, photos, gallery walls" },
   { label: "Shelf Installation", href: "/wall-installation-services-nashville", emoji: "📐", desc: "Floating shelves & cabinets" },
   { label: "Curtain Rods", href: "/wall-installation-services-nashville", emoji: "🪟", desc: "Rods, blinds & shades" },
-  { label: "Playset Assembly", href: "/playset-installation-nashville", emoji: "🛝", desc: "Swing sets & playsets" },
+  { label: "Playground Setup", href: "/playground-installation-nashville", emoji: "🛝", desc: "Play areas & swing sets" },
 ]
 
 export default function CrossSellSection() {

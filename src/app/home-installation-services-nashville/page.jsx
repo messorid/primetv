@@ -75,10 +75,10 @@ const SERVICES = [
   {
     emoji: "🛝",
     title: "Playset & Swing Set Installation",
-    desc: "Backyard Discovery, Gorilla Playsets, KidKraft and any wooden playset — assembled, anchored and safety-checked.",
-    href: "/playset-installation-nashville",
-    examples: ["Skyfort II", "Canyon Creek", "Sterling Point", "Atlantis", "Gorilla Playsets", "KidKraft Sets"],
-    cta: "Explore Playset Installation",
+    desc: "Backyard playgrounds and playsets — play structures, swing sets, trampolines and climbing frames assembled, anchored and safety-checked.",
+    href: "/playground-installation-nashville",
+    examples: ["Play Structures", "Swing Sets", "Trampolines", "Playhouses", "Climbing Frames", "Slides"],
+    cta: "Explore Playground Installation",
   },
 ]
 

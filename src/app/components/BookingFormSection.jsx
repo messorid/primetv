@@ -32,7 +32,7 @@ const HOME_INSTALL_SERVICES = [
   { id: "mirror_picture", label: "Picture / Mirror Hanging", icon: "🪞" },
   { id: "shelves_wall",   label: "Shelves & Wall Install",   icon: "📐" },
   { id: "gazebo",         label: "Gazebo / Pergola",         icon: "⛺" },
-  { id: "playset",        label: "Playset / Swing Set",      icon: "🛝" },
+  { id: "playset",        label: "Playground / Playset",     icon: "🛝" },
   { id: "other",          label: "Other Installation",       icon: "🔧" },
 ]
 

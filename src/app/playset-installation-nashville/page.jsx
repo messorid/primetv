@@ -12,7 +12,7 @@ export const metadata = {
     "Backyard Discovery installation Nashville",
     "swing set installer Nashville",
     "wooden playset assembly Nashville TN",
-    "playground installation Nashville",
+    "Gorilla Playsets assembly Nashville",
   ],
   openGraph: {
     title: "Playset Installation Nashville TN | PrimeTvNashville",
@@ -171,7 +171,18 @@ export default function PlaysetInstallationPage() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-2xl border border-black/10 bg-white p-6">
+          <div className="mt-8 rounded-2xl border border-black/10 bg-white px-5 py-4">
+            <p className="text-sm text-black/65 leading-relaxed">
+              <span className="font-bold text-black">Planning the whole play area?</span>{" "}
+              If you are adding a trampoline, a playhouse or a climbing frame alongside the set, the
+              layout matters as much as the build.{" "}
+              <Link href="/playground-installation-nashville" className="font-semibold text-[#E50914] hover:underline underline-offset-2">
+                See backyard playground installation →
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-black/10 bg-white p-6">
             <h3 className="font-extrabold text-black mb-1">Model not listed?</h3>
             <p className="text-sm text-black/60 mb-4">
               We assemble playsets from any brand and any retailer. Send us the model and we&apos;ll quote it.
