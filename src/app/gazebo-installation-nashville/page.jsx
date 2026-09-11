@@ -1,5 +1,6 @@
 import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
+import { GAZEBOS, GAZEBO_BRANDS, gazeboTime, gazeboRoofLabel } from "../lib/gazebos"
 
 export const metadata = {
   title: "Gazebo Assembly Nashville TN | Pergola Installation | PrimeTvNashville",
@@ -50,7 +51,11 @@ const faqs = [
   },
   {
     q: "How long does gazebo assembly take?",
-    a: "Most single gazebos take 3 to 6 hours depending on size and complexity. Larger pergolas or structures with additional features may take longer. We'll give you a realistic time estimate when you request a quote.",
+    a: "It depends on the footprint and the construction. A compact 10 by 10 usually runs 4 to 7 hours. A 10 by 12 or 10 by 13 is typically 6 to 10. Large 12-foot structures run 10 to 16 hours and a 12 by 20 or a big cedar gazebo is usually a two-day build. These are approximate — a level concrete patio shortens it and a sloped lawn lengthens it.",
+  },
+  {
+    q: "What is the difference between a hardtop and a soft-top gazebo to install?",
+    a: "A hardtop has rigid roof panels that shed water through correct overlap, so the panels have to be seated in the sequence the manual specifies — a panel fastened out of order is the usual reason a hardtop leaks at a seam. A soft top uses a fabric canopy that has to be tensioned evenly, because a slack corner pools water and standing water is what eventually splits a canopy.",
   },
   {
     q: "What surfaces can you install a gazebo on?",
@@ -66,7 +71,7 @@ const faqs = [
   },
 ]
 
-const BRANDS = ["Yardistry", "Backyard Discovery", "Purple Leaf", "Costco Gazebos", "Sunjoy", "ABCCANOPY", "Other brands"]
+const BRANDS = [...GAZEBO_BRANDS, "Yardistry", "Purple Leaf", "Sunjoy", "Other brands"]
 
 const SERVICES = [
   {
@@ -133,8 +138,52 @@ export default function GazeboInstallationPage() {
         </div>
       </section>
 
-      {/* SERVICES */}
+      {/* MODELS */}
       <section className="w-full bg-gray-50 py-16">
+        <div className="max-w-5xl mx-auto px-5 md:px-6">
+          <h2 className="text-3xl font-extrabold text-black mb-2">Gazebos We Install</h2>
+          <p className="text-black/60 mb-10 max-w-2xl">
+            These are models we assemble regularly. Don&apos;t see yours? We install any gazebo that
+            came in a box — send us the brand and model for a quote.
+          </p>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {GAZEBOS.map(g => (
+              <Link
+                key={g.slug}
+                href={`/gazebo-installation-nashville/${g.slug}`}
+                className="group flex flex-col rounded-2xl border border-black/10 bg-white p-5 shadow-sm hover:border-[#E50914]/30 hover:shadow-lg transition-all"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">
+                  {g.brand} · {g.size}
+                </span>
+                <h3 className="mt-1 text-base font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
+                  {g.name}
+                </h3>
+                <p className="mt-2 text-xs text-black/50">
+                  {gazeboRoofLabel(g.roof)} · approx. {gazeboTime(g.tier).split(",")[0]}
+                </p>
+                <span className="mt-4 text-sm font-semibold text-[#E50914] flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Installation details →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-black/10 bg-white px-5 py-4">
+            <p className="text-sm text-black/65 leading-relaxed">
+              <span className="font-bold text-black">Building out the whole backyard?</span>{" "}
+              We assemble playsets, trampolines and play structures too.{" "}
+              <Link href="/playground-installation-nashville" className="font-semibold text-[#E50914] hover:underline underline-offset-2">
+                See backyard playground installation →
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section className="w-full bg-white py-16">
         <div className="max-w-5xl mx-auto px-5 md:px-6">
           <h2 className="text-3xl font-extrabold text-black mb-2">What We Assemble</h2>
           <p className="text-black/60 mb-10">Gazebos, pergolas, outdoor structures and furniture — any brand delivered in a box.</p>

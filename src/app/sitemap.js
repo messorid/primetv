@@ -1,5 +1,6 @@
 import { getAllPosts } from "./lib/blog"
 import { PLAYSETS } from "./lib/playsets"
+import { GAZEBOS } from "./lib/gazebos"
 
 const BASE = "https://www.primetvnashville.com"
 
@@ -56,6 +57,13 @@ export default function sitemap() {
     priority: 0.65,
   }))
 
+  const gazeboEntries = GAZEBOS.map(g => ({
+    url: `${BASE}/gazebo-installation-nashville/${g.slug}`,
+    lastModified: "2026-09-11",
+    changeFrequency: "monthly",
+    priority: 0.70,
+  }))
+
   const playsetEntries = PLAYSETS.map(p => ({
     url: `${BASE}/playset-installation-nashville/${p.slug}`,
     lastModified: "2026-09-10",
@@ -63,5 +71,5 @@ export default function sitemap() {
     priority: 0.70,
   }))
 
-  return [...staticEntries, ...cityEntries, ...playsetEntries, ...blogEntries]
+  return [...staticEntries, ...cityEntries, ...playsetEntries, ...gazeboEntries, ...blogEntries]
 }
