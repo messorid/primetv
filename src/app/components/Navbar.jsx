@@ -18,6 +18,7 @@ const installations = [
   { label: "Picture & Mirror Hanging", href: "/picture-mirror-hanging-nashville", desc: "Art, mirrors & gallery walls" },
   { label: "Shelves & Wall Installation", href: "/wall-installation-services-nashville", desc: "Shelves, rods, blinds & cabinets" },
   { label: "Gazebo Assembly", href: "/gazebo-installation-nashville", desc: "Gazebos, pergolas & outdoor structures" },
+  { label: "Playset Installation", href: "/playset-installation-nashville", desc: "Swing sets & wooden playsets" },
   { label: "All Installation Services", href: "/home-installation-services-nashville", desc: "View all services" },
 ]
 

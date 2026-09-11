@@ -33,6 +33,14 @@ const NEW_SERVICES = [
     href: "/gazebo-installation-nashville",
     cta: "Explore Gazebo Assembly",
   },
+  {
+    emoji: "🛝",
+    title: "Playset & Swing Set Installation",
+    desc: "Backyard Discovery, Gorilla Playsets and KidKraft playsets assembled, anchored and safety-checked.",
+    tags: ["Skyfort II", "Canyon Creek", "Swing Sets", "Wooden Playsets"],
+    href: "/playset-installation-nashville",
+    cta: "Explore Playset Installation",
+  },
 ]
 
 export default function MoreThanTVSection() {
@@ -55,7 +63,7 @@ export default function MoreThanTVSection() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
           {NEW_SERVICES.map((s) => (
             <Link
               key={s.href}

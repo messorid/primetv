@@ -5,6 +5,7 @@ const SERVICE_LABELS = {
   mirror_picture: "Picture / Mirror Hanging",
   shelves_wall:  "Shelves / Wall Installation",
   gazebo:        "Gazebo / Pergola Assembly",
+  playset:       "Playset / Swing Set Installation",
   other:         "Other Installation",
 }
 

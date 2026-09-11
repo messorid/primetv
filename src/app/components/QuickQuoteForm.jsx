@@ -13,6 +13,7 @@ const INSTALL_SERVICES = [
   { value: "mirror_picture", label: "Picture / Mirror Hanging", emoji: "🪞" },
   { value: "shelves_wall",   label: "Shelves & Wall Install",   emoji: "📐" },
   { value: "gazebo",         label: "Gazebo / Pergola",         emoji: "⛺" },
+  { value: "playset",        label: "Playset / Swing Set",      emoji: "🛝" },
   { value: "other",          label: "Other Installation",       emoji: "🔧" },
 ]
 

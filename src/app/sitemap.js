@@ -1,4 +1,5 @@
 import { getAllPosts } from "./lib/blog"
+import { PLAYSETS } from "./lib/playsets"
 
 const BASE = "https://www.primetvnashville.com"
 
@@ -22,6 +23,14 @@ const STATIC_PAGES = [
   { path: "/samsung-frame-tv-installation-nashville",  priority: 0.85, freq: "monthly", date: "2026-05-01" },
   { path: "/tv-mounting-over-fireplace-nashville",     priority: 0.85, freq: "monthly", date: "2026-05-01" },
   { path: "/cable-concealment-nashville",              priority: 0.80, freq: "monthly", date: "2026-05-01" },
+
+  // Home installation services
+  { path: "/home-installation-services-nashville",     priority: 0.85, freq: "monthly", date: "2026-09-10" },
+  { path: "/playset-installation-nashville",           priority: 0.85, freq: "monthly", date: "2026-09-10" },
+  { path: "/furniture-assembly-nashville",             priority: 0.80, freq: "monthly", date: "2026-09-10" },
+  { path: "/picture-mirror-hanging-nashville",         priority: 0.80, freq: "monthly", date: "2026-09-10" },
+  { path: "/wall-installation-services-nashville",     priority: 0.80, freq: "monthly", date: "2026-09-10" },
+  { path: "/gazebo-installation-nashville",            priority: 0.80, freq: "monthly", date: "2026-09-10" },
 ]
 
 export default function sitemap() {
@@ -46,5 +55,12 @@ export default function sitemap() {
     priority: 0.65,
   }))
 
-  return [...staticEntries, ...cityEntries, ...blogEntries]
+  const playsetEntries = PLAYSETS.map(p => ({
+    url: `${BASE}/playset-installation-nashville/${p.slug}`,
+    lastModified: "2026-09-10",
+    changeFrequency: "monthly",
+    priority: 0.70,
+  }))
+
+  return [...staticEntries, ...cityEntries, ...playsetEntries, ...blogEntries]
 }

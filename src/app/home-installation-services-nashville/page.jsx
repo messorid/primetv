@@ -72,6 +72,14 @@ const SERVICES = [
     examples: ["Yardistry Gazebos", "Cedar Pergolas", "Aluminum Pergolas", "Outdoor Sectionals", "Pavilion Kits", "Play Structures"],
     cta: "Explore Gazebo Assembly",
   },
+  {
+    emoji: "🛝",
+    title: "Playset & Swing Set Installation",
+    desc: "Backyard Discovery, Gorilla Playsets, KidKraft and any wooden playset — assembled, anchored and safety-checked.",
+    href: "/playset-installation-nashville",
+    examples: ["Skyfort II", "Canyon Creek", "Sterling Point", "Atlantis", "Gorilla Playsets", "KidKraft Sets"],
+    cta: "Explore Playset Installation",
+  },
 ]
 
 const COMMERCIAL = [

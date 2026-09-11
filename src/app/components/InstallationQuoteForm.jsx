@@ -6,6 +6,7 @@ const SERVICES = [
   { value: "mirror_picture", label: "Picture / Mirror Hanging", emoji: "🪞" },
   { value: "shelves_wall", label: "Shelves / Wall Installation", emoji: "📐" },
   { value: "gazebo", label: "Gazebo / Pergola Assembly", emoji: "⛺" },
+  { value: "playset", label: "Playset / Swing Set", emoji: "🛝" },
   { value: "other", label: "Other Installation", emoji: "🔧" },
 ]
 
@@ -36,6 +37,15 @@ const SERVICE_QUESTIONS = {
     { id: "product_link", label: "Product link (optional)", type: "url", placeholder: "https://..." },
     { id: "surface", label: "Installation surface", type: "select", options: ["Grass", "Gravel", "Concrete / Patio", "Pavers", "Wood Deck", "Other"] },
     { id: "delivered", label: "Is the gazebo already delivered?", type: "select", options: ["Yes, it's already here", "Not yet — I'll let you know when it arrives", "Not sure yet"] },
+  ],
+  playset: [
+    { id: "brand", label: "Brand", type: "text", placeholder: "e.g. Backyard Discovery, Gorilla Playsets, KidKraft..." },
+    { id: "model", label: "Model", type: "text", placeholder: "e.g. Skyfort II, Canyon Creek, Outing III..." },
+    { id: "product_link", label: "Product link (optional)", type: "url", placeholder: "https://..." },
+    { id: "surface", label: "Ground surface", type: "select", options: ["Grass", "Mulch", "Rubber mulch", "Pea gravel", "Level dirt", "Other"] },
+    { id: "level", label: "Is the ground level?", type: "select", options: ["Yes, fairly level", "Slight slope", "Noticeable slope", "Not sure"] },
+    { id: "delivered", label: "Is the playset already delivered?", type: "select", options: ["Yes, all boxes are here", "Not yet — I'll let you know when it arrives", "Not sure yet"] },
+    { id: "anchors", label: "Did it come with a ground anchor kit?", type: "select", options: ["Yes", "No", "Not sure"] },
   ],
   other: [
     { id: "description", label: "Describe what you need installed", type: "textarea", placeholder: "Please describe the installation project in as much detail as possible..." },

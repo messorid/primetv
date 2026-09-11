@@ -6,6 +6,7 @@ const EXTRAS = [
   { label: "Picture Hanging", href: "/picture-mirror-hanging-nashville", emoji: "🖼️", desc: "Art, photos, gallery walls" },
   { label: "Shelf Installation", href: "/wall-installation-services-nashville", emoji: "📐", desc: "Floating shelves & cabinets" },
   { label: "Curtain Rods", href: "/wall-installation-services-nashville", emoji: "🪟", desc: "Rods, blinds & shades" },
+  { label: "Playset Assembly", href: "/playset-installation-nashville", emoji: "🛝", desc: "Swing sets & playsets" },
 ]
 
 export default function CrossSellSection() {
@@ -36,7 +37,7 @@ export default function CrossSellSection() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {EXTRAS.map((s) => (
             <Link
               key={s.label}
