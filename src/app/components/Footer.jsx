@@ -192,8 +192,8 @@ export default function Footer() {
                 <svg viewBox="0 0 24 24" fill="currentColor" className="size-3.5 text-yellow-400"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
               </span>
               <div>
-                <p className="text-xs font-bold text-white">4.9 / 5 Stars</p>
-                <p className="text-[10px] text-white/40">120+ Google Reviews</p>
+                <p className="text-xs font-bold text-white">4.8 / 5 Stars</p>
+                <p className="text-[10px] text-white/40">Google Reviews</p>
               </div>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.03] px-3.5 py-2.5">
