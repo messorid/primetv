@@ -6,6 +6,7 @@ import nodemailer from "nodemailer"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
+import { buildClientEmail } from "../../lib/clientEmail.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -183,6 +184,68 @@ export async function PATCH(request) {
         return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
       }
       return Response.json({ ok: false }, { status: 404 })
+    }
+
+    // ── Correct the customer's name, email or phone ──────────────────────────
+    // A mistyped address is the usual reason a confirmation never arrives, so
+    // this pairs with the resend below.
+    if (body.updateCustomer) {
+      const first = (body.firstName ?? "").trim()
+      const last  = (body.lastName  ?? "").trim()
+      const email = (body.email     ?? "").trim()
+      const phone = (body.phone     ?? "").trim()
+
+      if (!first && !last) {
+        return Response.json({ ok: false, error: "Name is required" }, { status: 400 })
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return Response.json({ ok: false, error: "That email address is not valid" }, { status: 400 })
+      }
+
+      const [row] = await sql`
+        UPDATE bookings
+        SET first_name=${first}, last_name=${last}, email=${email}, phone=${phone}
+        WHERE id=${id}
+        RETURNING *
+      `
+      if (!row) return Response.json({ ok: false, error: "Booking not found" }, { status: 404 })
+      return Response.json({ ok: true, booking: toBooking(row) })
+    }
+
+    // ── Resend the confirmation to the customer ──────────────────────────────
+    if (body.resendClientEmail) {
+      const [row] = await sql`SELECT * FROM bookings WHERE id=${id}`
+      if (!row) return Response.json({ ok: false, error: "Booking not found" }, { status: 404 })
+
+      const booking = toBooking(row)
+      if (!booking.email) {
+        return Response.json({ ok: false, error: "This booking has no email address" }, { status: 400 })
+      }
+
+      const user = process.env.EMAIL_USER
+      const pass = process.env.EMAIL_PASS
+      if (!user || !pass) {
+        return Response.json({ ok: false, error: "Email is not configured on the server" }, { status: 500 })
+      }
+
+      try {
+        const mail = buildClientEmail(booking, { organizer: user })
+        const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+        await transporter.sendMail({
+          from: `"PrimeTvNashville" <${user}>`,
+          to: booking.email,
+          subject: mail.subject,
+          attachments: mail.attachments,
+          html: mail.html,
+        })
+        return Response.json({ ok: true, sentTo: booking.email })
+      } catch (mailErr) {
+        console.error("resend client email failed", mailErr)
+        return Response.json(
+          { ok: false, error: mailErr?.message || "Could not send the email" },
+          { status: 502 }
+        )
+      }
     }
 
     // ── Update date / time ────────────────────────────────────────────────────

@@ -4,6 +4,10 @@ export const dynamic = "force-dynamic"
 import nodemailer from "nodemailer"
 import { neon } from "@neondatabase/serverless"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
+import {
+  buildClientEmail, buildICS, safe, formatAddress,
+  PROMO_PRICES, HOME_INSTALL_LABELS,
+} from "../../lib/clientEmail.js"
 
 export async function POST(request) {
   try {
@@ -41,28 +45,7 @@ export async function POST(request) {
     }
 
     const fullName = `${safe(info.firstName)} ${safe(info.lastName)}`
-    const fullAddress = [
-      safe(address.street),
-      address.apt ? safe(address.apt) : null,
-      `${safe(address.city)}, ${safe(address.state)} ${safe(address.zip)}`,
-    ].filter(Boolean).join(", ")
-
-    // Starting prices — the rep confirms the final figure, so the email must not
-    // promise a flat rate the site no longer advertises.
-    const PROMO_PRICES = {
-      '2 TVs up to 55"':                  "From $199",
-      '2 TVs up to 70"':                  "From $250",
-      '1 TV up to 55" + 1 TV up to 70"': "From $230",
-    }
-
-    const HOME_INSTALL_LABELS = {
-      furniture:      "Furniture Assembly",
-      mirror_picture: "Picture / Mirror Hanging",
-      shelves_wall:   "Shelves & Wall Installation",
-      gazebo:         "Gazebo / Pergola Assembly",
-      playset:        "Playground / Playset Installation",
-      other:          "Other Installation",
-    }
+    const fullAddress = formatAddress(address)
 
     const tvList      = (tvs || [])
     const isStandard  = !bookingMode || bookingMode === "standard"
@@ -354,77 +337,25 @@ export async function POST(request) {
     })
 
     // ── Confirmation email to client ───────────────────────────────────────────
+    // Built from the same module the admin panel uses to resend it, so a resend
+    // is byte-for-byte the message the customer originally got.
+    const clientEmail = buildClientEmail({
+      firstName: info.firstName, lastName: info.lastName, email: info.email,
+      date, timePreference, address,
+      bookingMode, selectedPromo, cableConcealment: cableQty,
+      comboDetails: jobDescription, homeInstallService,
+      couponCode, appliedCouponLabel, couponComment, couponHidden,
+      customQuote, customMode, customTvSize, customTvQty, customPrice,
+      moreTvs, moreTvsComment, tvs: tvList,
+    }, { organizer: user })
+
     const clientEmailSent = await trySend("client confirmation", {
       from: `"PrimeTvNashville" <${user}>`,
       to: info.email,
       bcc: "messoweb@gmail.com",
-      subject: "Booking Confirmed — PrimeTvNashville",
-      attachments: icsForClient ? [{ filename: "appointment.ics", content: icsForClient, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;">
-            📺 Your Booking is Confirmed!
-          </h2>
-
-          <p style="color:#444;margin-top:16px;font-size:15px;">
-            Hi ${safe(info.firstName)},
-          </p>
-          <p style="color:#444;font-size:15px;">
-            Thank you for choosing <strong>PrimeTvNashville</strong>! We've received your booking request and will contact you shortly to confirm your appointment.
-          </p>
-
-          <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:24px;">
-            <h4 style="margin:0 0 14px;color:#222;font-size:15px;">Booking Summary</h4>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              ${crow("Date", date)}
-              ${crow("Time Window", timePreference)}
-              ${crow("Address", fullAddress)}
-              ${isHomeInst
-                ? crow("Service", `${safe(homeInstLbl)} — quote based`)
-                : isCombo
-                ? crow("Service", "Custom Installation")
-                : hasPromo
-                ? crow("Package", selectedPromo)
-                : moreTvs
-                ? crow("TVs", "3+ TVs — custom quote")
-                : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
-              }
-              ${cableQty > 0 && !isCombo && !isHomeInst ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
-            </table>
-          </div>
-
-          ${promoPriceBlock}
-          ${customQuoteBlock}
-          ${couponBlock}
-          ${moreTvsBlock}
-          ${isHomeInst ? homeInstallBlock : ""}
-          ${frameTvBlock}
-
-          <p style="margin-top:24px;color:#444;font-size:14px;">
-            Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
-          </p>
-
-          <!-- Liability notice -->
-          <div style="margin-top:28px;border:2px solid #e50914;border-radius:12px;padding:18px 20px;background:#fff5f5;">
-            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
-              ⚠️ Important — Wall Liability Notice
-            </p>
-            <p style="margin:0 0 8px;font-size:13px;color:#555;line-height:1.6;">
-              <strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.
-            </p>
-            <p style="margin:0;font-size:13px;color:#555;">
-              By booking this service, you acknowledge and accept these conditions. Please read our full
-              <a href="https://www.primetvnashville.com/terms" style="color:#e50914;font-weight:600;">Terms &amp; Conditions</a>
-              for complete details.
-            </p>
-          </div>
-
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
-            PrimeTvNashville — Expert TV Mounting in Nashville, TN ·
-            <a href="https://www.primetvnashville.com/terms" style="color:#aaa;">Terms &amp; Conditions</a>
-          </div>
-        </div>
-      `,
+      subject: clientEmail.subject,
+      attachments: clientEmail.attachments,
+      html: clientEmail.html,
     })
 
     // A booking that never reached the database used to disappear silently while
@@ -500,41 +431,6 @@ export async function POST(request) {
   }
 }
 
-function buildICS({ uid, date, timePref, summary, description, location, organizer, attendees }) {
-  if (!date) return null
-  let startH = 10, startM = 0
-  const m = (timePref || "").match(/(\d+):(\d+)\s*(AM|PM)/i)
-  if (m) {
-    startH = parseInt(m[1]); startM = parseInt(m[2])
-    if (m[3].toUpperCase() === "PM" && startH !== 12) startH += 12
-    if (m[3].toUpperCase() === "AM" && startH === 12) startH = 0
-  } else if (/morning/i.test(timePref)) { startH = 9 }
-  else if (/afternoon/i.test(timePref)) { startH = 13 }
-  else if (/evening/i.test(timePref))   { startH = 17 }
-  const p2 = n => String(n).padStart(2, "0")
-  const [y, mo, d] = date.split("-")
-  const dtStart = `${y}${mo}${d}T${p2(startH)}${p2(startM)}00`
-  const dtEnd   = `${y}${mo}${d}T${p2(Math.min(startH + 2, 23))}${p2(startM)}00`
-  const stamp   = new Date().toISOString().replace(/[-:.]/g,"").slice(0,15) + "Z"
-  return [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PrimeTvNashville//EN",
-    "METHOD:REQUEST", "CALSCALE:GREGORIAN",
-    "BEGIN:VEVENT",
-    `UID:${uid || Date.now()}@primetv`,
-    `DTSTAMP:${stamp}`,
-    `DTSTART;TZID=America/Chicago:${dtStart}`,
-    `DTEND;TZID=America/Chicago:${dtEnd}`,
-    `SUMMARY:${summary}`,
-    description ? `DESCRIPTION:${description.replace(/[\r\n]+/g, "\\n")}` : "",
-    location    ? `LOCATION:${location}` : "",
-    `ORGANIZER;CN=PrimeTvNashville:mailto:${organizer}`,
-    ...(attendees || []).filter(a => a?.email).map(a =>
-      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${a.name}:mailto:${a.email}`
-    ),
-    "STATUS:CONFIRMED", "END:VEVENT", "END:VCALENDAR",
-  ].filter(Boolean).join("\r\n")
-}
-
 function brow(label, value) {
   return `
     <tr>
@@ -542,20 +438,4 @@ function brow(label, value) {
       <td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;">${value}</td>
     </tr>
   `
-}
-
-function crow(label, value) {
-  return `
-    <tr>
-      <td style="padding:6px 0;width:140px;font-weight:600;color:#666;font-size:13px;">${label}</td>
-      <td style="padding:6px 0;font-size:13px;">${value}</td>
-    </tr>
-  `
-}
-
-function safe(v) {
-  return String(v ?? "-")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
 }

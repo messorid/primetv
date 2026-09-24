@@ -24,7 +24,7 @@ mock.module("nodemailer", {
         if (failClientEmail && to === "bad-address@@invalid") {
           throw new Error("550 5.1.1 recipient rejected")
         }
-        sent.push({ to, subject })
+        sent.push({ to, subject, html: String(opts.html || "") })
         return { messageId: "ok" }
       },
     }),
@@ -152,4 +152,26 @@ test("cable concealment x1 still fine on the legacy column", async () => {
   const json = await (await call("good@example.com", 1)).json()
   assert.equal(json.saved, true)
   assert.equal(migrated, false, "1 is valid for a boolean column, no migration needed")
+})
+
+test("client confirmation keeps its content after the shared-module extraction", async () => {
+  sent.length = 0; inserts = 0; failInsert = false; cableIsBoolean = false
+  await call("good@example.com", 2)
+
+  const mail = sent.find(m => m.to === "good@example.com")
+  assert.ok(mail, "client email must be sent")
+  assert.equal(mail.subject, "Booking Confirmed — PrimeTvNashville")
+
+  for (const needle of [
+    "Your Booking is Confirmed!",
+    "Hi Test,",
+    "Booking Summary",
+    "1 Main St",
+    "Franklin",
+    "Cable Concealment ×2",
+    "Wall Liability Notice",
+    "primetvnashville.com/terms",
+  ]) {
+    assert.ok(mail.html.includes(needle), `client email must still contain: ${needle}`)
+  }
 })

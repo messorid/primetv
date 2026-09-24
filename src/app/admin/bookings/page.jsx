@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { MiniCalendar, TimeSlots } from "@/app/components/DateTimePicker"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -81,6 +82,26 @@ export default function BookingsPage() {
   const [schedDate,      setSchedDate]      = useState("")
   const [schedTime,      setSchedTime]      = useState("")
   const [savingSched,    setSavingSched]    = useState(false)
+
+  // Arriving from Customers with ?new=1&firstName=… opens the form already
+  // filled in, so a repeat job is never retyped.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return
+    const g = k => searchParams.get(k) || ""
+    setNewForm(f => ({
+      ...BLANK_FORM,
+      firstName: g("firstName"), lastName: g("lastName"),
+      email:     g("email"),     phone:    g("phone"),
+      street:    g("street"),    city:     g("city") || "Nashville",
+      state:     g("state") || "TN", zip:   g("zip"),
+      referral:  g("referral"),
+      payment:   g("payment") || BLANK_FORM.payment,
+    }))
+    setNewErr("")
+    setNewModal(true)
+    window.history.replaceState(null, "", "/admin/bookings")
+  }, [searchParams])
 
   useEffect(() => { loadBookings(); loadInstallers() }, [])
 
@@ -201,6 +222,28 @@ export default function BookingsPage() {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: bookingId, resendInstaller: true }),
     })
+  }
+
+  // ── Resend the confirmation to the customer ─────────────────────────────────
+  async function resendClientEmail(bookingId) {
+    const res  = await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: bookingId, resendClientEmail: true }),
+    })
+    return res.json()
+  }
+
+  // ── Correct a customer's name, email or phone ───────────────────────────────
+  async function saveCustomer(bookingId, fields) {
+    const res  = await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: bookingId, updateCustomer: true, ...fields }),
+    })
+    const data = await res.json()
+    if (data.ok && data.booking) {
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, ...data.booking } : b))
+    }
+    return data
   }
 
   // ── Edit schedule ────────────────────────────────────────────────────────────
@@ -515,6 +558,8 @@ export default function BookingsPage() {
               onAssign={installer => assignInstaller(b._id, installer)}
               onEditSchedule={() => openSchedModal(b)}
               onResend={() => resendInstallerEmail(b._id)}
+              onResendClient={() => resendClientEmail(b._id)}
+              onSaveCustomer={fields => saveCustomer(b._id, fields)}
               onMaterialsUpdate={updateMaterials}
               onProfitUpdate={updateProfit}
             />
@@ -799,7 +844,7 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onSaveCustomer, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [assigning,         setAssigning]         = useState(false)
   const [resending,         setResending]         = useState(false)
@@ -811,6 +856,34 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
   const [profitTypeVal,     setProfitTypeVal]     = useState("percent")
   const [profitValueVal,    setProfitValueVal]    = useState("")
   const [savingProfit,      setSavingProfit]      = useState(false)
+  const [editCustomer,      setEditCustomer]      = useState(false)
+  const [custForm,          setCustForm]          = useState({ firstName: "", lastName: "", email: "", phone: "" })
+  const [savingCust,        setSavingCust]        = useState(false)
+  const [custErr,           setCustErr]           = useState("")
+  const [resendingClient,   setResendingClient]   = useState(false)
+  const [clientResendState, setClientResendState] = useState("idle") // idle | ok | error
+  const [clientResendMsg,   setClientResendMsg]   = useState("")
+
+  async function handleSaveCustomer() {
+    setSavingCust(true); setCustErr("")
+    const data = await onSaveCustomer(custForm)
+    if (data?.ok) setEditCustomer(false)
+    else setCustErr(data?.error || "Could not save.")
+    setSavingCust(false)
+  }
+
+  async function handleResendClient() {
+    setResendingClient(true); setClientResendState("idle"); setClientResendMsg("")
+    const data = await onResendClient()
+    setResendingClient(false)
+    if (data?.ok) {
+      setClientResendState("ok")
+    } else {
+      setClientResendState("error")
+      setClientResendMsg(data?.error || "Could not send")
+    }
+    setTimeout(() => setClientResendState("idle"), 5000)
+  }
 
   async function handleResend() {
     setResending(true); setResendOk(false)
@@ -901,13 +974,96 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
             {/* Col 1 — Customer */}
             <section>
-              <SectionTitle>Customer</SectionTitle>
-              <InfoRow icon="👤" value={fullName} />
-              <InfoRow icon="✉️" value={<a href={`mailto:${b.email}`} className="text-blue-600 hover:underline">{b.email}</a>} />
-              <InfoRow icon="📞" value={<a href={`tel:${b.phone}`} className="text-blue-600 hover:underline">{b.phone}</a>} />
-              <InfoRow icon="📍" value={fullAddress || "—"} />
-              <InfoRow icon="💬" value={b.referral || "—"} label="Referral" />
-              <InfoRow icon="💳" value={b.payment || "—"} label="Payment" />
+              <div className="flex items-center justify-between mb-3">
+                <SectionTitleRaw>Customer</SectionTitleRaw>
+                {!editCustomer && (
+                  <button
+                    onClick={() => {
+                      setCustForm({
+                        firstName: b.firstName || "", lastName: b.lastName || "",
+                        email: b.email || "", phone: b.phone || "",
+                      })
+                      setCustErr("")
+                      setEditCustomer(true)
+                    }}
+                    className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition"
+                  >
+                    edit
+                  </button>
+                )}
+              </div>
+
+              {editCustomer ? (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input value={custForm.firstName} placeholder="First name"
+                      onChange={e => setCustForm(f => ({ ...f, firstName: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                    <input value={custForm.lastName} placeholder="Last name"
+                      onChange={e => setCustForm(f => ({ ...f, lastName: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                  </div>
+                  <input type="email" value={custForm.email} placeholder="Email"
+                    onChange={e => setCustForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                  <input value={custForm.phone} placeholder="Phone"
+                    onChange={e => setCustForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+
+                  {custErr && <p className="text-[11px] font-medium text-red-500">{custErr}</p>}
+
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveCustomer} disabled={savingCust}
+                      className="flex-1 rounded-lg bg-emerald-500 text-white text-xs font-bold py-2 hover:bg-emerald-600 transition disabled:opacity-40">
+                      {savingCust ? "Saving…" : "Save"}
+                    </button>
+                    <button onClick={() => { setEditCustomer(false); setCustErr("") }}
+                      className="rounded-lg border border-gray-200 text-gray-500 text-xs px-3 py-2 hover:bg-gray-100 transition">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <InfoRow icon="👤" value={fullName} />
+                  <InfoRow icon="✉️" value={b.email
+                    ? <a href={`mailto:${b.email}`} className="text-blue-600 hover:underline">{b.email}</a>
+                    : <span className="text-gray-400">no email</span>} />
+                  <InfoRow icon="📞" value={b.phone
+                    ? <a href={`tel:${b.phone}`} className="text-blue-600 hover:underline">{b.phone}</a>
+                    : <span className="text-gray-400">no phone</span>} />
+                  <InfoRow icon="📍" value={fullAddress || "—"} />
+                  <InfoRow icon="💬" value={b.referral || "—"} label="Referral" />
+                  <InfoRow icon="💳" value={b.payment || "—"} label="Payment" />
+
+                  {/* Resend the confirmation — for one that bounced, landed in
+                      spam, or went out before the address was corrected. */}
+                  <button
+                    onClick={handleResendClient}
+                    disabled={resendingClient || !b.email}
+                    className={`mt-3 w-full rounded-xl border text-xs font-semibold py-2 transition disabled:opacity-40 ${
+                      clientResendState === "ok"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : clientResendState === "error"
+                        ? "border-red-200 bg-red-50 text-red-600"
+                        : "border-gray-200 text-gray-600 hover:border-[#E50914]/40 hover:text-[#E50914]"
+                    }`}
+                  >
+                    {resendingClient
+                      ? "Sending…"
+                      : clientResendState === "ok"
+                      ? "✓ Confirmation sent"
+                      : clientResendState === "error"
+                      ? (clientResendMsg || "Could not send")
+                      : "✉️ Resend confirmation to customer"}
+                  </button>
+                  {!b.email && (
+                    <p className="mt-1 text-[10px] text-gray-400">
+                      Add an email above to enable this.
+                    </p>
+                  )}
+                </>
+              )}
             </section>
 
             {/* Col 2 — Service */}
