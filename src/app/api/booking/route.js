@@ -19,16 +19,25 @@ export async function POST(request) {
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
 
-    if (!user || !pass) {
-      return new Response(JSON.stringify({ ok: false, error: "SMTP credentials missing" }), { status: 500 })
+    const canEmail = Boolean(user && pass)
+    if (!canEmail) console.error("SMTP credentials missing — booking will be saved but no email sent")
+
+    const transporter = canEmail
+      ? nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+      : null
+
+    // An email problem must never cost us the booking record, so every send is
+    // isolated and reports success rather than throwing out of the handler.
+    async function trySend(label, opts) {
+      if (!transporter) return false
+      try {
+        await transporter.sendMail(opts)
+        return true
+      } catch (mailErr) {
+        console.error(`${label} email failed`, mailErr)
+        return false
+      }
     }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user, pass },
-    })
-
-    await transporter.verify()
 
     const fullName = `${safe(info.firstName)} ${safe(info.lastName)}`
     const fullAddress = [
@@ -180,162 +189,14 @@ export async function POST(request) {
       attendees: [{ name: fullName, email: info.email }],
     }) : null
 
-    // ── Email to business ──────────────────────────────────────────────────────
-    await transporter.sendMail({
-      from: `"PrimeTvNashville Bookings" <${user}>`,
-      to: "tvprimenashville@gmail.com",
-      replyTo: info.email,
-      subject: `New Booking — ${fullName} | ${date}`,
-      attachments: icsForBusiness ? [{ filename: "appointment.ics", content: icsForBusiness, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#222;border-bottom:3px solid #e50914;padding-bottom:12px;margin-bottom:0;">
-            📺 New Booking Request
-          </h2>
-
-          <table style="width:100%;margin-top:20px;border-collapse:collapse;">
-            ${brow("Customer", fullName)}
-            ${brow("Email", info.email)}
-            ${brow("Phone", info.phone)}
-            ${brow("Date Requested", date)}
-            ${brow("Time Preference", timePreference)}
-            ${brow("Service Address", fullAddress)}
-            ${brow("Booking Mode", isHomeInst ? "Home Installation" : isCombo ? "Bundle (custom)" : isPromo ? "Promo Package" : "Standard")}
-            ${hasPromo ? brow("Promo Selected", `${safe(selectedPromo)} — <strong>${promoPrice}</strong>`) : ""}
-            ${isHomeInst ? brow("Service Requested", `<strong>${safe(homeInstLbl)}</strong> — quote based`) : ""}
-            ${isHomeInst && homeInstallDetails ? brow("Job Description", safe(homeInstallDetails)) : ""}
-            ${anyFrameTv ? brow("Frame TV", "Yes — quote based") : ""}
-            ${isCombo && comboDetails ? brow("Job Description", safe(comboDetails)) : ""}
-            ${isStandard && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
-            ${isPromo && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
-            ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
-            ${customQuote ? brow("Custom Quote Mode", customMode === "sized" ? "TV Size & Qty" : "Comment Only") : ""}
-            ${customQuote && customMode === "sized" && customTvSize ? brow("Custom TV Size", `${safe(customTvSize)}${customTvQty ? ` × ${customTvQty}` : ""}`) : ""}
-            ${customQuote && customPriceNum != null ? brow("Custom Price", `<strong>$${customPriceNum.toFixed(2)}</strong>`) : ""}
-            ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
-            ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
-            ${moreTvsComment ? brow("TV Details", safe(moreTvsComment)) : ""}
-            ${brow("How they found us", info.referral)}
-            ${brow("Payment Method", info.payment)}
-          </table>
-
-          ${isHomeInst ? homeInstallBlock : isCombo ? `
-            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:16px;">
-              <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Bundle — Custom Job</p>
-              <p style="margin:8px 0 0;font-size:14px;color:#78350f;">${safe(comboDetails || "-")}</p>
-            </div>
-          ` : hasPromo ? `
-            <p style="margin:20px 0 8px;font-size:13px;color:#888;font-style:italic;">
-              Package promo — TV details not required.
-            </p>
-          ` : `
-            <h4 style="margin:28px 0 8px;color:#444;font-size:15px;">TV Details (${tvList.length} TV${tvList.length !== 1 ? "s" : ""})</h4>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              <thead>
-                <tr style="background:#f0f0f0;">
-                  <th style="padding:8px 12px;text-align:left;">#</th>
-                  <th style="padding:8px 12px;text-align:left;">Model</th>
-                  <th style="padding:8px 12px;text-align:left;">Size / Measurements</th>
-                  <th style="padding:8px 12px;text-align:left;">Wall Type</th>
-                  <th style="padding:8px 12px;text-align:left;">Comments</th>
-                </tr>
-              </thead>
-              <tbody>${tvRows}</tbody>
-            </table>
-            ${frameTvBlock}
-          `}
-          ${cableQty > 0 && !isCombo ? `
-            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:12px;">
-              <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8;">🔌 Cable Concealment ×${cableQty} — +$${cableTotal}</p>
-            </div>
-          ` : ""}
-
-          <p style="margin-top:28px;font-size:12px;color:#aaa;">
-            Submitted from PrimeTvNashville.com
-          </p>
-        </div>
-      `,
-    })
-
-    // ── Confirmation email to client ───────────────────────────────────────────
-    await transporter.sendMail({
-      from: `"PrimeTvNashville" <${user}>`,
-      to: info.email,
-      bcc: "messoweb@gmail.com",
-      subject: "Booking Confirmed — PrimeTvNashville",
-      attachments: icsForClient ? [{ filename: "appointment.ics", content: icsForClient, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;">
-            📺 Your Booking is Confirmed!
-          </h2>
-
-          <p style="color:#444;margin-top:16px;font-size:15px;">
-            Hi ${safe(info.firstName)},
-          </p>
-          <p style="color:#444;font-size:15px;">
-            Thank you for choosing <strong>PrimeTvNashville</strong>! We've received your booking request and will contact you shortly to confirm your appointment.
-          </p>
-
-          <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:24px;">
-            <h4 style="margin:0 0 14px;color:#222;font-size:15px;">Booking Summary</h4>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              ${crow("Date", date)}
-              ${crow("Time Window", timePreference)}
-              ${crow("Address", fullAddress)}
-              ${isHomeInst
-                ? crow("Service", `${safe(homeInstLbl)} — quote based`)
-                : isCombo
-                ? crow("Service", "Custom Installation")
-                : hasPromo
-                ? crow("Package", selectedPromo)
-                : moreTvs
-                ? crow("TVs", "3+ TVs — custom quote")
-                : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
-              }
-              ${cableQty > 0 && !isCombo && !isHomeInst ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
-            </table>
-          </div>
-
-          ${promoPriceBlock}
-          ${customQuoteBlock}
-          ${couponBlock}
-          ${moreTvsBlock}
-          ${isHomeInst ? homeInstallBlock : ""}
-          ${frameTvBlock}
-
-          <p style="margin-top:24px;color:#444;font-size:14px;">
-            Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
-          </p>
-
-          <!-- Liability notice -->
-          <div style="margin-top:28px;border:2px solid #e50914;border-radius:12px;padding:18px 20px;background:#fff5f5;">
-            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
-              ⚠️ Important — Wall Liability Notice
-            </p>
-            <p style="margin:0 0 8px;font-size:13px;color:#555;line-height:1.6;">
-              <strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.
-            </p>
-            <p style="margin:0;font-size:13px;color:#555;">
-              By booking this service, you acknowledge and accept these conditions. Please read our full
-              <a href="https://www.primetvnashville.com/terms" style="color:#e50914;font-weight:600;">Terms &amp; Conditions</a>
-              for complete details.
-            </p>
-          </div>
-
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
-            PrimeTvNashville — Expert TV Mounting in Nashville, TN ·
-            <a href="https://www.primetvnashville.com/terms" style="color:#aaa;">Terms &amp; Conditions</a>
-          </div>
-        </div>
-      `,
-    })
-
     // ── Save to Neon Postgres ──────────────────────────────────────────────────
-    // Fast path is the INSERT alone. The schema migration only runs if the insert
-    // fails, so a normal booking is one round trip instead of twelve — twelve
-    // sequential statements against a cold connection is what made saves time out
-    // while the confirmation emails had already gone out.
+    // This runs BEFORE any email. A booking whose confirmation bounces — a
+    // mistyped customer address is enough — used to throw out of the handler
+    // before reaching this point, returning a 500 and losing the record even
+    // though the business copy had already gone out.
+    //
+    // Fast path is the INSERT alone. The schema migration only runs if the
+    // insert fails, so a normal booking is one round trip instead of twelve.
     // A home installation carries its own free-text description; it lands in
     // combo_details so every quote-based job description reads from one column,
     // with booking_mode telling the two apart.
@@ -412,11 +273,162 @@ export async function POST(request) {
       }
     }
 
+
+    // ── Email to business ──────────────────────────────────────────────────────
+    const businessEmailSent = await trySend("business", {
+      from: `"PrimeTvNashville Bookings" <${user}>`,
+      to: "tvprimenashville@gmail.com",
+      replyTo: info.email,
+      subject: `New Booking — ${fullName} | ${date}`,
+      attachments: icsForBusiness ? [{ filename: "appointment.ics", content: icsForBusiness, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
+          <h2 style="color:#222;border-bottom:3px solid #e50914;padding-bottom:12px;margin-bottom:0;">
+            📺 New Booking Request
+          </h2>
+
+          <table style="width:100%;margin-top:20px;border-collapse:collapse;">
+            ${brow("Customer", fullName)}
+            ${brow("Email", info.email)}
+            ${brow("Phone", info.phone)}
+            ${brow("Date Requested", date)}
+            ${brow("Time Preference", timePreference)}
+            ${brow("Service Address", fullAddress)}
+            ${brow("Booking Mode", isHomeInst ? "Home Installation" : isCombo ? "Bundle (custom)" : isPromo ? "Promo Package" : "Standard")}
+            ${hasPromo ? brow("Promo Selected", `${safe(selectedPromo)} — <strong>${promoPrice}</strong>`) : ""}
+            ${isHomeInst ? brow("Service Requested", `<strong>${safe(homeInstLbl)}</strong> — quote based`) : ""}
+            ${isHomeInst && homeInstallDetails ? brow("Job Description", safe(homeInstallDetails)) : ""}
+            ${anyFrameTv ? brow("Frame TV", "Yes — quote based") : ""}
+            ${isCombo && comboDetails ? brow("Job Description", safe(comboDetails)) : ""}
+            ${isStandard && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
+            ${isPromo && cableQty > 0 ? brow("Cable Concealment", `×${cableQty} — $${cableTotal}`) : ""}
+            ${couponCode ? brow("Coupon Code", `${safe(couponCode)} — ${safe(appliedCouponLabel)}`) : ""}
+            ${customQuote ? brow("Custom Quote Mode", customMode === "sized" ? "TV Size & Qty" : "Comment Only") : ""}
+            ${customQuote && customMode === "sized" && customTvSize ? brow("Custom TV Size", `${safe(customTvSize)}${customTvQty ? ` × ${customTvQty}` : ""}`) : ""}
+            ${customQuote && customPriceNum != null ? brow("Custom Price", `<strong>$${customPriceNum.toFixed(2)}</strong>`) : ""}
+            ${couponComment ? brow("Coupon Comment", safe(couponComment)) : ""}
+            ${moreTvs ? brow("3+ TVs", "Yes — custom quote needed") : ""}
+            ${moreTvsComment ? brow("TV Details", safe(moreTvsComment)) : ""}
+            ${brow("How they found us", info.referral)}
+            ${brow("Payment Method", info.payment)}
+          </table>
+
+          ${isHomeInst ? homeInstallBlock : isCombo ? `
+            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:16px;">
+              <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Bundle — Custom Job</p>
+              <p style="margin:8px 0 0;font-size:14px;color:#78350f;">${safe(comboDetails || "-")}</p>
+            </div>
+          ` : hasPromo ? `
+            <p style="margin:20px 0 8px;font-size:13px;color:#888;font-style:italic;">
+              Package promo — TV details not required.
+            </p>
+          ` : `
+            <h4 style="margin:28px 0 8px;color:#444;font-size:15px;">TV Details (${tvList.length} TV${tvList.length !== 1 ? "s" : ""})</h4>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+              <thead>
+                <tr style="background:#f0f0f0;">
+                  <th style="padding:8px 12px;text-align:left;">#</th>
+                  <th style="padding:8px 12px;text-align:left;">Model</th>
+                  <th style="padding:8px 12px;text-align:left;">Size / Measurements</th>
+                  <th style="padding:8px 12px;text-align:left;">Wall Type</th>
+                  <th style="padding:8px 12px;text-align:left;">Comments</th>
+                </tr>
+              </thead>
+              <tbody>${tvRows}</tbody>
+            </table>
+            ${frameTvBlock}
+          `}
+          ${cableQty > 0 && !isCombo ? `
+            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:12px;">
+              <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8;">🔌 Cable Concealment ×${cableQty} — +$${cableTotal}</p>
+            </div>
+          ` : ""}
+
+          <p style="margin-top:28px;font-size:12px;color:#aaa;">
+            Submitted from PrimeTvNashville.com
+          </p>
+        </div>
+      `,
+    })
+
+    // ── Confirmation email to client ───────────────────────────────────────────
+    const clientEmailSent = await trySend("client confirmation", {
+      from: `"PrimeTvNashville" <${user}>`,
+      to: info.email,
+      bcc: "messoweb@gmail.com",
+      subject: "Booking Confirmed — PrimeTvNashville",
+      attachments: icsForClient ? [{ filename: "appointment.ics", content: icsForClient, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
+          <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;">
+            📺 Your Booking is Confirmed!
+          </h2>
+
+          <p style="color:#444;margin-top:16px;font-size:15px;">
+            Hi ${safe(info.firstName)},
+          </p>
+          <p style="color:#444;font-size:15px;">
+            Thank you for choosing <strong>PrimeTvNashville</strong>! We've received your booking request and will contact you shortly to confirm your appointment.
+          </p>
+
+          <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:24px;">
+            <h4 style="margin:0 0 14px;color:#222;font-size:15px;">Booking Summary</h4>
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+              ${crow("Date", date)}
+              ${crow("Time Window", timePreference)}
+              ${crow("Address", fullAddress)}
+              ${isHomeInst
+                ? crow("Service", `${safe(homeInstLbl)} — quote based`)
+                : isCombo
+                ? crow("Service", "Custom Installation")
+                : hasPromo
+                ? crow("Package", selectedPromo)
+                : moreTvs
+                ? crow("TVs", "3+ TVs — custom quote")
+                : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
+              }
+              ${cableQty > 0 && !isCombo && !isHomeInst ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
+            </table>
+          </div>
+
+          ${promoPriceBlock}
+          ${customQuoteBlock}
+          ${couponBlock}
+          ${moreTvsBlock}
+          ${isHomeInst ? homeInstallBlock : ""}
+          ${frameTvBlock}
+
+          <p style="margin-top:24px;color:#444;font-size:14px;">
+            Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
+          </p>
+
+          <!-- Liability notice -->
+          <div style="margin-top:28px;border:2px solid #e50914;border-radius:12px;padding:18px 20px;background:#fff5f5;">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
+              ⚠️ Important — Wall Liability Notice
+            </p>
+            <p style="margin:0 0 8px;font-size:13px;color:#555;line-height:1.6;">
+              <strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.
+            </p>
+            <p style="margin:0;font-size:13px;color:#555;">
+              By booking this service, you acknowledge and accept these conditions. Please read our full
+              <a href="https://www.primetvnashville.com/terms" style="color:#e50914;font-weight:600;">Terms &amp; Conditions</a>
+              for complete details.
+            </p>
+          </div>
+
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
+            PrimeTvNashville — Expert TV Mounting in Nashville, TN ·
+            <a href="https://www.primetvnashville.com/terms" style="color:#aaa;">Terms &amp; Conditions</a>
+          </div>
+        </div>
+      `,
+    })
+
     // A booking that never reached the database used to disappear silently while
     // the customer still got a confirmation. Now it always alerts the business.
     if (!dbSaved) {
-      try {
-        await transporter.sendMail({
+      await trySend("db-failure alert", {
           from: `"PrimeTvNashville Bookings" <${user}>`,
           to: "tvprimenashville@gmail.com",
           subject: `⚠️ BOOKING NOT SAVED TO DATABASE — ${fullName} | ${date}`,
@@ -443,13 +455,43 @@ export async function POST(request) {
               <pre style="background:#f6f6f6;padding:14px;border-radius:8px;font-size:11px;white-space:pre-wrap;word-break:break-word;">${safe(JSON.stringify(body, null, 2))}</pre>
             </div>
           `,
-        })
-      } catch (alertErr) {
-        console.error("Failed to send DB-failure alert", alertErr)
-      }
+      })
     }
 
-    return new Response(JSON.stringify({ ok: true, saved: dbSaved }), { status: 200 })
+    // The booking is safely stored but the customer never heard back, so the
+    // office has to know to reach out by phone.
+    if (dbSaved && !clientEmailSent) {
+      await trySend("client-email-failure alert", {
+        from: `"PrimeTvNashville Bookings" <${user}>`,
+        to: "tvprimenashville@gmail.com",
+        subject: `⚠️ CUSTOMER DID NOT GET THEIR CONFIRMATION — ${fullName} | ${date}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:2px solid #f59e0b;border-radius:12px;">
+            <h2 style="color:#b45309;margin:0 0 8px;">⚠️ Confirmation email did not reach the customer</h2>
+            <p style="color:#444;font-size:14px;margin:0 0 16px;">
+              The booking <strong>is saved</strong> and appears in the admin panel, but the
+              confirmation to the customer could not be delivered. The address below is most
+              likely mistyped. <strong>Call them to confirm the appointment.</strong>
+            </p>
+            <table style="width:100%;border-collapse:collapse;">
+              ${brow("Customer", fullName)}
+              ${brow("Email given", info.email)}
+              ${brow("Phone", info.phone)}
+              ${brow("Date", date)}
+              ${brow("Time", timePreference)}
+              ${brow("Address", fullAddress)}
+            </table>
+          </div>
+        `,
+      })
+    }
+
+    return new Response(JSON.stringify({
+      ok: true,
+      saved: dbSaved,
+      businessNotified: businessEmailSent,
+      clientNotified: clientEmailSent,
+    }), { status: 200 })
   } catch (err) {
     console.error("booking error", err)
     return new Response(JSON.stringify({ ok: false, error: "Server error" }), { status: 500 })

@@ -7,7 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test": "node --experimental-test-module-mocks --test \"src/**/*.test.mjs\""
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",
