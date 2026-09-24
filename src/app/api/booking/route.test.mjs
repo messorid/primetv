@@ -31,13 +31,29 @@ mock.module("nodemailer", {
   },
 })
 
+// Stands in for the real table. cableIsBoolean reproduces the production
+// column that ADD COLUMN IF NOT EXISTS never converted from BOOLEAN to INT:
+// it accepts 0 and 1 but rejects 2, exactly as Postgres did.
+let cableIsBoolean = false
+let migrated = false
+
 mock.module("@neondatabase/serverless", {
   namedExports: {
-    // Tagged-template stub: INSERT bumps the counter, everything else is a no-op.
-    neon: () => async (strings) => {
+    neon: () => async (strings, ...values) => {
       const sql = strings.join(" ")
+      if (/ALTER COLUMN cable_concealment TYPE INTEGER/i.test(sql)) {
+        migrated = true
+        cableIsBoolean = false
+        return []
+      }
       if (/INSERT INTO bookings/i.test(sql)) {
         if (failInsert) throw new Error("connection timeout")
+        if (cableIsBoolean) {
+          const cable = values[17]
+          if (typeof cable === "number" && cable !== 0 && cable !== 1) {
+            throw new Error(`invalid input syntax for type boolean: "${cable}"`)
+          }
+        }
         inserts++
       }
       return []
@@ -49,13 +65,13 @@ const { POST } = await import(
   "./route.js"
 )
 
-function payload(email) {
+function payload(email, cable = 0) {
   return {
     date: "2026-10-01",
     timePreference: "9:00 AM",
     bookingMode: "standard",
     tvs: [{ model: "standard", size: "55", wallType: "Drywall", comments: "" }],
-    cableConcealment: 0,
+    cableConcealment: cable,
     address: { street: "1 Main St", apt: "", city: "Franklin", state: "TN", zip: "37064" },
     info: {
       firstName: "Test", lastName: "Customer", email,
@@ -64,11 +80,11 @@ function payload(email) {
   }
 }
 
-const call = (email) =>
+const call = (email, cable = 0) =>
   POST(new Request("https://x/api/booking", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload(email)),
+    body: JSON.stringify(payload(email, cable)),
   }))
 
 test("customer email bounces -> booking STILL saved, no 500", async () => {
@@ -110,4 +126,30 @@ test("database down -> alert email fires, still no 500", async () => {
   assert.equal(json.saved, false)
   const subjects = sent.map(s => s.subject).join(" | ")
   assert.match(subjects, /BOOKING NOT SAVED TO DATABASE/)
+})
+
+test("cable concealment x2 on the legacy boolean column -> migrates and saves", async () => {
+  // Reproduces the Casey Sherwin booking: two cable runs against a column that
+  // was still BOOLEAN, which is what rejected the insert in production.
+  sent.length = 0; inserts = 0; failInsert = false
+  cableIsBoolean = true; migrated = false
+
+  const res = await call("good@example.com", 2)
+  const json = await res.json()
+
+  assert.equal(res.status, 200)
+  assert.equal(migrated, true, "the boolean->int migration must run")
+  assert.equal(json.saved, true, "booking must be saved after the migration")
+  assert.equal(inserts, 1)
+  assert.ok(!sent.some(s => /NOT SAVED TO DATABASE/.test(s.subject)),
+    "no data-loss alert once the migration lets the retry through")
+})
+
+test("cable concealment x1 still fine on the legacy column", async () => {
+  sent.length = 0; inserts = 0; failInsert = false
+  cableIsBoolean = true; migrated = false
+
+  const json = await (await call("good@example.com", 1)).json()
+  assert.equal(json.saved, true)
+  assert.equal(migrated, false, "1 is valid for a boolean column, no migration needed")
 })

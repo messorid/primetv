@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 
 import nodemailer from "nodemailer"
 import { neon } from "@neondatabase/serverless"
+import { applySchemaFixes } from "../../lib/schemaFixes.js"
 
 export async function POST(request) {
   try {
@@ -250,6 +251,7 @@ export async function POST(request) {
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
       await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
+      await applySchemaFixes(sql)
     }
 
     let dbSaved = false

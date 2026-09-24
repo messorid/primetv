@@ -5,6 +5,7 @@ import { neon } from "@neondatabase/serverless"
 import nodemailer from "nodemailer"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { applySchemaFixes } from "../../lib/schemaFixes.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -46,6 +47,10 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
+
+  // ADD COLUMN IF NOT EXISTS cannot correct a column declared with the wrong
+  // type. Those corrections live here.
+  await applySchemaFixes(sql)
 }
 
 // profitType: "percent" (profitValue is a % of charged-materials) or "fixed" ($ amount)
