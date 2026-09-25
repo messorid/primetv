@@ -25,6 +25,9 @@ export default function AdminLayout({ children }) {
     if (!localStorage.getItem("admin-auth")) {
       router.push("/admin/login")
     } else {
+      // Reaching here means the current build loaded fine, so release the
+      // one-shot guard that error.jsx uses to avoid a reload loop.
+      try { sessionStorage.removeItem("admin-stale-reload") } catch {}
       setReady(true)
     }
   }, [router, path])
