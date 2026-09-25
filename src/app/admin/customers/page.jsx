@@ -182,36 +182,88 @@ export default function CustomersPage() {
                   <div className="border-t border-gray-100 bg-gray-50 px-4 py-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Contact</p>
-                        <dl className="text-sm space-y-1">
-                          <div className="flex gap-2">
-                            <dt className="text-gray-400 w-16 flex-none">Email</dt>
-                            <dd className="text-gray-800 break-all">
-                              {c.email
-                                ? <a href={`mailto:${c.email}`} className="text-[#E50914] hover:underline">{c.email}</a>
-                                : "—"}
-                            </dd>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Contact</p>
+                          {editing !== c.key && (
+                            <button onClick={() => startEdit(c)}
+                              className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                              edit
+                            </button>
+                          )}
+                        </div>
+
+                        {editing === c.key ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={form.firstName} placeholder="First name"
+                                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                              <input value={form.lastName} placeholder="Last name"
+                                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                            </div>
+                            <input type="email" value={form.email} placeholder="Email"
+                              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                              className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                            <input value={form.phone} placeholder="Phone"
+                              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                              className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+
+                            {formErr && <p className="text-[11px] font-medium text-red-500">{formErr}</p>}
+
+                            {c.jobCount > 1 && (
+                              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                                This updates all {c.jobCount} of their bookings.
+                              </p>
+                            )}
+
+                            <div className="flex gap-2">
+                              <button onClick={() => saveEdit(c)} disabled={saving}
+                                className="flex-1 rounded-lg bg-emerald-500 text-white text-xs font-bold py-2 hover:bg-emerald-600 transition disabled:opacity-40">
+                                {saving ? "Saving…" : "Save"}
+                              </button>
+                              <button onClick={() => { setEditing(null); setFormErr("") }}
+                                className="rounded-lg border border-gray-200 text-gray-500 text-xs px-3 py-2 hover:bg-gray-100 transition">
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <dt className="text-gray-400 w-16 flex-none">Phone</dt>
-                            <dd className="text-gray-800">
-                              {c.phone
-                                ? <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} className="text-[#E50914] hover:underline">{c.phone}</a>
-                                : "—"}
-                            </dd>
-                          </div>
-                          <div className="flex gap-2">
-                            <dt className="text-gray-400 w-16 flex-none">Address</dt>
-                            <dd className="text-gray-800">{fullAddress(c.address) || "—"}</dd>
-                          </div>
-                          <div className="flex gap-2">
-                            <dt className="text-gray-400 w-16 flex-none">Source</dt>
-                            <dd className="text-gray-800">{c.referral || "—"}</dd>
-                          </div>
-                        </dl>
-                        <p className="mt-3 text-[11px] text-gray-400">
-                          Name, email and phone are edited on the booking itself, under Bookings.
-                        </p>
+                        ) : (
+                          <>
+                            <dl className="text-sm space-y-1">
+                              <div className="flex gap-2">
+                                <dt className="text-gray-400 w-16 flex-none">Email</dt>
+                                <dd className="text-gray-800 break-all">
+                                  {c.email
+                                    ? <a href={`mailto:${c.email}`} className="text-[#E50914] hover:underline">{c.email}</a>
+                                    : <span className="text-gray-400">no email</span>}
+                                </dd>
+                              </div>
+                              <div className="flex gap-2">
+                                <dt className="text-gray-400 w-16 flex-none">Phone</dt>
+                                <dd className="text-gray-800">
+                                  {c.phone
+                                    ? <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} className="text-[#E50914] hover:underline">{c.phone}</a>
+                                    : <span className="text-gray-400">no phone</span>}
+                                </dd>
+                              </div>
+                              <div className="flex gap-2">
+                                <dt className="text-gray-400 w-16 flex-none">Address</dt>
+                                <dd className="text-gray-800">{fullAddress(c.address) || "—"}</dd>
+                              </div>
+                              <div className="flex gap-2">
+                                <dt className="text-gray-400 w-16 flex-none">Source</dt>
+                                <dd className="text-gray-800">{c.referral || "—"}</dd>
+                              </div>
+                            </dl>
+                            {savedKey === c.key && (
+                              <p className="mt-2 text-[11px] font-semibold text-emerald-600">✓ Saved</p>
+                            )}
+                            <p className="mt-3 text-[11px] text-gray-400">
+                              The address belongs to each booking and is edited there, under Bookings.
+                            </p>
+                          </>
+                        )}
                       </div>
 
                       <div>

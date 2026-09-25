@@ -109,3 +109,67 @@ export async function GET(request) {
     return Response.json({ ok: false, error: err.message }, { status: 500 })
   }
 }
+
+// Editing a customer rewrites their details on every booking they own, because
+// the customer record *is* those bookings — there is no separate row to update.
+// The key is resolved here rather than trusting a list of ids from the client.
+export async function PATCH(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
+
+  try {
+    const { key, firstName, lastName, email, phone } = await request.json()
+
+    if (typeof key !== "string" || (!key.startsWith("e:") && !key.startsWith("p:"))) {
+      return Response.json({ ok: false, error: "Unknown customer" }, { status: 400 })
+    }
+
+    const first = (firstName ?? "").trim()
+    const last  = (lastName  ?? "").trim()
+    const mail  = (email     ?? "").trim()
+    const tel   = (phone     ?? "").trim()
+
+    if (!first && !last) {
+      return Response.json({ ok: false, error: "Name is required" }, { status: 400 })
+    }
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+      return Response.json({ ok: false, error: "That email address is not valid" }, { status: 400 })
+    }
+    if (!mail && !tel) {
+      return Response.json(
+        { ok: false, error: "Keep either an email or a phone — both cannot be blank" },
+        { status: 400 }
+      )
+    }
+
+    const sql = db()
+    const target = key.slice(2)
+
+    // Match the same way keyFor() groups them, so the edit reaches exactly the
+    // bookings that make up this customer.
+    const rows = key.startsWith("e:")
+      ? await sql`
+          UPDATE bookings
+          SET first_name = ${first}, last_name = ${last},
+              email = ${mail}, phone = ${tel}
+          WHERE LOWER(TRIM(COALESCE(email, ''))) = ${target}
+          RETURNING id
+        `
+      : await sql`
+          UPDATE bookings
+          SET first_name = ${first}, last_name = ${last},
+              email = ${mail}, phone = ${tel}
+          WHERE COALESCE(email, '') = ''
+            AND REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9]', '', 'g') = ${target}
+          RETURNING id
+        `
+
+    if (rows.length === 0) {
+      return Response.json({ ok: false, error: "No bookings matched this customer" }, { status: 404 })
+    }
+
+    return Response.json({ ok: true, updated: rows.length })
+  } catch (err) {
+    console.error("customers PATCH error", err)
+    return Response.json({ ok: false, error: err.message }, { status: 500 })
+  }
+}
