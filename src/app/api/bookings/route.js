@@ -7,6 +7,7 @@ import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
+import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -52,6 +53,7 @@ async function ensureTable(sql) {
   // ADD COLUMN IF NOT EXISTS cannot correct a column declared with the wrong
   // type. Those corrections live here.
   await applySchemaFixes(sql)
+  await ensureCrewTable(sql)
 }
 
 // profitType: "percent" (profitValue is a % of charged-materials) or "fixed" ($ amount)
@@ -71,7 +73,14 @@ export async function GET(request) {
     const sql = db()
     await ensureTable(sql)
     const rows = await sql`SELECT * FROM bookings ORDER BY created_at DESC`
-    return Response.json({ ok: true, bookings: rows.map(toBooking) })
+    const crewByBooking = await getCrewFor(sql, rows.map(r => r.id))
+    return Response.json({
+      ok: true,
+      bookings: rows.map(r => ({
+        ...toBooking(r),
+        crew: crewOrLegacy(crewByBooking.get(r.id), r),
+      })),
+    })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -136,6 +145,72 @@ export async function PATCH(request) {
       }
 
       return Response.json({ ok: true })
+    }
+
+    // ── Assign a crew (one or more installers) ───────────────────────────────
+    if (Array.isArray(body.crew)) {
+      await ensureCrewTable(sql)
+
+      const ids = body.crew.filter(Boolean)
+      await sql`DELETE FROM booking_crew WHERE booking_id = ${id}`
+
+      if (ids.length === 0) {
+        await sql`
+          UPDATE bookings
+          SET installer_id=NULL, installer_name=NULL, installer_email=NULL, assigned_at=NULL
+          WHERE id=${id}
+        `
+        return Response.json({ ok: true, crew: [] })
+      }
+
+      const people = await sql`
+        SELECT id, name, email, crew_share FROM installers WHERE id = ANY(${ids}::uuid[])
+      `
+      if (people.length === 0) {
+        return Response.json({ ok: false, error: "No matching installers" }, { status: 400 })
+      }
+
+      // Keep the order the caller sent, so the first stays the lead.
+      const ordered = ids
+        .map(i => people.find(p => p.id === i))
+        .filter(Boolean)
+
+      const shares = normaliseShares(ordered.map(p => ({
+        installerId: p.id, installerName: p.name, installerEmail: p.email,
+        crewShare: p.crew_share == null ? 50 : Number(p.crew_share),
+      })))
+
+      for (const m of shares) {
+        await sql`
+          INSERT INTO booking_crew (booking_id, installer_id, installer_name, installer_email, share_pct)
+          VALUES (${id}, ${m.installerId}, ${m.installerName}, ${m.installerEmail}, ${m.sharePct})
+        `
+      }
+
+      // The lead is mirrored onto the booking so everything written against a
+      // single installer keeps working.
+      const lead = shares[0]
+      await sql`
+        UPDATE bookings
+        SET installer_id=${lead.installerId}, installer_name=${lead.installerName},
+            installer_email=${lead.installerEmail}, assigned_at=NOW()
+        WHERE id=${id}
+      `
+
+      const [b] = await sql`SELECT * FROM bookings WHERE id=${id}`
+      if (b) {
+        for (const m of shares) {
+          if (m.installerEmail) {
+            try {
+              await sendInstallerEmail(b, m.installerName, m.installerEmail, shares)
+            } catch (mailErr) {
+              console.error("crew email failed for", m.installerEmail, mailErr)
+            }
+          }
+        }
+      }
+
+      return Response.json({ ok: true, crew: shares })
     }
 
     // ── Resend installer email ────────────────────────────────────────────────
@@ -261,6 +336,56 @@ export async function PATCH(request) {
       const profitType  = body.profitType === "fixed" ? "fixed" : "percent"
       const profitValue = parseFloat(body.profitValue) || 0
       const { companyProfit, amountPaidWorkers } = computeFinancials({ charged, materials, profitType, profitValue })
+
+      await ensureCrewTable(sql)
+
+      // Divide the worker pay across the crew. An explicit split from the
+      // complete form wins; otherwise fall back to the shares already on the
+      // job, which came from each installer's weight when they were assigned.
+      const existing = await sql`
+        SELECT installer_id, installer_name, installer_email, share_pct
+        FROM booking_crew WHERE booking_id = ${id}
+      `
+
+      let shares = null
+      if (Array.isArray(body.crewShares) && body.crewShares.length) {
+        const total = body.crewShares.reduce((t, c) => t + (Number(c.sharePct) || 0), 0)
+        if (Math.abs(total - 100) > 0.5) {
+          return Response.json(
+            { ok: false, error: `The crew split must add up to 100% (it adds up to ${total.toFixed(1)}%)` },
+            { status: 400 }
+          )
+        }
+        const byId = new Map(existing.map(e => [e.installer_id, e]))
+        shares = body.crewShares.map(c => {
+          const known = byId.get(c.installerId)
+          return {
+            installerId:    c.installerId,
+            installerName:  c.installerName  || known?.installer_name  || "",
+            installerEmail: c.installerEmail || known?.installer_email || null,
+            sharePct:       Number(c.sharePct) || 0,
+          }
+        })
+      } else if (existing.length) {
+        shares = existing.map(e => ({
+          installerId:    e.installer_id,
+          installerName:  e.installer_name,
+          installerEmail: e.installer_email,
+          sharePct:       e.share_pct == null ? 0 : Number(e.share_pct),
+        }))
+      }
+
+      if (shares && shares.length) {
+        const paid = splitAmount(amountPaidWorkers, shares)
+        await sql`DELETE FROM booking_crew WHERE booking_id = ${id}`
+        for (const m of paid) {
+          await sql`
+            INSERT INTO booking_crew (booking_id, installer_id, installer_name, installer_email, share_pct, amount)
+            VALUES (${id}, ${m.installerId}, ${m.installerName}, ${m.installerEmail}, ${m.sharePct}, ${m.amount})
+          `
+        }
+      }
+
       await sql`
         UPDATE bookings
         SET status='completed', amount_charged=${charged},
@@ -425,7 +550,7 @@ function buildCustomerNotes(b) {
 }
 
 // ── Installer assignment email ─────────────────────────────────────────────────
-async function sendInstallerEmail(b, installerName, installerEmail) {
+async function sendInstallerEmail(b, installerName, installerEmail, crew = null) {
   const user = process.env.EMAIL_USER
   const pass = process.env.EMAIL_PASS
   if (!user || !pass) return
@@ -503,6 +628,17 @@ async function sendInstallerEmail(b, installerName, installerEmail) {
         <p style="color:#444;margin-top:16px;font-size:15px;">
           Hi <strong>${safe(installerName)}</strong>, you have been assigned a new installation job.
         </p>
+
+        ${crew && crew.length > 1 ? `
+          <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:14px 18px;margin-top:16px;">
+            <p style="margin:0;font-size:12px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.05em;">
+              👥 Working with
+            </p>
+            <p style="margin:6px 0 0;font-size:13px;color:#4c1d95;">
+              ${crew.filter(m => m.installerName !== installerName).map(m => safe(m.installerName)).join(", ")}
+            </p>
+          </div>
+        ` : ""}
 
         <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:20px;">
           <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Job Details</h4>

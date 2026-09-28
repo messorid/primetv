@@ -22,6 +22,8 @@ async function ensureTable(sql) {
   // is agreed with them; the company share is the remainder.
   await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percent'`
   await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS commission_value NUMERIC(10,2) DEFAULT 65`
+  // Weight used to divide the worker pay when several installers share a job.
+  await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS crew_share NUMERIC(6,2) DEFAULT 50`
 }
 
 export async function GET(request) {
@@ -59,7 +61,7 @@ export async function POST(request) {
 export async function PATCH(request) {
   if (!(await isAdminRequest(request))) return unauthorized()
   try {
-    const { id, commissionType, commissionValue } = await request.json()
+    const { id, commissionType, commissionValue, crewShare } = await request.json()
     if (!id) return Response.json({ ok: false, error: "id required" }, { status: 400 })
 
     const type  = commissionType === "fixed" ? "fixed" : "percent"
@@ -74,12 +76,30 @@ export async function PATCH(request) {
 
     const sql = db()
     await ensureTable(sql)
-    const [row] = await sql`
-      UPDATE installers
-      SET commission_type = ${type}, commission_value = ${value}
-      WHERE id = ${id}
-      RETURNING *
-    `
+
+    // crewShare is optional; leave it untouched when the caller only changes
+    // the company split.
+    let share = null
+    if (crewShare !== undefined) {
+      share = Number(crewShare)
+      if (!Number.isFinite(share) || share <= 0) {
+        return Response.json({ ok: false, error: "Crew share must be greater than 0" }, { status: 400 })
+      }
+    }
+
+    const [row] = share === null
+      ? await sql`
+          UPDATE installers
+          SET commission_type = ${type}, commission_value = ${value}
+          WHERE id = ${id}
+          RETURNING *
+        `
+      : await sql`
+          UPDATE installers
+          SET commission_type = ${type}, commission_value = ${value}, crew_share = ${share}
+          WHERE id = ${id}
+          RETURNING *
+        `
     if (!row) return Response.json({ ok: false, error: "Installer not found" }, { status: 404 })
     return Response.json({ ok: true, installer: toInstaller(row) })
   } catch (err) {
@@ -107,5 +127,6 @@ function toInstaller(row) {
     ...row,
     commissionType:  row.commission_type || "percent",
     commissionValue: row.commission_value == null ? 65 : Number(row.commission_value),
+    crewShare:       row.crew_share == null ? 50 : Number(row.crew_share),
   }
 }

@@ -72,6 +72,7 @@ export default function BookingsPage() {
   const [completeModal,  setCompleteModal]  = useState(null)
   const [completeForm,   setCompleteForm]   = useState({ amountCharged: "", materialsCost: "", profitType: "percent", profitValue: "" })
   const [completing,     setCompleting]     = useState(false)
+  const [crewSplit,      setCrewSplit]      = useState([])   // [{installerId, installerName, sharePct}]
 
   const [newModal,       setNewModal]       = useState(false)
   const [newForm,        setNewForm]        = useState(BLANK_FORM)
@@ -165,6 +166,18 @@ export default function BookingsPage() {
     await fetch("/api/bookings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, notes }) })
   }
 
+  // Assign one or more installers. The pay split comes from each person's
+  // weight, so it does not have to be decided here.
+  async function assignCrew(bookingId, installerIds) {
+    const res  = await fetch("/api/bookings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: bookingId, crew: installerIds }),
+    })
+    const data = await res.json()
+    if (data.ok) await loadBookings()
+    return data
+  }
+
   async function assignInstaller(bookingId, installer) {
     setBookings(prev => prev.map(b => b._id === bookingId
       ? { ...b, installerId: installer.id, installerName: installer.name, installerEmail: installer.email } : b
@@ -203,6 +216,16 @@ export default function BookingsPage() {
 
     setCompleteModal({ id, name, installerName: booking?.installerName || "", installer: inst || null })
     setCompleteForm({ amountCharged: "", materialsCost: "", profitType, profitValue })
+
+    // Seed the split from the crew already on the job so it only needs touching
+    // when this particular job was shared differently than usual.
+    const crew = Array.isArray(booking?.crew) ? booking.crew : []
+    setCrewSplit(crew.map(m => ({
+      installerId:    m.installerId,
+      installerName:  m.installerName,
+      installerEmail: m.installerEmail,
+      sharePct:       m.sharePct == null ? 0 : Number(m.sharePct),
+    })))
   }
 
   async function handleComplete() {
@@ -214,15 +237,20 @@ export default function BookingsPage() {
     const profitValue = parseFloat(completeForm.profitValue) || 0
     const res  = await fetch("/api/bookings", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: completeModal.id, status: "completed", amountCharged: charged, materialsCost: materials, profitType, profitValue }),
+      body: JSON.stringify({
+        id: completeModal.id, status: "completed",
+        amountCharged: charged, materialsCost: materials, profitType, profitValue,
+        crewShares: crewSplit.length ? crewSplit : undefined,
+      }),
     })
     const data = await res.json()
     if (data.ok) {
-      setBookings(prev => prev.map(b => b._id === completeModal.id
-        ? { ...b, status: "completed", amountCharged: charged, amountPaidWorkers: data.amountPaidWorkers, materialsCost: materials,
-            profitType, profitValue, companyProfit: data.profit, completedAt: new Date().toISOString() } : b
-      ))
       setCompleteModal(null)
+      // Reload so the stored per-person amounts come back from the server
+      // rather than being guessed here.
+      await loadBookings()
+    } else {
+      alert(data.error || "Could not complete this job.")
     }
     setCompleting(false)
   }
@@ -351,6 +379,8 @@ export default function BookingsPage() {
   const ccProfit    = completeForm.profitType === "fixed" ? ccProfitVal : ccSubtotal * (ccProfitVal / 100)
   const ccWorkerPay = ccSubtotal - ccProfit
   const showPreview = completeForm.amountCharged || completeForm.materialsCost || completeForm.profitValue
+  const crewTotal   = crewSplit.reduce((t, m) => t + (Number(m.sharePct) || 0), 0)
+  const crewValid   = crewSplit.length === 0 || Math.abs(crewTotal - 100) < 0.5
 
   // Calendar grid
   const firstDow    = new Date(calYear, calMonth, 1).getDay()
@@ -576,6 +606,7 @@ export default function BookingsPage() {
               onDelete={() => deleteBooking(b._id)}
               installers={installers}
               onAssign={installer => assignInstaller(b._id, installer)}
+              onAssignCrew={ids => assignCrew(b._id, ids)}
               onEditSchedule={() => openSchedModal(b)}
               onResend={() => resendInstallerEmail(b._id)}
               onResendClient={() => resendClientEmail(b._id)}
@@ -787,6 +818,67 @@ export default function BookingsPage() {
                 </div>
               </div>
 
+              {crewSplit.length > 0 && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      Worker pay split
+                    </p>
+                    <span className={`text-[11px] font-bold ${
+                      Math.abs(crewTotal - 100) < 0.5 ? "text-emerald-600" : "text-red-500"
+                    }`}>
+                      {crewTotal.toFixed(0)}%
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {crewSplit.map((m, idx) => (
+                      <div key={(m.installerId || m.installerName) + idx} className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-700 flex-1 truncate">
+                          {m.installerName}
+                        </span>
+                        <div className="relative flex-none">
+                          <input type="number" min="0" max="100" step="1" value={m.sharePct}
+                            onChange={e => {
+                              const v = e.target.value
+                              setCrewSplit(prev => prev.map((x, i) =>
+                                i === idx ? { ...x, sharePct: v === "" ? "" : Number(v) } : x))
+                            }}
+                            className="w-20 rounded-lg border border-gray-200 pl-2 pr-6 py-1.5 text-xs text-right focus:outline-none focus:ring-2 focus:ring-red-300" />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">%</span>
+                        </div>
+                        <span className="text-xs font-bold text-amber-700 w-20 text-right flex-none">
+                          ${((ccWorkerPay * (Number(m.sharePct) || 0)) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {Math.abs(crewTotal - 100) >= 0.5 && (
+                    <p className="mt-2 text-[11px] font-medium text-red-500">
+                      The split has to add up to 100%.
+                    </p>
+                  )}
+                  {crewSplit.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const even = Math.round((100 / crewSplit.length) * 100) / 100
+                        setCrewSplit(prev => prev.map((x, i) => ({
+                          ...x,
+                          sharePct: i === 0
+                            ? Math.round((100 - even * (prev.length - 1)) * 100) / 100
+                            : even,
+                        })))
+                      }}
+                      className="mt-2 text-[10px] text-gray-400 hover:text-[#E50914] underline underline-offset-2"
+                    >
+                      split evenly
+                    </button>
+                  )}
+                </div>
+              )}
+
               {showPreview && (
                 <div className={`rounded-xl border p-4 space-y-1.5 ${ccProfit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
                   <div className="flex justify-between text-xs text-gray-500">
@@ -807,7 +899,7 @@ export default function BookingsPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setCompleteModal(null)}
                 className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition">Cancel</button>
-              <button onClick={handleComplete} disabled={completing}
+              <button onClick={handleComplete} disabled={completing || !crewValid}
                 className="flex-1 rounded-xl bg-emerald-500 text-white text-sm font-bold py-2.5 hover:bg-emerald-600 transition disabled:opacity-50">
                 {completing ? "Saving…" : "Mark Complete"}
               </button>
@@ -864,8 +956,24 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onSaveCustomer, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
+  const [crewPick,          setCrewPick]          = useState([])
+  const [savingCrew,        setSavingCrew]        = useState(false)
+  const [crewErr,           setCrewErr]           = useState("")
+
+  const crew = Array.isArray(b.crew) ? b.crew : []
+
+  function toggleCrew(id) {
+    setCrewPick(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  async function handleAssignCrew() {
+    setSavingCrew(true); setCrewErr("")
+    const data = await onAssignCrew(crewPick)
+    if (!data?.ok) setCrewErr(data?.error || "Could not assign.")
+    setSavingCrew(false)
+  }
   const [assigning,         setAssigning]         = useState(false)
   const [resending,         setResending]         = useState(false)
   const [resendOk,          setResendOk]          = useState(false)
@@ -1197,27 +1305,45 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
             {/* Col 3 — Installer + Status + Notes */}
             <section>
-              <SectionTitle>Installer</SectionTitle>
-              {b.installerName ? (
-                <div className="mb-4 rounded-xl bg-blue-50 border border-blue-100 p-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
-                      <span className="text-[#E50914] font-bold text-xs">
-                        {b.installerName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-                      </span>
+              <SectionTitle>Crew</SectionTitle>
+
+              {crew.length > 0 ? (
+                <div className="mb-3 space-y-2">
+                  {crew.map((m, idx) => (
+                    <div key={(m.installerId || m.installerName) + idx}
+                      className="rounded-xl bg-blue-50 border border-blue-100 p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
+                          <span className="text-[#E50914] font-bold text-xs">
+                            {(m.installerName || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{m.installerName}</p>
+                          <p className="text-xs text-gray-500 truncate">{m.installerEmail || ""}</p>
+                        </div>
+                        <div className="text-right flex-none">
+                          <p className="text-sm font-extrabold text-blue-700">
+                            {m.sharePct == null ? "—" : `${m.sharePct}%`}
+                          </p>
+                          {m.amount != null && (
+                            <p className="text-[11px] font-semibold text-amber-700">${Number(m.amount).toFixed(2)}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">{b.installerName}</p>
-                      <p className="text-xs text-gray-500">{b.installerEmail}</p>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-2">
-                    Assigned {b.assignedAt ? new Date(b.assignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
-                  </p>
+                  ))}
+
+                  {crew.length > 1 && (
+                    <p className="text-[10px] text-gray-400">
+                      Worker pay is divided between them by these percentages.
+                    </p>
+                  )}
+
                   <button
                     onClick={handleResend}
                     disabled={resending}
-                    className={`mt-2 w-full rounded-xl border text-xs font-semibold py-1.5 transition ${
+                    className={`w-full rounded-xl border text-xs font-semibold py-1.5 transition ${
                       resendOk
                         ? "border-emerald-300 bg-emerald-50 text-emerald-600"
                         : "border-blue-200 text-blue-600 hover:bg-blue-100"
@@ -1227,19 +1353,54 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 mb-3">No installer assigned yet</p>
+                <p className="text-xs text-gray-400 mb-3">No crew assigned yet</p>
               )}
 
               {installers.length > 0 && (
-                <div className="flex gap-2 mb-5">
-                  <select value={selectedInstaller} onChange={e => setSelectedInstaller(e.target.value)}
-                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
-                    <option value="">Select installer…</option>
-                    {installers.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-                  </select>
-                  <button onClick={handleAssign} disabled={!selectedInstaller || assigning}
-                    className="rounded-xl bg-[#E50914] text-white text-xs font-bold px-4 py-2 hover:bg-red-700 transition disabled:opacity-40">
-                    {assigning ? "…" : "Assign"}
+                <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                    Assign crew
+                  </p>
+                  <div className="space-y-1.5 mb-2">
+                    {installers.map(i => {
+                      const on = crewPick.includes(i.id)
+                      return (
+                        <button key={i.id} type="button" onClick={() => toggleCrew(i.id)}
+                          className={`w-full flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
+                            on ? "bg-[#E50914] text-white border-[#E50914]" : "bg-white border-gray-200 hover:bg-gray-100"
+                          }`}>
+                          <span className={`size-4 rounded border flex items-center justify-center text-[10px] flex-none ${
+                            on ? "bg-white text-[#E50914] border-white" : "border-gray-300"
+                          }`}>
+                            {on ? "✓" : ""}
+                          </span>
+                          <span className="text-xs font-semibold flex-1 truncate">{i.name}</span>
+                          <span className={`text-[10px] flex-none ${on ? "text-white/70" : "text-gray-400"}`}>
+                            weight {i.crewShare ?? 50}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {crewPick.length > 1 && (
+                    <p className="text-[11px] text-gray-500 mb-2">
+                      Split:{" "}
+                      {(() => {
+                        const picked = crewPick.map(id => installers.find(i => i.id === id)).filter(Boolean)
+                        const total  = picked.reduce((t, p) => t + (Number(p.crewShare) || 50), 0)
+                        return picked
+                          .map(p => `${p.name.split(" ")[0]} ${Math.round(((Number(p.crewShare) || 50) / total) * 100)}%`)
+                          .join(" · ")
+                      })()}
+                    </p>
+                  )}
+
+                  {crewErr && <p className="text-[11px] font-medium text-red-500 mb-2">{crewErr}</p>}
+
+                  <button onClick={handleAssignCrew} disabled={savingCrew || crewPick.length === 0}
+                    className="w-full rounded-xl bg-[#E50914] text-white text-xs font-bold py-2 hover:bg-red-700 transition disabled:opacity-40">
+                    {savingCrew ? "…" : crewPick.length > 1 ? `Assign ${crewPick.length} installers` : "Assign"}
                   </button>
                 </div>
               )}
