@@ -183,7 +183,27 @@ export default function BookingsPage() {
   }
 
   // ── Complete ─────────────────────────────────────────────────────────────────
-  function openCompleteModal(id, name) { setCompleteModal({ id, name }); setCompleteForm({ amountCharged: "", materialsCost: "", profitType: "percent", profitValue: "" }) }
+  // Prefill the split from the assigned installer's default so it is agreed once
+  // per person instead of retyped on every job. profitValue is the COMPANY's
+  // share, so an installer on 65% means the company keeps 35.
+  function openCompleteModal(id, name) {
+    const booking = bookings.find(b => b._id === id)
+    const inst    = installers.find(i => i.id === booking?.installerId)
+
+    let profitType = "percent", profitValue = ""
+    if (inst) {
+      if (inst.commissionType === "fixed") {
+        // A fixed installer fee is not a fixed company profit, so it cannot be
+        // prefilled into this field. Left blank rather than guessed wrong.
+        profitType = "percent"
+      } else if (inst.commissionValue != null) {
+        profitValue = String(100 - Number(inst.commissionValue))
+      }
+    }
+
+    setCompleteModal({ id, name, installerName: booking?.installerName || "", installer: inst || null })
+    setCompleteForm({ amountCharged: "", materialsCost: "", profitType, profitValue })
+  }
 
   async function handleComplete() {
     if (!completeModal) return

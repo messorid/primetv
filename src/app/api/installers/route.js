@@ -17,6 +17,11 @@ async function ensureTable(sql) {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `
+  // The installer's default cut, so a split is set once per person instead of
+  // retyped on every job. Stored as what the INSTALLER earns, which is how it
+  // is agreed with them; the company share is the remainder.
+  await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percent'`
+  await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS commission_value NUMERIC(10,2) DEFAULT 65`
 }
 
 export async function GET(request) {
@@ -25,7 +30,7 @@ export async function GET(request) {
     const sql = db()
     await ensureTable(sql)
     const rows = await sql`SELECT * FROM installers WHERE active = TRUE ORDER BY name`
-    return Response.json({ ok: true, installers: rows })
+    return Response.json({ ok: true, installers: rows.map(toInstaller) })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -50,6 +55,39 @@ export async function POST(request) {
   }
 }
 
+// Set an installer's default cut.
+export async function PATCH(request) {
+  if (!(await isAdminRequest(request))) return unauthorized()
+  try {
+    const { id, commissionType, commissionValue } = await request.json()
+    if (!id) return Response.json({ ok: false, error: "id required" }, { status: 400 })
+
+    const type  = commissionType === "fixed" ? "fixed" : "percent"
+    const value = Number(commissionValue)
+
+    if (!Number.isFinite(value) || value < 0) {
+      return Response.json({ ok: false, error: "Enter a positive amount" }, { status: 400 })
+    }
+    if (type === "percent" && value > 100) {
+      return Response.json({ ok: false, error: "A percentage cannot exceed 100" }, { status: 400 })
+    }
+
+    const sql = db()
+    await ensureTable(sql)
+    const [row] = await sql`
+      UPDATE installers
+      SET commission_type = ${type}, commission_value = ${value}
+      WHERE id = ${id}
+      RETURNING *
+    `
+    if (!row) return Response.json({ ok: false, error: "Installer not found" }, { status: 404 })
+    return Response.json({ ok: true, installer: toInstaller(row) })
+  } catch (err) {
+    console.error("installers PATCH error", err)
+    return Response.json({ ok: false, error: err.message }, { status: 500 })
+  }
+}
+
 export async function DELETE(request) {
   if (!(await isAdminRequest(request))) return unauthorized()
   try {
@@ -61,5 +99,13 @@ export async function DELETE(request) {
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false }, { status: 500 })
+  }
+}
+
+function toInstaller(row) {
+  return {
+    ...row,
+    commissionType:  row.commission_type || "percent",
+    commissionValue: row.commission_value == null ? 65 : Number(row.commission_value),
   }
 }
