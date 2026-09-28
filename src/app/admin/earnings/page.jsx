@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 const money = v => `$${(Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 const money2 = v => `$${(Number(v) || 0).toFixed(2)}`
 
+const pct = (part, whole) => (Number(whole) > 0 ? (Number(part) / Number(whole)) * 100 : 0)
+
 function iso(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
@@ -201,13 +203,58 @@ export default function EarningsPage() {
           {/* ── Per installer ───────────────────────────────────────────────── */}
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm mb-6 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">By installer</h2>
+              <h2 className="font-bold text-gray-800">Where the money went</h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                The split is what each installer earns after materials. The company keeps the rest.
+                Each installer and the company side by side, for the selected range.
               </p>
             </div>
 
             <div className="divide-y divide-gray-100">
+
+              {/* The company sits in the same list as the installers so the
+                  whole pie is visible in one place, not split across sections. */}
+              <div className="px-5 py-4 bg-emerald-50/50">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center justify-center size-9 rounded-full bg-emerald-100 text-sm flex-none">
+                    🏢
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-gray-900">PrimeTvNashville</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {t.jobs} job{t.jobs !== 1 ? "s" : ""} · {money(t.revenue)} revenue
+                      {t.materials > 0 ? ` · ${money(t.materials)} materials` : ""}
+                    </p>
+                  </div>
+
+                  <div className="text-right flex-none">
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Company kept</p>
+                    <p className="text-lg font-extrabold text-emerald-600">{money(t.companyProfit)}</p>
+                  </div>
+
+                  <div className="text-right flex-none hidden sm:block">
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Margin</p>
+                    <p className="text-sm font-bold text-purple-700">
+                      {t.margin == null ? "—" : `${t.margin.toFixed(1)}%`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Revenue split: what went to workers, materials, and the company */}
+                <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden flex">
+                  <div className="h-full bg-amber-400"   style={{ width: `${pct(t.installerPay,  t.revenue)}%` }} title="Installers" />
+                  <div className="h-full bg-orange-300"  style={{ width: `${pct(t.materials,     t.revenue)}%` }} title="Materials" />
+                  <div className="h-full bg-emerald-500" style={{ width: `${pct(t.companyProfit, t.revenue)}%` }} title="Company" />
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-400">
+                  <span><span className="inline-block size-2 rounded-sm bg-amber-400 mr-1 align-middle" />Installers {pct(t.installerPay, t.revenue).toFixed(0)}%</span>
+                  {t.materials > 0 && (
+                    <span><span className="inline-block size-2 rounded-sm bg-orange-300 mr-1 align-middle" />Materials {pct(t.materials, t.revenue).toFixed(0)}%</span>
+                  )}
+                  <span><span className="inline-block size-2 rounded-sm bg-emerald-500 mr-1 align-middle" />Company {pct(t.companyProfit, t.revenue).toFixed(0)}%</span>
+                </div>
+              </div>
+
               {data.installers.map(i => {
                 const inst    = commissionFor(i.installerId)
                 const editing = editId && editId === i.installerId
@@ -231,7 +278,7 @@ export default function EarningsPage() {
                         <p className="text-lg font-extrabold text-amber-700">{money(i.installerPay)}</p>
                       </div>
 
-                      <div className="text-right flex-none hidden sm:block">
+                      <div className="text-right flex-none">
                         <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Company</p>
                         <p className="text-sm font-bold text-emerald-600">{money(i.companyProfit)}</p>
                       </div>

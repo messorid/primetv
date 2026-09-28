@@ -964,6 +964,14 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
   const crew = Array.isArray(b.crew) ? b.crew : []
 
+  // Start the picker from the crew already on the job, so adding a second
+  // installer is one click rather than re-selecting everyone. Re-syncs whenever
+  // the saved crew changes, which also resets the boxes after a save.
+  const crewIds = crew.map(m => m.installerId).filter(Boolean).join(",")
+  useEffect(() => {
+    setCrewPick(crewIds ? crewIds.split(",") : [])
+  }, [crewIds, expanded])
+
   function toggleCrew(id) {
     setCrewPick(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
@@ -1398,10 +1406,41 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
                   {crewErr && <p className="text-[11px] font-medium text-red-500 mb-2">{crewErr}</p>}
 
-                  <button onClick={handleAssignCrew} disabled={savingCrew || crewPick.length === 0}
-                    className="w-full rounded-xl bg-[#E50914] text-white text-xs font-bold py-2 hover:bg-red-700 transition disabled:opacity-40">
-                    {savingCrew ? "…" : crewPick.length > 1 ? `Assign ${crewPick.length} installers` : "Assign"}
-                  </button>
+                  {(() => {
+                    const saved   = crewIds ? crewIds.split(",") : []
+                    const changed = saved.length !== crewPick.length ||
+                                    crewPick.some(id => !saved.includes(id))
+                    const added   = crewPick.filter(id => !saved.includes(id)).length
+                    const removed = saved.filter(id => !crewPick.includes(id)).length
+
+                    return (
+                      <>
+                        {changed && (added > 0 || removed > 0) && (
+                          <p className="text-[11px] text-gray-500 mb-2">
+                            {added > 0 && <span className="text-emerald-600 font-semibold">+{added} added</span>}
+                            {added > 0 && removed > 0 && " · "}
+                            {removed > 0 && <span className="text-red-500 font-semibold">-{removed} removed</span>}
+                          </p>
+                        )}
+
+                        <button onClick={handleAssignCrew}
+                          disabled={savingCrew || !changed}
+                          className="w-full rounded-xl bg-[#E50914] text-white text-xs font-bold py-2 hover:bg-red-700 transition disabled:opacity-40">
+                          {savingCrew
+                            ? "…"
+                            : !changed
+                            ? (saved.length ? "Crew is up to date" : "Pick an installer")
+                            : crewPick.length === 0
+                            ? "Remove everyone"
+                            : saved.length
+                            ? `Update crew (${crewPick.length})`
+                            : crewPick.length > 1
+                            ? `Assign ${crewPick.length} installers`
+                            : "Assign"}
+                        </button>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
 
