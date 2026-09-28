@@ -42,7 +42,7 @@ Name: ${form.name || "-"}`.trim()
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, leadSource: "contact_form" }),
       })
       if (!res.ok) throw new Error("Request failed")
       setStatus("ok")

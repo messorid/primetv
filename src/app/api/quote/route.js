@@ -2,53 +2,105 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import nodemailer from "nodemailer"
+import { captureQuoteLead } from "../../lib/quoteLeads.js"
 
 export async function POST(request) {
+  let body
   try {
-    const body = await request.json()
+    body = await request.json()
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: "Bad request" }), { status: 400 })
+  }
 
-    // Lee primero EMAIL_* como en tu versión anterior, y si no existen usa SMTP_*
+  // Detecta forma del payload: Wizard viejo o Quick Quote nuevo
+  const isWizard = Array.isArray(body.tvDetails)
+
+  // El lead se guarda ANTES del correo. Si el SMTP falla, el lead sigue
+  // apareciendo en el panel; antes se perdia por completo.
+  const saved = await captureQuoteLead(
+    isWizard ? wizardLead(body) : quickLead(body)
+  )
+
+  let notified = false
+  try {
+    // Lee primero EMAIL_* como en tu version anterior, y si no existen usa SMTP_*
     const user = process.env.EMAIL_USER || process.env.SMTP_USER
     const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS
     const to   = process.env.QUOTE_TO || user
     const from = process.env.MAIL_FROM || user
     const replyTo = process.env.REPLY_TO || body.email || undefined
 
-    if (!user || !pass) {
-      console.error("quote error: missing SMTP credentials")
-      return new Response(JSON.stringify({ ok: false, error: "SMTP credentials missing" }), { status: 500 })
-    }
+    if (!user || !pass) throw new Error("SMTP credentials missing")
 
-    // Igual que tu código que funcionaba: usa el servicio gmail
+    // Igual que tu codigo que funcionaba: usa el servicio gmail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user, pass },
     })
 
-    // Verifica conexión
     await transporter.verify()
-
-    // Detecta forma del payload: Wizard viejo o Quick Quote nuevo
-    const isWizard = Array.isArray(body.tvDetails)
 
     const subject = isWizard
       ? `PrimeTv Nashville - New Quote from ${safe(body.fullName)}`
       : `PrimeTv Quote - ${safe(body.name || body.fullName || "Unknown")}`
-
-    const html = isWizard ? renderWizardEmail(body) : renderQuickEmail(body)
 
     await transporter.sendMail({
       from,
       to,
       replyTo,
       subject,
-      html,
+      html: isWizard ? renderWizardEmail(body) : renderQuickEmail(body),
     })
-
-    return new Response(JSON.stringify({ ok: true }), { status: 200 })
+    notified = true
   } catch (err) {
-    console.error("quote error", err)
+    console.error("quote email failed", err)
+  }
+
+  // Solo es un error para el cliente si no quedo registrado en ningun lado.
+  if (!saved && !notified) {
     return new Response(JSON.stringify({ ok: false, error: "Server error" }), { status: 500 })
+  }
+
+  return new Response(JSON.stringify({ ok: true, saved, notified }), { status: 200 })
+}
+
+/* Leads */
+
+const KNOWN_SOURCES = ["quick_quote", "installation_quote", "contact_form"]
+
+function quickLead(body) {
+  return {
+    source:        KNOWN_SOURCES.includes(body.leadSource) ? body.leadSource : "quick_quote",
+    service:       body.service,
+    name:          body.name || body.fullName,
+    phone:         body.phone,
+    email:         body.email,
+    zip:           body.zip,
+    address:       body.address,
+    tvSize:        body.tvSize,
+    mountType:     body.mountType,
+    preferredDate: body.preferredDate,
+    preferredTime: body.preferredTime,
+    notes:         body.notes,
+  }
+}
+
+function wizardLead(body) {
+  const tvs = Array.isArray(body.tvDetails) ? body.tvDetails : []
+  const notes = tvs
+    .map((tv, i) => `TV ${i + 1}: ${[tv.tvType, tv.tvSize, tv.wallType, tv.hideCables ? `cables: ${tv.hideCables}` : "", tv.comments].filter(Boolean).join(" · ")}`)
+    .join("\n")
+
+  return {
+    source:        "quick_quote",
+    service:       tvs.length ? `${tvs.length} TV${tvs.length > 1 ? "s" : ""}` : "TV Mounting",
+    name:          body.fullName,
+    phone:         body.phone,
+    email:         body.email,
+    tvSize:        tvs.map(t => t.tvSize).filter(Boolean).join(", "),
+    preferredDate: body.preferredDate,
+    notes,
+    details:       { tvDetails: tvs, totalCost: body.totalCost ?? null },
   }
 }
 

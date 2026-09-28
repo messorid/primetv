@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer"
+import { captureQuoteLead } from "../../lib/quoteLeads.js"
 
 const SERVICE_LABELS = {
   furniture:     "Furniture Assembly",
@@ -18,6 +19,21 @@ export async function POST(request) {
     }
 
     const serviceLabel = SERVICE_LABELS[service] || service
+
+    // El lead se guarda antes del correo, para que quede en el panel aunque
+    // el envio falle. Un fallo de base de datos no rompe el formulario.
+    const saved = await captureQuoteLead({
+      source:        "installation_quote",
+      service:       serviceLabel,
+      name:          contact.name,
+      phone:         contact.phone,
+      email:         contact.email,
+      zip:           contact.zip,
+      address:       contact.address,
+      preferredDate: contact.date,
+      notes:         (answers && answers.description) || "",
+      details:       { serviceKey: service, answers: answers || {} },
+    })
 
     const answersHtml = Object.entries(answers || {})
       .filter(([, v]) => v)
@@ -59,15 +75,25 @@ export async function POST(request) {
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     })
 
-    await transporter.sendMail({
-      from: `"PrimeTV Nashville" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      replyTo: contact.email,
-      subject: `[Installation Quote] ${serviceLabel} — ${contact.name}`,
-      html,
-    })
+    let notified = false
+    try {
+      await transporter.sendMail({
+        from: `"PrimeTV Nashville" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        replyTo: contact.email,
+        subject: `[Installation Quote] ${serviceLabel} — ${contact.name}`,
+        html,
+      })
+      notified = true
+    } catch (mailErr) {
+      console.error("installation-quote email failed", mailErr)
+    }
 
-    return Response.json({ ok: true })
+    if (!saved && !notified) {
+      return Response.json({ ok: false }, { status: 500 })
+    }
+
+    return Response.json({ ok: true, saved, notified })
   } catch (err) {
     console.error("installation-quote error", err)
     return Response.json({ ok: false }, { status: 500 })
