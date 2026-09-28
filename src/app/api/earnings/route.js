@@ -9,13 +9,14 @@ function db() { return neon(process.env.DATABASE_URL) }
 
 const n = v => (v == null ? 0 : Number(v) || 0)
 
-// Which day a job counts toward. completed_at is when the money was actually
-// settled, so it wins; the scheduled date is the fallback for older rows that
-// predate the completion flow.
+// The business day a job counts toward, in Nashville time. Taking the UTC date
+// off completed_at files an evening job on the following day — a job finished
+// at 8pm Central is already tomorrow in UTC — which silently moved earnings
+// onto the wrong day. Postgres does the conversion so DST is handled properly.
+const BUSINESS_TZ = "America/Chicago"
+
 function earnedOn(row) {
-  if (row.completed_at) return new Date(row.completed_at).toISOString().slice(0, 10)
-  if (row.date) return String(row.date).slice(0, 10)
-  return new Date(row.created_at).toISOString().slice(0, 10)
+  return row.earned_date || String(row.date || "").slice(0, 10)
 }
 
 export async function GET(request) {
@@ -33,7 +34,12 @@ export async function GET(request) {
       SELECT id, first_name, last_name, date, completed_at, created_at,
              installer_id, installer_name,
              amount_charged, amount_paid_workers, materials_cost, company_profit,
-             profit_type, profit_value, address
+             profit_type, profit_value, address,
+             COALESCE(
+               (completed_at AT TIME ZONE ${BUSINESS_TZ})::date::text,
+               NULLIF(date, ''),
+               (created_at AT TIME ZONE ${BUSINESS_TZ})::date::text
+             ) AS earned_date
       FROM bookings
       WHERE status = 'completed'
     `
