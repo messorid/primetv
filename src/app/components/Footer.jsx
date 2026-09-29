@@ -26,6 +26,23 @@ const quickLinks = [
   { label: "Book Installation", href: "/book" },
 ]
 
+// Brand and size hubs. "OLED" sits with the brands because that is how people
+// shop for it, even though it is a panel type rather than a manufacturer.
+const brandLinks = [
+  { label: "Samsung", href: "/samsung-tv-mounting" },
+  { label: "Hisense", href: "/hisense-tv-mounting" },
+  { label: "TCL", href: "/tcl-tv-mounting" },
+  { label: "LG", href: "/lg-tv-mounting" },
+  { label: "OLED", href: "/oled-tv-mounting" },
+  { label: "Samsung Frame", href: "/samsung-frame-tv-installation-nashville" },
+]
+
+const sizeLinks = [
+  { label: '65-Inch TVs', href: "/65-inch-tv-mounting" },
+  { label: '75-Inch TVs', href: "/75-inch-tv-mounting" },
+  { label: '85-Inch TVs', href: "/85-inch-tv-mounting" },
+]
+
 const legalLinks = [
   { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy-policy" },
@@ -208,6 +225,41 @@ export default function Footer() {
           </div>
         </div>
 
+      </div>
+
+      {/* ── TV BRANDS & SIZES ── */}
+      {/* A band of its own rather than a fifth column, so the four-column grid
+          above keeps its layout on every breakpoint. */}
+      <div className="border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">TV Brands</h3>
+            <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
+              {brandLinks.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                    <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">TV Sizes</h3>
+            <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
+              {sizeLinks.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                    <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* ── BOTTOM BAR ── */}

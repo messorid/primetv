@@ -34,7 +34,9 @@ const jsonLd = {
 }
 
 export default function BlogPage() {
-  const posts = getAllPosts()
+  // Newest first. Without this the index is in filesystem order, which is
+  // alphabetical by filename and puts the how-to guides in the middle.
+  const posts = getAllPosts().sort((a, b) => new Date(b.date) - new Date(a.date))
 
   return (
     <>

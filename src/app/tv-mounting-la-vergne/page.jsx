@@ -6,6 +6,7 @@ import WhyChooseSection from "../components/WhyChooseSection";
 import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
 import StickyActionBar from "../components/StickyActionBar";
+import TvBrandSizeLinks from "../components/TvBrandSizeLinks";
 import HeroReusable from "../components/HeroReusable"
 import LocalCitySection from "../components/LocalCitySection"
 import CityFaqSection from "../components/CityFaqSection";
@@ -67,6 +68,7 @@ export default function TvMountingLaVergnePage() {
       <QuickQuoteForm />
       <CityFaqSection city="la-vergne" />
       <FaqsSection />
+      <TvBrandSizeLinks city="La Vergne" />
       <StickyActionBar />
     </>
   );

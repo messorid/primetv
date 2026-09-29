@@ -1,6 +1,7 @@
 import { getAllPosts } from "./lib/blog"
 import { PLAYSETS } from "./lib/playsets"
 import { GAZEBOS } from "./lib/gazebos"
+import { BRANDS, SIZES } from "./lib/tvModels"
 
 const BASE = "https://www.primetvnashville.com"
 
@@ -33,6 +34,9 @@ const STATIC_PAGES = [
   { path: "/picture-mirror-hanging-nashville",         priority: 0.80, freq: "monthly", date: "2026-09-10" },
   { path: "/wall-installation-services-nashville",     priority: 0.80, freq: "monthly", date: "2026-09-10" },
   { path: "/gazebo-installation-nashville",            priority: 0.80, freq: "monthly", date: "2026-09-10" },
+
+  // Specialty TV pages
+  { path: "/oled-tv-mounting",                         priority: 0.80, freq: "monthly", date: "2026-09-29" },
 ]
 
 export default function sitemap() {
@@ -41,6 +45,22 @@ export default function sitemap() {
     lastModified: date,
     changeFrequency: freq,
     priority,
+  }))
+
+  // Brand and size pages are generated from the same list the pages read, so a
+  // new brand or size can never be added to the site and missed in the sitemap.
+  const brandEntries = BRANDS.map(b => ({
+    url: `${BASE}${b.path}`,
+    lastModified: "2026-09-29",
+    changeFrequency: "monthly",
+    priority: 0.85,
+  }))
+
+  const sizeEntries = SIZES.map(s => ({
+    url: `${BASE}${s.path}`,
+    lastModified: "2026-09-29",
+    changeFrequency: "monthly",
+    priority: 0.85,
   }))
 
   const cityEntries = CITIES.map(city => ({
@@ -71,5 +91,13 @@ export default function sitemap() {
     priority: 0.70,
   }))
 
-  return [...staticEntries, ...cityEntries, ...playsetEntries, ...gazeboEntries, ...blogEntries]
+  return [
+    ...staticEntries,
+    ...brandEntries,
+    ...sizeEntries,
+    ...cityEntries,
+    ...playsetEntries,
+    ...gazeboEntries,
+    ...blogEntries,
+  ]
 }
