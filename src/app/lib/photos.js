@@ -146,6 +146,34 @@ export const PHOTOS = {
   },
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HERO SLIDES
+//
+// The hero frame is 4:3 but most of these photos are shot portrait (576x1024),
+// so object-cover throws away well over half the height. Left on the default
+// centre crop, the television — the entire point of the photo — ends up sliced
+// or out of frame. `pos` is the object-position that keeps the TV in view, set
+// per photo by rendering the actual crop and looking at it rather than guessing.
+//
+// The first slide is the photo the hero used before this was a carousel, so the
+// first paint is unchanged and the LCP image stays exactly what it was.
+// ─────────────────────────────────────────────────────────────────────────────
+export const HERO_SLIDES = [
+  {
+    src: "/images/tvinstallation.jpg",
+    alt: "TV mounted above a white brick fireplace between built-in cabinets, Nashville TN",
+    pos: "50% 45%",
+  },
+  { ...PHOTOS.fireplaceShiplap,       pos: "50% 34%" },
+  { ...PHOTOS.frameArtMode,           pos: "50% 42%" },
+  { ...PHOTOS.slatWallCeilingMount,   pos: "50% 50%" },
+  { ...PHOTOS.fireplaceStackedStone,  pos: "50% 35%" },
+  { ...PHOTOS.fireplaceStoneFeature,  pos: "50% 35%" },
+  { ...PHOTOS.fireplaceDarkWall,      pos: "50% 45%" },
+  { ...PHOTOS.outdoorPatio,           pos: "50% 40%" },
+  { ...PHOTOS.soundbarSubwoofer,      pos: "50% 50%" },
+]
+
 export const photo = key => PHOTOS[key]
 
 // Picks a set by key, skipping anything mistyped rather than rendering a broken

@@ -1,9 +1,10 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Star, ShieldCheck, Clock, Zap } from "lucide-react"
+import HeroCarousel from "./HeroCarousel"
+import { HERO_SLIDES } from "../lib/photos"
 
 const stats = [
   { value: "500+", label: "Installations" },
@@ -175,28 +176,12 @@ export default function HeroSection() {
               className="relative w-full max-w-md lg:max-w-lg"
             >
               <div aria-hidden="true" className="absolute -inset-6 rounded-3xl bg-gradient-to-tr from-[#E50914]/20 via-transparent to-[#E50914]/5 blur-3xl" />
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 aspect-[4/3]">
-                <Image
-                  src="/images/tvinstallation.jpg"
-                  alt="Licensed technician mounting a flat screen TV on a wall in Nashville"
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 580px"
-                  priority
-                  quality={82}
-                  className="object-cover"
-                />
-                {/* Gradient overlay bottom */}
-                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                {/* Bottom label */}
-                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between">
-                  <span className="text-[11px] sm:text-xs font-bold text-white bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
-                    Nashville, TN
-                  </span>
-                  <span className="text-[11px] sm:text-xs font-bold text-white bg-[#E50914]/90 backdrop-blur-sm rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
-                    Same-Day ⚡
-                  </span>
-                </div>
-              </div>
+              {/* Rotates through real installs. The first slide is the photo
+                  this hero always used, so the first paint is unchanged. */}
+              <HeroCarousel
+                slides={HERO_SLIDES}
+                className="rounded-3xl shadow-2xl ring-1 ring-black/5 aspect-[4/3]"
+              />
             </motion.div>
 
             {/* Same proof as the floating cards, but below the photo where it
