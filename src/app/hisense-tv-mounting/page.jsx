@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SeriesCard,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SeriesCard,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForBrand, codeFor, guideFor, getBrand } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const URL = `${BASE}/hisense-tv-mounting`
 
@@ -223,6 +224,13 @@ export default function HisenseTvMountingPage() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="Hisense Installs We Have Done"
+        intro="A Hisense Roku TV with the cables run inside the wall, a large panel on stacked stone, and a flat mount with nothing showing. All our own work."
+        photos={photoSet("hisenseRoku", "fireplaceStackedStone", "cablesInWall")}
+      />
 
       <FaqAccordion heading="Hisense TV Mounting — Common Questions" faqs={FAQS} />
 

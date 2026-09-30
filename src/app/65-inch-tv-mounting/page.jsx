@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SizeModelTable, SizeFactsGrid,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SizeModelTable, SizeFactsGrid,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForSize, codeFor, guideFor, brandLabel, getSize } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const SIZE = 65
 const URL = `${BASE}/65-inch-tv-mounting`
@@ -205,6 +206,13 @@ export default function Size65Page() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="65-Inch Installs We Have Done"
+        intro="The size that usually lands exactly where the customer wanted it — above a mantel, between built-ins, or on a plain wall."
+        photos={photoSet("smallRoom", "fireplaceShiplap", "builtInShelves")}
+      />
 
       <FaqAccordion heading="65-Inch TV Mounting — Common Questions" faqs={FAQS} />
 

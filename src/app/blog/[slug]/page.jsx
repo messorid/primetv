@@ -22,7 +22,7 @@ export async function generateMetadata({ params }) {
       description: data.description,
       url: `${BASE}/blog/${slug}`,
       siteName: 'PrimeTvNashville',
-      images: [{ url: data.image, width: 1200, height: 630, alt: data.title }],
+      images: [{ url: data.image, width: 1200, height: 630, alt: data.imageAlt || data.title }],
       locale: 'en_US',
       type: 'article',
       publishedTime: data.date,
@@ -43,6 +43,11 @@ export async function generateMetadata({ params }) {
 export default async function BlogPost({ params }) {
   const { slug } = await params
   const { content, data } = getPostBySlug(slug)
+
+  // The header photo usually illustrates the topic rather than showing the
+  // exact model in the title, so posts can describe the photo itself via
+  // imageAlt. Older posts without it fall back to the title.
+  const imageAlt = data.imageAlt || data.title
 
   const absoluteImage = data.image?.startsWith("http")
     ? data.image
@@ -103,7 +108,7 @@ export default async function BlogPost({ params }) {
 
         {data.image && (
           <div className="relative w-full h-64 mb-8 rounded-xl overflow-hidden">
-            <Image src={data.image} alt={data.title} fill className="object-cover" priority />
+            <Image src={data.image} alt={imageAlt} fill className="object-cover" priority />
           </div>
         )}
 

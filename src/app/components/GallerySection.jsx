@@ -4,10 +4,14 @@ import { useState } from "react"
 import Image from "next/image"
 
 const PHOTOS = [
-  { src: "/images/work-1.jpeg", alt: "TV mounted on wall — Nashville installation" },
-  { src: "/images/work-3.jpeg", alt: "TV installation over fireplace — Nashville" },
-  { src: "/images/work-4.jpeg", alt: "Clean cable concealment — TV mounting Nashville" },
-  { src: "/images/work-5.jpeg", alt: "Bedroom TV wall mount — PrimeTvNashville" },
+  { src: "/images/tvs/tv-over-fireplace-dark-accent-wall-nashville.jpeg",              alt: "TV mounted over a fireplace on a dark accent wall with a floating mantel and no visible cables, Nashville TN" },
+  { src: "/images/tvs/tv-mounted-stacked-stone-fireplace-nashville.jpeg",              alt: "Large TV wall mounted on a stacked stone fireplace above a reclaimed wood mantel, Nashville TN" },
+  { src: "/images/hometheater/home-theater-led-accent-lighting-theater-seating-nashville.jpeg", alt: "Home theater room with leather recliners, LED floor lighting and backlit movie posters, Nashville TN" },
+  { src: "/images/tvs/tv-ceiling-mount-wood-slat-accent-wall-nashville.jpeg",          alt: "TV on a ceiling-drop mount in front of a wood slat accent wall, Nashville TN" },
+  { src: "/images/tvs/samsung-frame-tv-art-mode-painted-brick-fireplace-nashville.jpeg", alt: "Samsung Frame TV in Art Mode mounted on a painted brick fireplace, Nashville TN" },
+  { src: "/images/tvs/tv-wall-mount-hidden-cables-drywall-nashville.jpeg",             alt: "TV wall mounted on drywall with the cables routed inside the wall, Nashville TN" },
+  { src: "/images/hometheater/home-theater-tv-av-receiver-led-display-shelves-nashville.jpeg", alt: "Home theater media wall with a mounted TV, AV receiver and LED-lit floating shelves, Nashville TN" },
+  { src: "/images/tvs/outdoor-tv-mount-covered-patio-fireplace-nashville.jpeg",        alt: "Outdoor TV mounted above a painted brick fireplace on a covered patio, Nashville TN" },
 ]
 
 export default function GallerySection() {

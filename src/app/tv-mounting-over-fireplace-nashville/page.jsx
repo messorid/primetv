@@ -1,6 +1,8 @@
 ﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
+import { PhotoStrip } from "../components/TvSeoLayout"
+import { photoSet } from "../lib/photos"
 
 export const metadata = {
   title: "TV Mounting Over Fireplace Nashville TN | PrimeTvNashville",
@@ -204,6 +206,12 @@ export default function FireplaceTvMountingPage() {
           </div>
         </div>
       </section>
+
+      <PhotoStrip
+        heading="Fireplace Installs We Have Done"
+        intro="Shiplap, stacked stone, painted brick, dark accent walls and covered patios — every one measured for heat clearance before we committed to a height."
+        photos={photoSet("fireplaceNiche", "fireplaceShiplap", "fireplaceStoneFeature", "fireplaceDarkWall", "fireplaceStackedStone", "outdoorPatio")}
+      />
 
       <StickyActionBar />
     </>

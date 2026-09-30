@@ -1,4 +1,6 @@
-﻿export const metadata = {
+﻿import Image from "next/image"
+
+export const metadata = {
     title: "TV Wall Mounting Services in Nashville | PrimeTvNashville",
     description:
       "Expert TV wall mounting with secure installation, wire concealment and aesthetic integration. Serving Nashville TN homes and businesses.",
@@ -69,11 +71,17 @@
               Safety is our top priority. We use high-quality mounting equipment and rigorously test every setup to ensure stability and long-term reliability.
             </p>
   
-            <img
-              src="/gallery/tv2.jpeg"
-              alt="TV wall mounting in Nashville"
-              className="rounded-xl shadow-lg mt-4 w-full object-cover"
-            />
+            {/* next/image so the full-size photo is not shipped to a phone */}
+            <div className="relative mt-4 w-full aspect-[4/3] overflow-hidden rounded-xl shadow-lg">
+              <Image
+                src="/images/tvs/tv-mounted-stacked-stone-fireplace-nashville.jpeg"
+                alt="Large TV wall mounted on a stacked stone fireplace above a reclaimed wood mantel, Nashville TN"
+                fill
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>

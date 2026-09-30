@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SeriesCard,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SeriesCard,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForBrand, codeFor, guideFor, getBrand } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const URL = `${BASE}/tcl-tv-mounting`
 
@@ -222,6 +223,13 @@ export default function TclTvMountingPage() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="Large-Panel Installs We Have Done"
+        intro="A ceiling-drop mount on a slat wall, a panel fitted between built-ins, and a big screen with a soundbar. The same work a QM-series set gets."
+        photos={photoSet("slatWallCeilingMount", "builtInShelves", "soundbarSubwoofer")}
+      />
 
       <FaqAccordion heading="TCL TV Mounting — Common Questions" faqs={FAQS} />
 

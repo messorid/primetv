@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SeriesCard,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SeriesCard,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForBrand, codeFor, guideFor, getBrand } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const URL = `${BASE}/lg-tv-mounting`
 
@@ -225,6 +226,13 @@ export default function LgTvMountingPage() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="LG-Class Installs We Have Done"
+        intro="Flat to the wall, cables inside it, and nothing left hanging. This is the finish a C-series panel is worth."
+        photos={photoSet("fireplaceDarkWall", "hiddenCablesDrywall", "hardwoodLivingRoom")}
+      />
 
       <FaqAccordion heading="LG TV Mounting — Common Questions" faqs={FAQS} />
 

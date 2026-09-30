@@ -5,7 +5,46 @@
 // one template with the name swapped out.
 
 import Link from "next/link"
+import Image from "next/image"
 import { AFFILIATION_NOTE, CITIES, PHONE_DISPLAY, PHONE_HREF } from "../lib/tvModels"
+
+// Real job photos on the page. Portrait originals get a taller frame so the
+// install is not cropped away at the top and bottom, which is exactly what
+// happens to an over-fireplace shot squeezed into a landscape box.
+export function PhotoStrip({ heading, intro, photos, priority = false }) {
+  return (
+    <section className="w-full bg-white py-16">
+      <div className="max-w-5xl mx-auto px-5 md:px-6">
+        <h2 className="text-3xl font-extrabold text-black mb-2">{heading}</h2>
+        {intro && <p className="text-black/60 mb-8 text-sm max-w-2xl leading-relaxed">{intro}</p>}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {photos.map((p, i) => (
+            <figure
+              key={p.src}
+              className={`relative overflow-hidden rounded-2xl border border-black/10 bg-gray-100 ${
+                p.tall ? "aspect-[3/4]" : "aspect-[4/3]"
+              }`}
+            >
+              <Image
+                src={p.src}
+                alt={p.alt}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover"
+                priority={priority && i === 0}
+              />
+            </figure>
+          ))}
+        </div>
+
+        <p className="mt-4 text-[11px] text-black/40">
+          Photos of our own installations in Nashville and Middle Tennessee.
+        </p>
+      </div>
+    </section>
+  )
+}
 
 export function SeoBreadcrumb({ trail }) {
   return (

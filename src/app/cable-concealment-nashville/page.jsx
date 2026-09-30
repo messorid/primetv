@@ -1,6 +1,8 @@
 ﻿import Link from "next/link"
 import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
+import { PhotoStrip } from "../components/TvSeoLayout"
+import { photoSet } from "../lib/photos"
 
 export const metadata = {
   title: "Cable Concealment Nashville TN | Hide TV Wires | PrimeTvNashville",
@@ -190,6 +192,12 @@ export default function CableConcealmentPage() {
           </div>
         </div>
       </section>
+
+      <PhotoStrip
+        heading="Cable Concealment We Have Done"
+        intro="In-wall routing down to a recessed media plate. Nothing hanging, nothing taped to the baseboard."
+        photos={photoSet("hiddenCablesDrywall", "cablesInWall", "hisenseRoku")}
+      />
 
       <StickyActionBar />
     </>

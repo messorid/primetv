@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SizeModelTable, SizeFactsGrid,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SizeModelTable, SizeFactsGrid,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForSize, codeFor, guideFor, brandLabel, getSize } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const SIZE = 85
 const URL = `${BASE}/85-inch-tv-mounting`
@@ -210,6 +211,13 @@ export default function Size85Page() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="Large-Format Installs We Have Done"
+        intro="Slat walls, stacked stone and stone feature walls — the kind of wall an 85-inch panel needs, and the anchors that go with it."
+        photos={photoSet("slatWallCeilingMount", "fireplaceStackedStone", "fireplaceStoneFeature")}
+      />
 
       <FaqAccordion heading="85-Inch TV Mounting — Common Questions" faqs={FAQS} />
 

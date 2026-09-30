@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SizeModelTable, SizeFactsGrid,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SizeModelTable, SizeFactsGrid,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, seriesForSize, codeFor, guideFor, brandLabel, getSize } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const SIZE = 75
 const URL = `${BASE}/75-inch-tv-mounting`
@@ -210,6 +211,13 @@ export default function Size75Page() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="75-Inch Installs We Have Done"
+        intro="Two technicians on every one of these. Drywall, brick and covered patios across Middle Tennessee."
+        photos={photoSet("vizioLivingRoom", "soundbarSubwoofer", "brickPatio")}
+      />
 
       <FaqAccordion heading="75-Inch TV Mounting — Common Questions" faqs={FAQS} />
 

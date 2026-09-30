@@ -3,10 +3,11 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SizeModelTable,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SizeModelTable,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import { BASE, PRICES, SERIES, codeFor, guideFor, brandLabel } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const URL = `${BASE}/oled-tv-mounting`
 
@@ -236,6 +237,13 @@ export default function OledTvMountingPage() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="Flush Installs We Have Done"
+        intro="Tight to the wall with nothing visible running down it. On an OLED that finish is the entire point."
+        photos={photoSet("fireplaceDarkWall", "cablesInWall", "theaterTvShelves")}
+      />
 
       <FaqAccordion heading="OLED TV Mounting — Common Questions" faqs={FAQS} />
 

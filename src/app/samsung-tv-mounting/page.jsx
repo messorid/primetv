@@ -3,12 +3,13 @@ import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
-  RelatedLinks, SeoCta, AffiliationFootnote, SeriesCard,
+  RelatedLinks, SeoCta, AffiliationFootnote, PhotoStrip, SeriesCard,
 } from "../components/TvSeoLayout"
 import { serviceSchema, faqSchema, breadcrumbSchema, JsonLd } from "../lib/tvSeoSchema"
 import {
   BASE, PRICES, seriesForBrand, codeFor, guideFor, getBrand,
 } from "../lib/tvModels"
+import { photoSet } from "../lib/photos"
 
 const URL = `${BASE}/samsung-tv-mounting`
 
@@ -229,6 +230,13 @@ export default function SamsungTvMountingPage() {
           </div>
         </div>
       </section>
+
+
+      <PhotoStrip
+        heading="Samsung Installs We Have Done"
+        intro="A Frame TV in Art Mode on painted brick, an over-fireplace mount on a dark accent wall, and a large panel with a soundbar underneath. All our own work."
+        photos={photoSet("frameArtMode", "fireplaceDarkWall", "soundbarSubwoofer")}
+      />
 
       <FaqAccordion heading="Samsung TV Mounting — Common Questions" faqs={FAQS.map(f => ({
         q: f.q,
