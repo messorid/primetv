@@ -2,46 +2,57 @@
 
 // The hero photo, rotating through real installs.
 //
-// Three things this deliberately does not do:
-//   • It does not mount all nine images. They all sit inside the viewport, so
-//     next/image would load every one on first paint — around half a megabyte
-//     on a phone for eight pictures nobody has seen yet. Only the current and
-//     the next slide are in the DOM, which is enough to crossfade cleanly.
-//   • It does not animate for people who asked the OS not to animate things.
-//     prefers-reduced-motion stops the auto-advance; the dots still work.
-//   • It does not keep cycling in a background tab, or while someone is
-//     hovering or tabbing through it.
+// It does not mount all nine images. They all sit inside the viewport, so
+// next/image would load every one on first paint — around half a megabyte on a
+// phone for eight pictures nobody has seen yet. Only the current and the next
+// slide are in the DOM, which is enough to crossfade cleanly.
+//
+// It also does not pause on hover, and that is a correction rather than an
+// oversight. The first version did, and on a desktop this hero is large and
+// centred, so a cursor left resting anywhere near the middle of the page froze
+// it indefinitely — which is exactly how it was reported. Auto-advance is
+// stopped only by a hidden tab or by keyboard focus, the latter so that someone
+// tabbing to the dots can actually use them.
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 
 const INTERVAL = 5000
+// After this many held ticks we move on regardless. A slow image is a worse
+// reason to freeze the hero than to show a brief empty frame.
+const MAX_HOLDS = 2
 
 export default function HeroCarousel({ slides, className = "" }) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [reduced, setReduced] = useState(false)
-  // Slides whose image has actually loaded. The carousel refuses to fade to a
-  // photo that has not arrived yet, which is what produced a blank frame on a
-  // slow first visit; it holds the current one and tries again next tick.
-  //
-  // A ref, not state, on purpose. As state this belongs in the interval's
-  // dependency array, and then every image that finishes loading tears down and
-  // recreates the timer — with nine slides the dwell never completes and the
-  // carousel stalls. Nothing renders from this, so a ref is the honest type.
-  const ready = useRef(new Set([0]))
+  const rootRef = useRef(null)
+  const holds = useRef(0)
   const count = slides.length
 
-  const markReady = useCallback(i => { ready.current.add(i) }, [])
-
-  // Respect the OS setting, and follow it if the user changes it live.
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const sync = () => setReduced(mq.matches)
-    sync()
-    mq.addEventListener("change", sync)
-    return () => mq.removeEventListener("change", sync)
+  // Whether a slide's photo has actually arrived, asked of the DOM rather than
+  // tracked from an onLoad event.
+  //
+  // This used to listen for onLoad and remember the answer. That is unreliable
+  // in exactly the case most visitors are in: when the image is already in the
+  // browser cache it completes BEFORE React attaches the handler during
+  // hydration, so onLoad never fires, the next slide is never considered ready,
+  // and the carousel freezes on slide one forever. A cold-cache test passes and
+  // every returning visitor sees a still photo.
+  //
+  // `complete && naturalWidth > 0` is the state itself, not a notification
+  // about it, so there is no event to miss.
+  const isReady = useCallback(i => {
+    const img = rootRef.current?.querySelector(`[data-slide="${i}"] img`)
+    return Boolean(img?.complete && img.naturalWidth > 0)
   }, [])
+
+  // There is deliberately no prefers-reduced-motion branch here. The first
+  // version stopped the carousel dead for anyone with that setting on, and on
+  // Windows plenty of people have animation effects switched off without ever
+  // meaning "hide the photographs from me" — they simply never saw the hero
+  // change. A crossfade is an opacity change with nothing moving across the
+  // screen, which is the standard reduced-motion-safe alternative to a slide,
+  // so everyone gets the same behaviour.
 
   // A hidden tab should not be burning timers or decoding images.
   useEffect(() => {
@@ -51,29 +62,32 @@ export default function HeroCarousel({ slides, className = "" }) {
   }, [])
 
   useEffect(() => {
-    if (paused || reduced || count < 2) return
+    if (paused || count < 2) return
     const id = setInterval(() => {
       setIndex(i => {
         const candidate = (i + 1) % count
-        // Hold rather than fade to an image that has not loaded.
-        return ready.current.has(candidate) ? candidate : i
+        if (isReady(candidate) || holds.current >= MAX_HOLDS) {
+          holds.current = 0
+          return candidate
+        }
+        holds.current += 1
+        return i
       })
     }, INTERVAL)
     return () => clearInterval(id)
     // `index` is a dependency so the timer restarts on every change, including
     // a manual one. Without it, tapping a dot could leave only a sliver of the
     // current interval before the slide moved on again.
-  }, [paused, reduced, count, index])
+  }, [paused, count, index, isReady])
 
   const next = (index + 1) % count
 
   return (
     <div
+      ref={rootRef}
       // A neutral base so any moment without a painted image reads as a dim
       // frame rather than a white hole punched in the hero.
       className={`relative overflow-hidden bg-neutral-200 ${className}`}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       role="region"
@@ -87,6 +101,7 @@ export default function HeroCarousel({ slides, className = "" }) {
         return (
           <div
             key={s.src}
+            data-slide={i}
             className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
               active ? "opacity-100" : "opacity-0"
             }`}
@@ -100,13 +115,13 @@ export default function HeroCarousel({ slides, className = "" }) {
               // No `quality` prop: Next only honours values declared in
               // images.qualities, so the old quality={82} here was silently
               // falling back to the default 75 and just misled the reader.
+              //
               // Slide 1 is the LCP image. Slide 2 is fetched eagerly but at low
               // priority so the first crossfade always has something to show
               // without competing with the LCP.
               priority={i === 0}
               loading={i <= 1 ? "eager" : undefined}
               fetchPriority={i === 1 ? "low" : undefined}
-              onLoad={() => markReady(i)}
               style={{ objectPosition: s.pos || "50% 50%" }}
               className="object-cover"
             />
