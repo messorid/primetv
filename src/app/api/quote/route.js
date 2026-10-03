@@ -1,8 +1,11 @@
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
+import { randomUUID } from "node:crypto"
 import nodemailer from "nodemailer"
 import { captureQuoteLead } from "../../lib/quoteLeads.js"
+import { forwardLeadToCrm } from "../../lib/crmForward.js"
+import { runAfterResponse } from "../../lib/afterResponse.js"
 
 export async function POST(request) {
   let body
@@ -14,12 +17,19 @@ export async function POST(request) {
 
   // Detecta forma del payload: Wizard viejo o Quick Quote nuevo
   const isWizard = Array.isArray(body.tvDetails)
+  const lead = isWizard ? wizardLead(body) : quickLead(body)
 
   // El lead se guarda ANTES del correo. Si el SMTP falla, el lead sigue
   // apareciendo en el panel; antes se perdia por completo.
-  const saved = await captureQuoteLead(
-    isWizard ? wizardLead(body) : quickLead(body)
-  )
+  const saved = await captureQuoteLead(lead)
+
+  // Los Quick Quote tambien van al CRM (Sistema de Leads), pero despues de
+  // responder: un CRM lento o caido nunca hace esperar al cliente ni le
+  // devuelve un error. El id permite al CRM reconocer un reintento.
+  if (lead.source === "quick_quote") {
+    const externalId = randomUUID()
+    runAfterResponse(() => forwardLeadToCrm(lead, externalId))
+  }
 
   let notified = false
   try {

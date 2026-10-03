@@ -45,6 +45,26 @@ mock.module("@neondatabase/serverless", {
   },
 })
 
+// after() is replaced by a queue, so a test can prove the CRM call waits until
+// the response is out, then run it on demand.
+const deferred = []
+mock.module("../../lib/afterResponse.js", {
+  namedExports: { runAfterResponse: task => deferred.push(task) },
+})
+
+process.env.CRM_API_URL = "https://crm.example.com/api/public/leads"
+process.env.CRM_API_KEY = "crm-key"
+
+const crmCalls = []
+let failCrm = false
+globalThis.fetch = async (url, opts) => {
+  if (failCrm) throw new Error("ECONNREFUSED")
+  crmCalls.push({ url, headers: opts.headers, body: JSON.parse(opts.body) })
+  return new Response(JSON.stringify({ id: "crm-1" }), { status: 201 })
+}
+
+const runDeferred = () => Promise.all(deferred.map(task => task()))
+
 const { POST } = await import("./route.js")
 
 const post = body =>
@@ -57,8 +77,11 @@ const post = body =>
 function reset() {
   sent.length = 0
   inserted.length = 0
+  deferred.length = 0
+  crmCalls.length = 0
   failEmail = false
   failInsert = false
+  failCrm = false
 }
 
 const QUICK = {
@@ -203,4 +226,69 @@ test("malformed JSON is rejected without touching the database", async () => {
   assert.equal(res.status, 400)
   assert.equal(inserted.length, 0)
   assert.equal(sent.length, 0)
+})
+
+/* CRM: Quick Quote leads also go to the Sistema de Leads CRM, as Google leads */
+
+test("a quick quote is filed in the CRM as a Google lead, after the response", async () => {
+  reset()
+  const res = await post({ ...QUICK, mountType: "Tilting", notes: "brick fireplace" })
+
+  assert.equal(res.status, 200)
+  assert.equal(crmCalls.length, 0, "the customer must not wait for the CRM")
+  assert.equal(deferred.length, 1)
+
+  await runDeferred()
+  assert.equal(crmCalls.length, 1)
+
+  const call = crmCalls[0]
+  assert.equal(call.url, "https://crm.example.com/api/public/leads")
+  assert.equal(call.headers["X-API-Key"], "crm-key")
+  assert.equal(call.body.source, "GOOGLE")
+  assert.equal(call.body.form, "Quick Quote")
+  assert.equal(call.body.name, "Ada Lovelace")
+  assert.equal(call.body.phone, "6155550123")
+  assert.equal(call.body.zip, "37201")
+  assert.equal(call.body.mountType, "Tilting")
+  assert.equal(call.body.notes, "brick fireplace")
+  assert.match(call.body.externalId, /^[0-9a-f-]{36}$/)
+})
+
+test("each quote gets its own CRM id, so two real requests are two leads", async () => {
+  reset()
+  await post(QUICK)
+  await post(QUICK)
+  await runDeferred()
+
+  assert.equal(crmCalls.length, 2)
+  assert.notEqual(crmCalls[0].body.externalId, crmCalls[1].body.externalId)
+})
+
+test("the contact form is not sent to the CRM", async () => {
+  reset()
+  await post({ ...QUICK, leadSource: "contact_form" })
+
+  assert.equal(deferred.length, 0)
+})
+
+test("a CRM outage never reaches the customer", async () => {
+  reset()
+  failCrm = true
+  const res = await post(QUICK)
+
+  assert.equal(res.status, 200)
+  assert.equal((await res.json()).ok, true)
+  // The deferred task swallows the failure instead of crashing the function.
+  await assert.doesNotReject(runDeferred())
+})
+
+test("the CRM still gets the lead when the inbox and database are both down", async () => {
+  reset()
+  failEmail = true
+  failInsert = true
+  const res = await post(QUICK)
+  await runDeferred()
+
+  assert.equal(res.status, 500)
+  assert.equal(crmCalls.length, 1, "the CRM is one more place the lead survives")
 })
