@@ -210,7 +210,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
           {quoteType === "installation" && (
             <form onSubmit={onSubmitInstall} className="p-6">
               <h3 className="text-xl font-bold">Home Installation quote</h3>
-              <p className="mt-1 text-sm text-black/60">Tell us what you need and we'll reply with pricing.</p>
+              <p className="mt-1 text-sm text-black/60">Tell us what you need and we&rsquo;ll reply with pricing.</p>
 
               {/* Service selector */}
               <div className="mt-5">
@@ -262,7 +262,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
               </div>
 
               <div className="mt-4 min-h-6">
-                {status === "ok" && <p className="text-sm font-medium text-emerald-600">Thank you! We'll get back to you with pricing shortly.</p>}
+                {status === "ok" && <p className="text-sm font-medium text-emerald-600">Thank you! We&rsquo;ll get back to you with pricing shortly.</p>}
                 {status === "error" && <p className="text-sm font-medium text-[#E50914]">Something went wrong. Please try again.</p>}
               </div>
             </form>

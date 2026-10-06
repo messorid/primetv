@@ -23,7 +23,7 @@ export default function GetInstallationQuotePage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-black mb-3">Request an Installation Quote</h1>
             <p className="text-black/55 max-w-md mx-auto text-sm">
-              Tell us about your project and we'll get back to you with pricing and availability.
+              Tell us about your project and we&rsquo;ll get back to you with pricing and availability.
             </p>
           </div>
 

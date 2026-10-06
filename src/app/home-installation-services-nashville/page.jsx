@@ -174,7 +174,7 @@ export default function HomeInstallationPage() {
               <p className="text-[10px] font-bold tracking-widest text-white/40 uppercase mb-2">Our Primary Specialty</p>
               <h3 className="text-xl md:text-2xl font-extrabold mb-2">Professional TV Mounting in Nashville</h3>
               <p className="text-white/60 text-sm leading-relaxed max-w-xl">
-                PrimeTvNashville's core business is professional TV mounting — same-day service, upfront pricing,
+                PrimeTvNashville&rsquo;s core business is professional TV mounting — same-day service, upfront pricing,
                 clean cable concealment. All other installation services complement our TV expertise.
               </p>
             </div>
@@ -235,7 +235,7 @@ export default function HomeInstallationPage() {
       <section className="w-full bg-black text-white py-16">
         <div className="max-w-3xl mx-auto px-5 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold">Ready to Get Started?</h2>
-          <p className="mt-3 text-white/60 text-lg">Tell us what you need installed and we'll get back to you with a quote.</p>
+          <p className="mt-3 text-white/60 text-lg">Tell us what you need installed and we&rsquo;ll get back to you with a quote.</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/get-installation-quote" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">
               Request an Installation Quote

@@ -146,7 +146,7 @@ export default function InstallationQuoteForm() {
         <div className="text-5xl mb-4">✅</div>
         <h2 className="text-2xl font-extrabold text-black mb-2">Quote Request Received!</h2>
         <p className="text-black/60 mb-6 max-w-md mx-auto">
-          We'll review your request and get back to you shortly with pricing and availability.
+          We&rsquo;ll review your request and get back to you shortly with pricing and availability.
         </p>
         <p className="text-sm text-black/50">
           Questions? Call us at{" "}
@@ -244,7 +244,7 @@ export default function InstallationQuoteForm() {
       {step === 3 && (
         <form onSubmit={handleSubmit}>
           <h2 className="text-xl font-extrabold text-black mb-2">Your contact information</h2>
-          <p className="text-sm text-black/55 mb-6">We'll reach out with your quote and availability.</p>
+          <p className="text-sm text-black/55 mb-6">We&rsquo;ll reach out with your quote and availability.</p>
           <div className="space-y-4 mb-6">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>

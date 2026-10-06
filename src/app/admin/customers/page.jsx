@@ -32,7 +32,66 @@ export default function CustomersPage() {
   const [filter,    setFilter]    = useState("all") // all | repeat
   const [expanded,  setExpanded]  = useState(null)
 
+  // Inline editing of a customer's name, email and phone. The panel markup for
+  // this existed while the state behind it did not, so opening any customer
+  // threw "editing is not defined" and the error boundary swallowed the page.
+  const [editing,  setEditing]  = useState(null)   // customer key being edited
+  const [form,     setForm]     = useState({ firstName: "", lastName: "", email: "", phone: "" })
+  const [saving,   setSaving]   = useState(false)
+  const [formErr,  setFormErr]  = useState("")
+  const [savedKey, setSavedKey] = useState(null)   // shows the ✓ after a save
+
   useEffect(() => { load() }, [])
+
+  function startEdit(c) {
+    setEditing(c.key)
+    setFormErr("")
+    setSavedKey(null)
+    setForm({
+      firstName: c.firstName || "",
+      lastName:  c.lastName  || "",
+      email:     c.email     || "",
+      phone:     c.phone     || "",
+    })
+  }
+
+  // A customer is derived from their bookings, so a rename rewrites every
+  // booking they have. The API enforces the same rules; these checks are only
+  // here to fail fast without a round trip.
+  async function saveEdit(c) {
+    const firstName = form.firstName.trim()
+    const lastName  = form.lastName.trim()
+    const email     = form.email.trim()
+    const phone     = form.phone.trim()
+
+    if (!firstName && !lastName) return setFormErr("Enter a name.")
+    if (!email && !phone)        return setFormErr("Keep at least an email or a phone.")
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setFormErr("That email does not look right.")
+
+    setSaving(true)
+    setFormErr("")
+    try {
+      const res  = await fetch("/api/customers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: c.key, firstName, lastName, email, phone }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setFormErr(data.error || "Could not save those changes.")
+        return
+      }
+      setEditing(null)
+      setSavedKey(c.key)
+      // The customer key is derived from the email or phone, so it can change
+      // under us. Reload rather than patching the row in place.
+      await load()
+    } catch {
+      setFormErr("Could not reach the server.")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function load() {
     setLoading(true)

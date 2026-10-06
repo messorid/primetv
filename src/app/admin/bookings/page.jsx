@@ -1291,7 +1291,7 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 <div className="mt-2 rounded-xl bg-emerald-50 border border-emerald-100 p-3">
                   <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">Coupon — {b.couponCode}</p>
                   <p className="text-sm text-emerald-800">{b.appliedCouponLabel}</p>
-                  {b.couponComment && <p className="mt-1 text-sm text-emerald-700 italic">"{b.couponComment}"</p>}
+                  {b.couponComment && <p className="mt-1 text-sm text-emerald-700 italic">&ldquo;{b.couponComment}&rdquo;</p>}
                 </div>
               )}
               {b.customQuote && (
