@@ -5,6 +5,7 @@ const serviceLinks = [
   { label: "TV Wall Mounting", href: "/services/tv-mounting" },
   { label: "Home Theater Setup", href: "/services/home-theater" },
   { label: "Soundbar Installation", href: "/soundbar-installation-nashville" },
+  { label: "Ceiling Fan Installation", href: "/ceiling-fan-installation-nashville" },
   { label: "Pricing", href: "/pricing" },
 ]
 

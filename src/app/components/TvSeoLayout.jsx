@@ -62,7 +62,8 @@ export function SeoBreadcrumb({ trail }) {
   )
 }
 
-export function SeoHero({ eyebrow, title, accent, lead, body, facts }) {
+export function SeoHero({ eyebrow, title, accent, lead, body, facts,
+                         ctaHref = "/book", ctaLabel = "Book Your Installation" }) {
   return (
     <section className="relative w-full bg-white text-black overflow-hidden">
       <div className="h-1 w-full bg-gradient-to-r from-[#E50914] via-black to-[#E50914]" />
@@ -82,8 +83,8 @@ export function SeoHero({ eyebrow, title, accent, lead, body, facts }) {
         {body && <p className="mt-4 text-base text-black/70 max-w-2xl leading-relaxed">{body}</p>}
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
-          <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white shadow-xl shadow-red-500/25 hover:bg-red-700 transition">
-            Book Your Installation
+          <Link href={ctaHref} className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white shadow-xl shadow-red-500/25 hover:bg-red-700 transition">
+            {ctaLabel}
           </Link>
           <a href={PHONE_HREF} className="inline-flex items-center justify-center rounded-full border-2 border-black/10 px-8 py-4 font-bold text-black hover:bg-black/5 transition">
             Call {PHONE_DISPLAY}
@@ -186,15 +187,16 @@ export function RelatedLinks({ heading, intro, links }) {
   )
 }
 
-export function SeoCta({ heading, sub, footLinks }) {
+export function SeoCta({ heading, sub, footLinks,
+                        ctaHref = "/book", ctaLabel = "Book Your Installation" }) {
   return (
     <section className="w-full bg-black text-white py-16">
       <div className="max-w-3xl mx-auto px-5 text-center">
         <h2 className="text-3xl md:text-4xl font-extrabold">{heading}</h2>
         <p className="mt-3 text-white/60 text-lg">{sub}</p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">
-            Book Your Installation
+          <Link href={ctaHref} className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-8 py-4 font-bold text-white hover:bg-red-700 transition">
+            {ctaLabel}
           </Link>
           <a href={PHONE_HREF} className="inline-flex items-center justify-center rounded-full border border-white/20 px-8 py-4 font-semibold text-white hover:bg-white/10 transition">
             Call {PHONE_DISPLAY}
@@ -215,11 +217,11 @@ export function SeoCta({ heading, sub, footLinks }) {
   )
 }
 
-export function AffiliationFootnote() {
+export function AffiliationFootnote({ text = AFFILIATION_NOTE }) {
   return (
     <section className="w-full bg-white py-8 border-t border-black/[0.06]">
       <div className="max-w-5xl mx-auto px-5 md:px-6">
-        <p className="text-[11px] leading-relaxed text-black/40">{AFFILIATION_NOTE}</p>
+        <p className="text-[11px] leading-relaxed text-black/40">{text}</p>
       </div>
     </section>
   )

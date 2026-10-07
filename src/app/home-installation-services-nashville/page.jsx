@@ -65,6 +65,14 @@ const SERVICES = [
     cta: "Explore Wall Installations",
   },
   {
+    emoji: "🌀",
+    title: "Ceiling Fan Installation",
+    desc: "Standard, LED, remote control, flush mount, outdoor, smart WiFi and high-ceiling fans — Hunter, Hampton Bay, Harbor Breeze, Casablanca and more.",
+    href: "/ceiling-fan-installation-nashville",
+    examples: ["Fan Replacement", "Light to Fan Swap", "Outdoor & Porch", "Flush Mount", "Smart WiFi Fans", "Vaulted Ceilings"],
+    cta: "Explore Ceiling Fan Installation",
+  },
+  {
     emoji: "⛺",
     title: "Gazebo & Pergola Assembly",
     desc: "Expert assembly of Yardistry, Backyard Discovery, Purple Leaf and all pre-manufactured outdoor structures.",
@@ -252,6 +260,8 @@ export default function HomeInstallationPage() {
             <Link href="/picture-mirror-hanging-nashville" className="hover:text-white/70 transition">Mirror Hanging</Link>
             <span>·</span>
             <Link href="/wall-installation-services-nashville" className="hover:text-white/70 transition">Shelves & Wall</Link>
+            <span>·</span>
+            <Link href="/ceiling-fan-installation-nashville" className="hover:text-white/70 transition">Ceiling Fans</Link>
             <span>·</span>
             <Link href="/gazebo-installation-nashville" className="hover:text-white/70 transition">Gazebo Assembly</Link>
           </div>

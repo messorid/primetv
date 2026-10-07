@@ -5,6 +5,7 @@ const SERVICES = [
   { value: "furniture", label: "Furniture Assembly", emoji: "🪑" },
   { value: "mirror_picture", label: "Picture / Mirror Hanging", emoji: "🪞" },
   { value: "shelves_wall", label: "Shelves / Wall Installation", emoji: "📐" },
+  { value: "ceiling_fan", label: "Ceiling Fan Installation", emoji: "🌀" },
   { value: "gazebo", label: "Gazebo / Pergola Assembly", emoji: "⛺" },
   { value: "playset", label: "Playground / Playset", emoji: "🛝" },
   { value: "other", label: "Other Installation", emoji: "🔧" },
@@ -29,6 +30,14 @@ const SERVICE_QUESTIONS = {
     { id: "qty", label: "Number of items", type: "number", placeholder: "1" },
     { id: "wall_type", label: "Wall type", type: "select", options: ["Drywall", "Plaster", "Brick / Masonry", "Tile", "Concrete", "Not sure"] },
     { id: "product_link", label: "Product link (optional)", type: "url", placeholder: "https://..." },
+  ],
+  ceiling_fan: [
+    { id: "fan_type", label: "What kind of fan?", type: "select", options: ["Standard", "With LED light", "Remote control", "Low profile / flush mount", "Outdoor / porch", "Smart WiFi", "For a high or vaulted ceiling", "Not sure"] },
+    { id: "brand", label: "Brand / Model (if known)", type: "text", placeholder: "e.g. Hunter, Hampton Bay, Harbor Breeze, Casablanca..." },
+    { id: "product_link", label: "Product link (optional)", type: "url", placeholder: "https://..." },
+    { id: "existing", label: "What is there now?", type: "select", options: ["An existing ceiling fan", "A light fixture", "Nothing — bare ceiling", "Not sure"] },
+    { id: "ceiling_height", label: "Approximate ceiling height", type: "text", placeholder: "e.g. 8 ft, 10 ft, vaulted" },
+    { id: "qty", label: "How many fans?", type: "number", placeholder: "1" },
   ],
   gazebo: [
     { id: "brand", label: "Brand", type: "text", placeholder: "e.g. Yardistry, Backyard Discovery, Purple Leaf..." },

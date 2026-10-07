@@ -2,6 +2,7 @@ import { getAllPosts } from "./lib/blog"
 import { PLAYSETS } from "./lib/playsets"
 import { GAZEBOS } from "./lib/gazebos"
 import { BRANDS, SIZES } from "./lib/tvModels"
+import { FAN_TYPES, HUB as FAN_HUB } from "./lib/ceilingFans"
 
 const BASE = "https://www.primetvnashville.com"
 
@@ -37,6 +38,9 @@ const STATIC_PAGES = [
 
   // Specialty TV pages
   { path: "/oled-tv-mounting",                         priority: 0.80, freq: "monthly", date: "2026-09-29" },
+
+  // Ceiling fans
+  { path: "/ceiling-fan-installation-nashville",       priority: 0.85, freq: "monthly", date: "2026-10-07" },
 ]
 
 export default function sitemap() {
@@ -61,6 +65,13 @@ export default function sitemap() {
     lastModified: "2026-09-29",
     changeFrequency: "monthly",
     priority: 0.85,
+  }))
+
+  const fanEntries = FAN_TYPES.map(t => ({
+    url: `${BASE}${FAN_HUB}/${t.slug}`,
+    lastModified: "2026-10-07",
+    changeFrequency: "monthly",
+    priority: 0.75,
   }))
 
   const cityEntries = CITIES.map(city => ({
@@ -95,6 +106,7 @@ export default function sitemap() {
     ...staticEntries,
     ...brandEntries,
     ...sizeEntries,
+    ...fanEntries,
     ...cityEntries,
     ...playsetEntries,
     ...gazeboEntries,

@@ -17,6 +17,7 @@ const installations = [
   { label: "Furniture Assembly", href: "/furniture-assembly-nashville", desc: "IKEA, office & home furniture" },
   { label: "Picture & Mirror Hanging", href: "/picture-mirror-hanging-nashville", desc: "Art, mirrors & gallery walls" },
   { label: "Shelves & Wall Installation", href: "/wall-installation-services-nashville", desc: "Shelves, rods, blinds & cabinets" },
+  { label: "Ceiling Fan Installation", href: "/ceiling-fan-installation-nashville", desc: "Standard, outdoor, smart & high ceilings" },
   { label: "Gazebo Assembly", href: "/gazebo-installation-nashville", desc: "Gazebos, pergolas & outdoor structures" },
   { label: "Playset Installation", href: "/playset-installation-nashville", desc: "Swing sets & wooden playsets" },
   { label: "Playground Installation", href: "/playground-installation-nashville", desc: "Backyard play areas & trampolines" },

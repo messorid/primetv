@@ -12,6 +12,7 @@ const INSTALL_SERVICES = [
   { value: "furniture",      label: "Furniture Assembly",       emoji: "🪑" },
   { value: "mirror_picture", label: "Picture / Mirror Hanging", emoji: "🪞" },
   { value: "shelves_wall",   label: "Shelves & Wall Install",   emoji: "📐" },
+  { value: "ceiling_fan",    label: "Ceiling Fan Install",      emoji: "🌀" },
   { value: "gazebo",         label: "Gazebo / Pergola",         emoji: "⛺" },
   { value: "playset",        label: "Playground / Playset",     emoji: "🛝" },
   { value: "other",          label: "Other Installation",       emoji: "🔧" },
