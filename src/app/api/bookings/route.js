@@ -5,7 +5,7 @@ import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
-import { getTransport } from "../../lib/mailer.js"
+import { getTransport, mailFrom } from "../../lib/mailer.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 
@@ -307,7 +307,7 @@ export async function PATCH(request) {
         const mail = buildClientEmail(booking, { organizer: user })
         const transporter = getTransport()
         await transporter.sendMail({
-          from: `"PrimeTvNashville" <${user}>`,
+          from: mailFrom("PrimeTvNashville"),
           to: booking.email,
           subject: mail.subject,
           attachments: mail.attachments,
@@ -615,7 +615,7 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
     : null
 
   await transporter.sendMail({
-    from:    `"PrimeTvNashville" <${user}>`,
+    from:    mailFrom("PrimeTvNashville"),
     to:      installerEmail,
     subject: `New Job Assigned — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
     attachments,
@@ -692,7 +692,7 @@ async function sendCancellationEmail(b) {
     .filter(Boolean).join(", ")
 
   await transporter.sendMail({
-    from:    `"PrimeTvNashville" <${user}>`,
+    from:    mailFrom("PrimeTvNashville"),
     to:      b.installer_email,
     subject: `❌ Job Cancelled — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
     html: `

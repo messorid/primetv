@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
-import { getTransport, canSendMail } from "../../lib/mailer.js"
+import { getTransport, canSendMail, mailFrom, notifyTo } from "../../lib/mailer.js"
 import {
   buildClientEmail, buildICS, safe, formatAddress,
   PROMO_PRICES, HOME_INSTALL_LABELS,
@@ -161,7 +161,7 @@ export async function POST(request) {
     const icsForBusiness = date ? buildICS({
       ...icsBase,
       summary: `TV Installation — ${fullName}`,
-      attendees: [{ name: "PrimeTvNashville", email: "tvprimenashville@gmail.com" }],
+      attendees: [{ name: "PrimeTvNashville", email: notifyTo() }],
     }) : null
 
     const icsForClient = date ? buildICS({
@@ -259,8 +259,8 @@ export async function POST(request) {
 
     // ── Email to business ──────────────────────────────────────────────────────
     const businessEmailSent = await trySend("business", {
-      from: `"PrimeTvNashville Bookings" <${user}>`,
-      to: "tvprimenashville@gmail.com",
+      from: mailFrom("PrimeTvNashville Bookings"),
+      to: notifyTo(),
       replyTo: info.email,
       subject: `New Booking — ${fullName} | ${date}`,
       attachments: icsForBusiness ? [{ filename: "appointment.ics", content: icsForBusiness, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],
@@ -348,9 +348,9 @@ export async function POST(request) {
     }, { organizer: user })
 
     const clientEmailSent = await trySend("client confirmation", {
-      from: `"PrimeTvNashville" <${user}>`,
+      from: mailFrom("PrimeTvNashville"),
       to: info.email,
-      bcc: "messoweb@gmail.com",
+      bcc: notifyTo(),
       subject: clientEmail.subject,
       attachments: clientEmail.attachments,
       html: clientEmail.html,
@@ -360,8 +360,8 @@ export async function POST(request) {
     // the customer still got a confirmation. Now it always alerts the business.
     if (!dbSaved) {
       await trySend("db-failure alert", {
-          from: `"PrimeTvNashville Bookings" <${user}>`,
-          to: "tvprimenashville@gmail.com",
+          from: mailFrom("PrimeTvNashville Bookings"),
+          to: notifyTo(),
           subject: `⚠️ BOOKING NOT SAVED TO DATABASE — ${fullName} | ${date}`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:2px solid #e50914;border-radius:12px;">
@@ -393,8 +393,8 @@ export async function POST(request) {
     // office has to know to reach out by phone.
     if (dbSaved && !clientEmailSent) {
       await trySend("client-email-failure alert", {
-        from: `"PrimeTvNashville Bookings" <${user}>`,
-        to: "tvprimenashville@gmail.com",
+        from: mailFrom("PrimeTvNashville Bookings"),
+        to: notifyTo(),
         subject: `⚠️ CUSTOMER DID NOT GET THEIR CONFIRMATION — ${fullName} | ${date}`,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:2px solid #f59e0b;border-radius:12px;">

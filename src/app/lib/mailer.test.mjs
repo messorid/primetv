@@ -96,6 +96,25 @@ test("MAIL_FROM can override the visible sender", () => {
   assert.equal(mailFrom(), '"PrimeTvNashville" <bookings@primetvnashville.com>')
 })
 
+test("a MAIL_FROM on another domain is ignored — the production outage", () => {
+  // The exact state production was in: logged in to Hostinger as info@,
+  // a year-old MAIL_FROM still saying messoweb@gmail.com. Obeying it made
+  // Hostinger refuse every message with "553 Sender address rejected".
+  process.env.SMTP_HOST = "smtp.hostinger.com"
+  process.env.MAIL_FROM = "messoweb@gmail.com"
+  assert.equal(mailFrom(), '"PrimeTvNashville" <info@primetvnashville.com>')
+})
+
+test("a QUOTE_TO on another domain is ignored, so quotes stay in the business inbox", () => {
+  process.env.QUOTE_TO = "tvprimenashville@gmail.com"
+  assert.equal(notifyTo(), "info@primetvnashville.com")
+})
+
+test("the domain comparison ignores case and stray spaces", () => {
+  process.env.MAIL_FROM = "  Bookings@PrimeTvNashville.com "
+  assert.equal(mailFrom(""), "Bookings@PrimeTvNashville.com")
+})
+
 test("internal notifications default to the sending mailbox", () => {
   assert.equal(notifyTo(), "info@primetvnashville.com")
   process.env.QUOTE_TO = "daniel@primetvnashville.com"

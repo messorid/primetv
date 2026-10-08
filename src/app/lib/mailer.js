@@ -37,11 +37,34 @@ export const mailPass = () => process.env.EMAIL_PASS || process.env.SMTP_PASS ||
 // this instead of trying to send and catching the failure.
 export const canSendMail = () => Boolean(mailUser() && mailPass())
 
+const domainOf = address => String(address || "").split("@")[1]?.trim().toLowerCase() || ""
+
+// An override is only trusted when it lives on the same domain as the mailbox
+// we actually log in as. This is not tidiness. MAIL_FROM and QUOTE_TO were set
+// a year ago, when everything ran through Gmail, and still pointed at Gmail
+// addresses when the site moved to the Hostinger mailbox. Hostinger refuses to
+// send as an address it does not own —
+//   553 5.7.1 <messoweb@gmail.com>: Sender address rejected:
+//   not owned by user info@primetvnashville.com
+// — so one stale variable silently stopped every form notification on the
+// site. A foreign-domain override is now ignored, with a warning in the logs,
+// instead of being obeyed into an outage.
+function sameDomainOverride(name) {
+  const value = (process.env[name] || "").trim()
+  if (!value) return ""
+  const own = domainOf(mailUser())
+  if (own && domainOf(value) !== own) {
+    console.warn(`${name}=${value} ignored: not on ${own}, the domain we send from`)
+    return ""
+  }
+  return value
+}
+
 // The address mail is sent as. With a custom domain this must be the mailbox
-// that SMTP authenticated as, or the receiving server sees a mismatch between
-// the envelope sender and the From header and treats it as spoofing.
+// that SMTP authenticated as — a foreign From is either refused outright, as
+// above, or delivered and then filed as spoofing by the receiving server.
 export function mailFrom(displayName = "PrimeTvNashville") {
-  const address = process.env.MAIL_FROM || mailUser()
+  const address = sameDomainOverride("MAIL_FROM") || mailUser()
   return displayName ? `"${displayName}" <${address}>` : address
 }
 
@@ -72,6 +95,12 @@ export function getTransport() {
   return nodemailer.createTransport(smtpConfig())
 }
 
-// Where mail about a job goes internally. Separate from the sending account so
-// notifications can be routed somewhere else later without touching SMTP.
-export const notifyTo = () => process.env.QUOTE_TO || mailUser()
+// Where every internal notification goes: new bookings, quick quotes,
+// installation quotes, the copy of each customer confirmation, and the alerts
+// when something fails. That is the business inbox, info@primetvnashville.com,
+// which is the mailbox we send from.
+//
+// QUOTE_TO can still redirect them, but only to another address on the same
+// domain — the old value pointed at a personal Gmail and would otherwise keep
+// pulling quotes out of the business inbox.
+export const notifyTo = () => sameDomainOverride("QUOTE_TO") || mailUser()

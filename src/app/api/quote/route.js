@@ -36,9 +36,12 @@ export async function POST(request) {
     // Lee primero EMAIL_* como en tu version anterior, y si no existen usa SMTP_*
     const user = process.env.EMAIL_USER || process.env.SMTP_USER
     const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS
-    const to   = process.env.QUOTE_TO || user
-    const from = process.env.MAIL_FROM || user
-    const replyTo = process.env.REPLY_TO || body.email || undefined
+    const to   = notifyTo()
+    const from = mailFrom("PrimeTvNashville")
+    // Reply goes to the customer who asked for the quote. This used to prefer a
+    // REPLY_TO variable pointing at a Gmail inbox, so hitting Reply on a lead
+    // wrote back to ourselves instead of to the person waiting for a price.
+    const replyTo = body.email || undefined
 
     if (!user || !pass) throw new Error("SMTP credentials missing")
 

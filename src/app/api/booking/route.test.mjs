@@ -24,7 +24,8 @@ mock.module("nodemailer", {
         if (failClientEmail && to === "bad-address@@invalid") {
           throw new Error("550 5.1.1 recipient rejected")
         }
-        sent.push({ to, subject, html: String(opts.html || "") })
+        sent.push({ to, subject, html: String(opts.html || ""),
+                    from: String(opts.from || ""), bcc: String(opts.bcc || "") })
         return { messageId: "ok" }
       },
     }),
@@ -174,4 +175,44 @@ test("client confirmation keeps its content after the shared-module extraction",
   ]) {
     assert.ok(mail.html.includes(needle), `client email must still contain: ${needle}`)
   }
+})
+
+// Every message a booking produces lands in the business inbox, and nothing is
+// addressed to the two personal Gmail inboxes that used to receive them.
+// Runs with the stale overrides production still had, so a revert to the old
+// behaviour would show up here rather than as silence in the office.
+test("every booking email goes to the business inbox, none to the old Gmail ones", async () => {
+  sent.length = 0; inserts = 0; failInsert = false
+  const saved = { MAIL_FROM: process.env.MAIL_FROM, QUOTE_TO: process.env.QUOTE_TO }
+  process.env.MAIL_FROM = "messoweb@gmail.com"
+  process.env.QUOTE_TO  = "tvprimenashville@gmail.com"
+  try {
+    const res = await call("bad-address@@invalid")   // forces the alert too
+    assert.equal(res.status, 200)
+
+    const inbox = process.env.EMAIL_USER
+    const business = sent.find(m => /^New Booking/.test(m.subject))
+    const alert    = sent.find(m => /CUSTOMER DID NOT GET/.test(m.subject))
+    assert.ok(business, "business notification was sent")
+    assert.ok(alert, "failure alert was sent")
+    assert.equal(business.to, inbox, "new bookings go to the business inbox")
+    assert.equal(alert.to, inbox, "alerts go to the business inbox")
+
+    for (const m of sent) {
+      assert.ok(!/gmail\.com/i.test(m.to + " " + m.bcc), `addressed to Gmail: ${m.subject}`)
+      assert.match(m.from, new RegExp(`<${inbox}>$`), `sent as the mailbox, not a stale MAIL_FROM: ${m.subject}`)
+    }
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v
+    }
+  }
+})
+
+test("the customer confirmation copies the business inbox", async () => {
+  sent.length = 0; inserts = 0; failInsert = false
+  await call("good@example.com")
+  const confirmation = sent.find(m => m.to === "good@example.com")
+  assert.ok(confirmation, "customer got a confirmation")
+  assert.equal(confirmation.bcc, process.env.EMAIL_USER, "a copy lands in the business inbox")
 })
