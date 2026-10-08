@@ -37,7 +37,14 @@ export const mailPass = () => process.env.EMAIL_PASS || process.env.SMTP_PASS ||
 // this instead of trying to send and catching the failure.
 export const canSendMail = () => Boolean(mailUser() && mailPass())
 
-const domainOf = address => String(address || "").split("@")[1]?.trim().toLowerCase() || ""
+// Accepts either a bare address or the "Display Name <address>" form — the
+// MAIL_FROM in production uses the second — and returns just the address.
+const bareAddress = value => {
+  const s = String(value || "").trim()
+  const angled = s.match(/<([^>]+)>/)
+  return (angled ? angled[1] : s).trim()
+}
+const domainOf = address => bareAddress(address).split("@")[1]?.trim().toLowerCase() || ""
 
 // An override is only trusted when it lives on the same domain as the mailbox
 // we actually log in as. This is not tidiness. MAIL_FROM and QUOTE_TO were set
@@ -57,7 +64,9 @@ function sameDomainOverride(name) {
     console.warn(`${name}=${value} ignored: not on ${own}, the domain we send from`)
     return ""
   }
-  return value
+  // The bare address: mailFrom adds its own display name, and a recipient
+  // field wants an address, not a formatted header.
+  return bareAddress(value)
 }
 
 // The address mail is sent as. With a custom domain this must be the mailbox

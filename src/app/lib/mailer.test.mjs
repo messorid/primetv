@@ -110,6 +110,17 @@ test("a QUOTE_TO on another domain is ignored, so quotes stay in the business in
   assert.equal(notifyTo(), "info@primetvnashville.com")
 })
 
+test("a display-name MAIL_FROM is read by its address, not its brackets", () => {
+  // The foreign one production actually had, in this exact format.
+  process.env.MAIL_FROM = "PrimeTv Nashville <messoweb@gmail.com>"
+  assert.equal(mailFrom(""), "info@primetvnashville.com")
+
+  // And a legitimate same-domain one in the same format must be honoured,
+  // without being double-wrapped in a second display name.
+  process.env.MAIL_FROM = "PrimeTV <bookings@primetvnashville.com>"
+  assert.equal(mailFrom("PrimeTvNashville"), '"PrimeTvNashville" <bookings@primetvnashville.com>')
+})
+
 test("the domain comparison ignores case and stray spaces", () => {
   process.env.MAIL_FROM = "  Bookings@PrimeTvNashville.com "
   assert.equal(mailFrom(""), "Bookings@PrimeTvNashville.com")
