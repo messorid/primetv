@@ -1,15 +1,9 @@
-import nodemailer from 'nodemailer'
+import { getTransport, mailFrom, notifyTo } from "../../lib/mailer.js"
 
 export async function POST(request) {
   const body = await request.json()
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  })
+  const transporter = getTransport()
 
   // Generar filas dinámicamente para cada televisor
   const tvRows = body.tvDetails
@@ -28,8 +22,8 @@ export async function POST(request) {
     .join('')
 
   const mailOptions = {
-    from: `"PrimeTvNashville Website" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_USER,
+    from: mailFrom("PrimeTvNashville Website"),
+    to: notifyTo(),
     subject: `PrimeTvNashville - New Quote from ${body.fullName}`,
     html: `
       <div style="font-family:Arial, sans-serif; max-width:600px; margin:auto; padding:20px; border:1px solid #eee; border-radius:10px;">

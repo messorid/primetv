@@ -2,8 +2,8 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { randomUUID } from "node:crypto"
-import nodemailer from "nodemailer"
 import { captureQuoteLead } from "../../lib/quoteLeads.js"
+import { getTransport, mailFrom, notifyTo, canSendMail } from "../../lib/mailer.js"
 import { forwardLeadToCrm } from "../../lib/crmForward.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
 
@@ -43,10 +43,7 @@ export async function POST(request) {
     if (!user || !pass) throw new Error("SMTP credentials missing")
 
     // Igual que tu codigo que funcionaba: usa el servicio gmail
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user, pass },
-    })
+    const transporter = getTransport()
 
     await transporter.verify()
 

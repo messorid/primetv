@@ -1,9 +1,9 @@
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-import nodemailer from "nodemailer"
 import { neon } from "@neondatabase/serverless"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
+import { getTransport, canSendMail } from "../../lib/mailer.js"
 import {
   buildClientEmail, buildICS, safe, formatAddress,
   PROMO_PRICES, HOME_INSTALL_LABELS,
@@ -24,12 +24,10 @@ export async function POST(request) {
     const user = process.env.EMAIL_USER
     const pass = process.env.EMAIL_PASS
 
-    const canEmail = Boolean(user && pass)
+    const canEmail = canSendMail()
     if (!canEmail) console.error("SMTP credentials missing — booking will be saved but no email sent")
 
-    const transporter = canEmail
-      ? nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
-      : null
+    const transporter = getTransport()
 
     // An email problem must never cost us the booking record, so every send is
     // isolated and reports success rather than throwing out of the handler.

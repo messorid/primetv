@@ -2,10 +2,10 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
-import nodemailer from "nodemailer"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
+import { getTransport } from "../../lib/mailer.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 
@@ -305,7 +305,7 @@ export async function PATCH(request) {
 
       try {
         const mail = buildClientEmail(booking, { organizer: user })
-        const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+        const transporter = getTransport()
         await transporter.sendMail({
           from: `"PrimeTvNashville" <${user}>`,
           to: booking.email,
@@ -555,7 +555,7 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
   const pass = process.env.EMAIL_PASS
   if (!user || !pass) return
 
-  const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+  const transporter = getTransport()
 
   const serviceDetail = buildServiceDetail(b)
   const customerNotes = buildCustomerNotes(b)
@@ -686,7 +686,7 @@ async function sendCancellationEmail(b) {
   const pass = process.env.EMAIL_PASS
   if (!user || !pass || !b.installer_email) return
 
-  const transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } })
+  const transporter = getTransport()
 
   const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
     .filter(Boolean).join(", ")

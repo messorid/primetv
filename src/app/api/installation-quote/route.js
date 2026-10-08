@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer"
 import { captureQuoteLead } from "../../lib/quoteLeads.js"
+import { getTransport, mailFrom, notifyTo } from "../../lib/mailer.js"
 
 const SERVICE_LABELS = {
   furniture:     "Furniture Assembly",
@@ -71,16 +71,13 @@ export async function POST(request) {
   </div>
 </div>`
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    })
+    const transporter = getTransport()
 
     let notified = false
     try {
       await transporter.sendMail({
-        from: `"PrimeTV Nashville" <${process.env.EMAIL_USER}>`,
-        to: process.env.EMAIL_USER,
+        from: mailFrom("PrimeTV Nashville"),
+        to: notifyTo(),
         replyTo: contact.email,
         subject: `[Installation Quote] ${serviceLabel} — ${contact.name}`,
         html,
