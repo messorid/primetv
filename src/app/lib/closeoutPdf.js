@@ -148,18 +148,23 @@ export async function buildCloseoutPdf({ view, signature, photos = [], audit = {
   }
   if (embedded.length) {
     y -= 10
-    // Keep the heading with the first row of photos.
-    ensure(260)
-    label(`Photos of the finished work (${embedded.length})`)
     const colW = (width - 12) / 2
+    const fit = (img, maxH) => { const sc = Math.min(colW / img.width, maxH / img.height); return { w: img.width * sc, h: img.height * sc } }
+    // The first row may shrink a little to use the space left on this page
+    // rather than leave it blank and start a new one.
+    const roomHere = y - 10 - 60 - 36
+    const rows = []
     for (let i = 0; i < embedded.length; i += 2) {
-      const pair = embedded.slice(i, i + 2)
-      const sizes = pair.map(img => { const sc = Math.min(colW / img.width, 300 / img.height); return { w: img.width * sc, h: img.height * sc } })
-      const h = Math.max(...sizes.map(z => z.h))
+      const maxH = i === 0 && roomHere >= 180 ? Math.min(300, roomHere) : 300
+      const pair = embedded.slice(i, i + 2).map(img => ({ img, ...fit(img, maxH) }))
+      rows.push({ pair, h: Math.max(...pair.map(p => p.h)) })
+    }
+    // Keep the heading with the first row: the label takes about 24pt.
+    ensure(rows[0].h + 12 + 24)
+    label(`Photos of the finished work (${embedded.length})`)
+    for (const { pair, h } of rows) {
       ensure(h + 12)
-      pair.forEach((img, j) => {
-        page.drawImage(img, { x: M + j * (colW + 12), y: y - sizes[j].h, width: sizes[j].w, height: sizes[j].h })
-      })
+      pair.forEach((p, j) => page.drawImage(p.img, { x: M + j * (colW + 12), y: y - p.h, width: p.w, height: p.h }))
       y -= h + 12
     }
   }
