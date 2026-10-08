@@ -53,6 +53,49 @@ function pad(n) { return String(n).padStart(2, "0") }
 function isoDate(d) {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 }
+function addDays(iso, n) {
+  const d = new Date(iso + "T12:00:00")
+  d.setDate(d.getDate() + n)
+  return isoDate(d)
+}
+function fmtDay(iso, opts = { month: "short", day: "numeric" }) {
+  return new Date(iso + "T12:00:00").toLocaleDateString("en-US", opts)
+}
+
+// Date ranges the stats and the list can be narrowed to. Dates are compared as
+// "YYYY-MM-DD" strings in the office's local time, so "today" is never off by
+// one in the evening the way a UTC date would be.
+const PERIODS = [
+  { key: "all",       label: "All dates"   },
+  { key: "today",     label: "Today"       },
+  { key: "tomorrow",  label: "Tomorrow"    },
+  { key: "week",      label: "This week"   },
+  { key: "next7",     label: "Next 7 days" },
+  { key: "month",     label: "This month"  },
+  { key: "lastMonth", label: "Last month"  },
+  { key: "custom",    label: "Custom"      },
+]
+
+function periodBounds(key, today) {
+  const t = new Date(today + "T12:00:00")
+  const y = t.getFullYear(), m = t.getMonth()
+  switch (key) {
+    case "today":     return { from: today, to: today }
+    case "tomorrow":  { const d = addDays(today, 1); return { from: d, to: d } }
+    case "week":      { const from = addDays(today, -t.getDay()); return { from, to: addDays(from, 6) } }
+    case "next7":     return { from: today, to: addDays(today, 6) }
+    case "month":     return { from: isoDate(new Date(y, m, 1)),     to: isoDate(new Date(y, m + 1, 0)) }
+    case "lastMonth": return { from: isoDate(new Date(y, m - 1, 1)), to: isoDate(new Date(y, m, 0)) }
+    default:          return { from: "", to: "" }
+  }
+}
+
+function periodLabel(range) {
+  if (!range) return "All dates"
+  if (range.from === range.to) return fmtDay(range.from, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+  const sameYear = range.from.slice(0, 4) === range.to.slice(0, 4)
+  return `${fmtDay(range.from, sameYear ? undefined : { month: "short", day: "numeric", year: "numeric" })} – ${fmtDay(range.to, { month: "short", day: "numeric", year: "numeric" })}`
+}
 
 export default function BookingsPage() {
   const [bookings,       setBookings]       = useState([])
@@ -66,7 +109,8 @@ export default function BookingsPage() {
   // Calendar state
   const [calYear,        setCalYear]        = useState(() => new Date().getFullYear())
   const [calMonth,       setCalMonth]       = useState(() => new Date().getMonth())
-  const [selectedDay,    setSelectedDay]    = useState(null) // "YYYY-MM-DD" or null
+  // Date filter. A day clicked on the calendar is a one-day period ("day").
+  const [period,         setPeriod]         = useState({ key: "all", from: "", to: "" })
 
   // Modals
   const [completeModal,  setCompleteModal]  = useState(null)
@@ -334,17 +378,35 @@ export default function BookingsPage() {
     [bookings, filter]
   )
 
-  const filtered = useMemo(() => {
+  // The active date range, or null for all dates. A custom range typed back to
+  // front still works, and an open end means "from this day on" / "up to it".
+  const range = useMemo(() => {
+    if (period.key === "all" || (!period.from && !period.to)) return null
+    let from = period.from || "0000-01-01", to = period.to || "9999-12-31"
+    if (from > to) [from, to] = [to, from]
+    return { from, to }
+  }, [period])
+  const selectedDay = range && range.from === range.to ? range.from : null
+
+  // Everything in the period that matches the search, whatever its status.
+  // The stat cards count this, so they always answer "in these dates".
+  const inPeriod = useMemo(() => {
     const q = search.toLowerCase()
-    return statusFiltered.filter(b => {
+    return bookings.filter(b => {
       const matchSearch = !q ||
         `${b.firstName} ${b.lastName}`.toLowerCase().includes(q) ||
         b.email?.toLowerCase().includes(q) || b.phone?.includes(q) ||
         b.address?.city?.toLowerCase().includes(q)
-      const matchDay = !selectedDay || b.date === selectedDay
-      return matchSearch && matchDay
+      const matchDate = !range || (!!b.date && b.date >= range.from && b.date <= range.to)
+      return matchSearch && matchDate
     })
-  }, [statusFiltered, search, selectedDay])
+  }, [bookings, search, range])
+
+  // With a date range the list reads in calendar order, soonest first.
+  const filtered = useMemo(() => {
+    const list = inPeriod.filter(b => filter === "all" || b.status === filter)
+    return range ? [...list].sort((a, b) => (a.date || "").localeCompare(b.date || "")) : list
+  }, [inPeriod, filter, range])
 
   // Bookings in the current calendar month (used to paint the calendar)
   const calBookings = useMemo(() => {
@@ -364,14 +426,35 @@ export default function BookingsPage() {
     return map
   }, [calBookings])
 
-  const stats = useMemo(() => ({
-    total:     bookings.length,
-    pending:   bookings.filter(b => b.status === "pending").length,
-    confirmed: bookings.filter(b => b.status === "confirmed").length,
-    completed: bookings.filter(b => b.status === "completed").length,
-  }), [bookings])
+  const stats = useMemo(() => {
+    const count = s => inPeriod.filter(b => b.status === s).length
+    return {
+      all:       inPeriod.length,
+      pending:   count("pending"),
+      confirmed: count("confirmed"),
+      completed: count("completed"),
+      cancelled: count("cancelled"),
+    }
+  }, [inPeriod])
 
   const todayISO  = isoDate(new Date())
+
+  function choosePeriod(key) {
+    if (key === "custom") {
+      setPeriod(p => ({ key: "custom", from: p.from || todayISO, to: p.to || todayISO }))
+      return
+    }
+    const b = periodBounds(key, todayISO)
+    setPeriod({ key, ...b })
+    // Bring the calendar to the start of the period so it shows the same dates.
+    if (b.from) {
+      const d = new Date(b.from + "T12:00:00")
+      setCalYear(d.getFullYear()); setCalMonth(d.getMonth())
+    }
+  }
+  function pickDay(iso) {
+    setPeriod(selectedDay === iso ? { key: "all", from: "", to: "" } : { key: "day", from: iso, to: iso })
+  }
   const ccCharged   = parseFloat(completeForm.amountCharged) || 0
   const ccMaterials = parseFloat(completeForm.materialsCost) || 0
   const ccSubtotal  = ccCharged - ccMaterials
@@ -409,19 +492,75 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Total",     value: stats.total,     bg: "bg-white"      },
-          { label: "Pending",   value: stats.pending,   bg: "bg-amber-50"   },
-          { label: "Confirmed", value: stats.confirmed, bg: "bg-blue-50"    },
-          { label: "Completed", value: stats.completed, bg: "bg-emerald-50" },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl border border-gray-200 p-4 shadow-sm`}>
-            <p className="text-xs text-gray-500 font-medium">{s.label}</p>
-            <p className="text-3xl font-extrabold text-gray-900 mt-1">{s.value}</p>
+      {/* Period — narrows the stats and the list to a set of dates */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 sm:p-4 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-2.5">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Dates</p>
+          <p className="text-sm font-semibold text-gray-700 truncate" aria-live="polite">{periodLabel(range)}</p>
+        </div>
+        <div role="group" aria-label="Show bookings for"
+          className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {PERIODS.map(p => {
+            const on = period.key === p.key
+            return (
+              <button key={p.key} type="button" aria-pressed={on} onClick={e => { choosePeriod(p.key); e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" }) }}
+                className={`shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold border transition ${
+                  on ? "bg-[#E50914] text-white border-[#E50914] shadow-sm"
+                     : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                }`}>
+                {p.label}
+              </button>
+            )
+          })}
+          {period.key === "day" && (
+            <button type="button" aria-pressed="true" onClick={() => choosePeriod("all")}
+              className="shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold border bg-[#E50914] text-white border-[#E50914] shadow-sm">
+              {fmtDay(period.from)} ×
+            </button>
+          )}
+        </div>
+        {period.key === "custom" && (
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <label className="block">
+              <span className="block text-xs font-semibold text-gray-500 mb-1">From</span>
+              <input type="date" value={period.from} max={period.to || undefined}
+                onChange={e => setPeriod(p => ({ ...p, from: e.target.value }))}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-semibold text-gray-500 mb-1">To</span>
+              <input type="date" value={period.to} min={period.from || undefined}
+                onChange={e => setPeriod(p => ({ ...p, to: e.target.value }))}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+            </label>
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* Stats — each card also filters the list by that status */}
+      <div role="group" aria-label="Filter by status" className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        {[
+          { key: "all",       label: "Total",     bg: "bg-white",      ring: "ring-gray-900"   },
+          { key: "pending",   label: "Pending",   bg: "bg-amber-50",   ring: "ring-amber-500"  },
+          { key: "confirmed", label: "Confirmed", bg: "bg-blue-50",    ring: "ring-blue-500"   },
+          { key: "completed", label: "Completed", bg: "bg-emerald-50", ring: "ring-emerald-500" },
+          { key: "cancelled", label: "Cancelled", bg: "bg-gray-50",    ring: "ring-gray-400"   },
+        ].map(s => {
+          const on = filter === s.key
+          return (
+            <button key={s.key} type="button" aria-pressed={on}
+              onClick={() => setFilter(on && s.key !== "all" ? "all" : s.key)}
+              className={`${s.bg} ${s.key === "all" ? "col-span-2 md:col-span-1" : ""} text-left rounded-2xl border p-3 sm:p-4 shadow-sm transition hover:shadow-md ${
+                on ? `border-transparent ring-2 ${s.ring}` : "border-gray-200"
+              }`}>
+              <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                {s.key !== "all" && <span className={`w-2 h-2 rounded-full ${STATUS_CONFIG[s.key].dot}`} />}
+                {s.label}
+              </span>
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5 sm:mt-1">{stats[s.key]}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── Admin Calendar ───────────────────────────────────────────────────── */}
@@ -440,38 +579,24 @@ export default function BookingsPage() {
               className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-600 text-xl font-bold transition">
               ›
             </button>
-            <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()); setSelectedDay(null) }}
+            <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()) }}
               className="text-xs font-semibold text-gray-400 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-gray-50 transition">
               Today
             </button>
           </div>
 
-          {selectedDay && (
+          {range && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold text-gray-700">
-                {new Date(selectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                {selectedDay ? fmtDay(selectedDay, { weekday: "short", month: "short", day: "numeric" }) : periodLabel(range)}
                 {" — "}{filtered.length} booking{filtered.length !== 1 ? "s" : ""}
               </span>
-              <button onClick={() => setSelectedDay(null)}
+              <button onClick={() => choosePeriod("all")}
                 className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-red-50 transition">
                 Clear ×
               </button>
             </div>
           )}
-
-          {/* Status filter inside calendar header — desktop only */}
-          <div className="hidden md:flex gap-1 flex-wrap">
-            {["all", ...STATUS_FLOW].map(s => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold border transition ${
-                  filter === s
-                    ? "bg-[#E50914] text-white border-[#E50914]"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
-                }`}>
-                {s === "all" ? "All" : STATUS_CONFIG[s].label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Day-of-week headers */}
@@ -492,15 +617,19 @@ export default function BookingsPage() {
             const dayBs  = byDay[d] || []
             const isToday = iso === todayISO
             const isSel  = iso === selectedDay
+            const inRange = !!range && !selectedDay && iso >= range.from && iso <= range.to
             const hasBks = dayBs.length > 0
 
             return (
               <button
                 key={iso}
-                onClick={() => setSelectedDay(isSel ? null : iso)}
+                onClick={() => pickDay(iso)}
+                aria-pressed={isSel}
+                aria-label={`${fmtDay(iso, { weekday: "long", month: "long", day: "numeric" })}, ${dayBs.length} booking${dayBs.length !== 1 ? "s" : ""}`}
                 className={`relative flex flex-col p-1 sm:p-1.5 rounded-lg sm:rounded-xl border text-left transition min-h-[36px] sm:min-h-[70px] ${
                   isSel    ? "bg-[#E50914] border-[#E50914] shadow-md" :
                   isToday  ? "border-[#E50914]/40 bg-red-50" :
+                  inRange  ? "border-red-100 bg-red-50/50 hover:border-[#E50914]/40" :
                   hasBks   ? "border-gray-200 bg-white hover:border-[#E50914]/40 hover:shadow-sm" :
                              "border-transparent bg-gray-50/50 hover:bg-gray-100"
                 }`}
@@ -562,24 +691,16 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* Search + status filter (mobile) */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+      {/* Search */}
+      <div className="mb-5">
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, email, phone or city…"
-          className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+          type="search"
+          aria-label="Search bookings"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-base sm:text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-red-300"
         />
-        <div className="flex gap-2 flex-wrap md:hidden">
-          {["all", ...STATUS_FLOW].map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold capitalize border transition ${
-                filter === s ? "bg-[#E50914] text-white border-[#E50914]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-              }`}>
-              {s === "all" ? "All" : STATUS_CONFIG[s].label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Booking list */}
@@ -588,7 +709,9 @@ export default function BookingsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           {selectedDay
-            ? `No bookings on ${new Date(selectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
+            ? `No ${filter === "all" ? "" : STATUS_CONFIG[filter].label.toLowerCase() + " "}bookings on ${fmtDay(selectedDay, { weekday: "long", month: "long", day: "numeric" })}`
+            : range
+            ? `No ${filter === "all" ? "" : STATUS_CONFIG[filter].label.toLowerCase() + " "}bookings for ${periodLabel(range)}`
             : "No bookings found."}
         </div>
       ) : (
