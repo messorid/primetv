@@ -90,13 +90,15 @@ test("review request carries the message and the Google link", () => {
   assert.ok(html.includes(GOOGLE_REVIEW_URL))
   assert.ok(html.includes("we would be grateful if you could leave us a quick Google review"))
   assert.ok(html.includes("Your feedback helps our small business grow."))
+  // Asks everyone the same way — not only customers who were happy.
+  assert.ok(!/if you.re happy/i.test(html))
 })
 
 test("names are escaped in the review and closeout emails", () => {
   const b = { first_name: "<script>x</script>", last_name: "", date: "2026-10-08" }
   assert.ok(!buildReviewRequestEmail(b).html.includes("<script>x"))
   const view = { workItems: ["<b>TV</b>"], installers: [], signed: { name: "<i>A</i>", at: "2026-10-08T15:00:00Z", tip: 0, notes: "" } }
-  const office = buildCloseoutSignedEmail({ b, view, signatureCid: "sig", photoCids: [] }).html
+  const office = buildCloseoutSignedEmail({ b, view, signatureSrc: "https://x/sig", photoSrcs: [] }).html
   assert.ok(!office.includes("<b>TV</b>") && !office.includes("<i>A</i>"))
   assert.ok(!buildCloseoutLinkEmail({ b, installerName: "<u>N</u>", url: "https://x/job/abc" }).html.includes("<u>N</u>"))
 })
@@ -106,4 +108,16 @@ test("the work order includes the closeout link only when there is one", () => {
   const url = "https://www.primetvnashville.com/job/abcdefghijklmnopqrstuvwx"
   assert.ok(buildInstallerJobEmail({ b, installerName: "Nelson", closeoutUrl: url }).html.includes(url))
   assert.ok(!buildInstallerJobEmail({ b, installerName: "Nelson" }).html.includes("/job/"))
+})
+
+test("the PDF builds, with characters the PDF fonts cannot draw dropped", async () => {
+  const { buildCloseoutPdf, closeoutPdfName } = await import("./closeoutPdf.js")
+  const view = {
+    customerName: "José Núñez 🎉", date: "2026-10-08", time: "", installers: ["Nelson"],
+    workItems: ["TV ✓ mounted", "Cable × 1"], photos: [],
+    signed: { name: "José", at: "2026-10-08T20:15:00Z", tip: 10, tipMethod: "Zelle", notes: "Línea 1\nLínea 2" },
+  }
+  const pdf = await buildCloseoutPdf({ view })
+  assert.equal(Buffer.from(pdf.slice(0, 5)).toString(), "%PDF-")
+  assert.equal(closeoutPdfName(view), "job-completion-jose-nunez-2026-10-08.pdf")
 })

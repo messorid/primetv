@@ -1985,6 +1985,12 @@ function JobCloseout({ bookingId, active, hasCrew, onChange }) {
             </button>
           )}
           {s && (
+            <a href={`/api${info.path}/pdf`}
+              className="col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-center text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition">
+              📄 Download PDF
+            </a>
+          )}
+          {s && (
             <button type="button" onClick={reopen} disabled={!!busy}
               className="col-span-2 text-[11px] font-semibold text-gray-400 hover:text-red-500 disabled:opacity-40">
               {busy === "reopen" ? "Reopening…" : "Reopen for a new signature"}

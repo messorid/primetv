@@ -151,3 +151,26 @@ export async function crewFor(sql, booking) {
   const byBooking = await getCrewFor(sql, [booking.id])
   return crewOrLegacy(byBooking.get(booking.id), booking)
 }
+
+// Absolute address of a path on the live site, for emails and the PDF.
+export const siteUrl = path => `${process.env.SITE_URL || BRAND.site}${path}`
+
+// Everything the signed record needs, by token: the page view plus the
+// signature and photo bytes and the audit trail. Null when unsigned.
+export async function closeoutRecord(sql, token) {
+  const data = await loadCloseout(sql, token)
+  if (!data || !data.closeout.signed_at) return null
+  const crew = await crewFor(sql, data.booking)
+  const view = publicView(data, crew.map(m => m.installerName).filter(Boolean))
+  const rows = await sql`
+    SELECT data_url FROM closeout_photos WHERE booking_id = ${data.closeout.booking_id} ORDER BY created_at ASC
+  `
+  return {
+    ...data,
+    view,
+    signature: decodeDataUrl(data.closeout.signature),
+    photos: rows.map(r => decodeDataUrl(r.data_url)).filter(Boolean),
+    audit: { ip: data.closeout.signed_ip, agent: data.closeout.signed_agent },
+    closeoutId: token.slice(0, 8).toUpperCase(),
+  }
+}

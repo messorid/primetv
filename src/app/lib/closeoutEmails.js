@@ -40,11 +40,11 @@ export function buildReviewRequestEmail(b) {
   const when = b.date ? ` for your installation on ${fmtDate(b.date).replace(/, \d{4}$/, "")}` : ""
   const html = emailDocument({
     title: "Thank you from PrimeTvNashville",
-    preheader: "If you're happy with our service, a quick Google review helps our small business grow.",
+    preheader: "A quick Google review helps our small business grow.",
     body: `
       ${heading(first ? `Thank you, ${esc(first)}!` : "Thank you!", { kicker: "Thank you" })}
       ${para(`Thank you for choosing PrimeTvNashville${esc(when)}.`)}
-      ${para("If you’re happy with our service, we would be grateful if you could leave us a quick Google review. Your feedback helps our small business grow.")}
+      ${para("We’d love to hear how everything went. If you have a minute, we would be grateful if you could leave us a quick Google review. Your feedback helps our small business grow.")}
       ${buttons([{ href: GOOGLE_REVIEW_URL, label: "⭐ Leave a Google review" }])}
       ${para(`Or open this link: <a href="${GOOGLE_REVIEW_URL}" style="color:${BRAND.red};font-weight:700;word-break:break-all;">${GOOGLE_REVIEW_URL}</a>`, { muted: true, size: 13, top: 4 })}
       ${para("Thank you,<br><strong>The PrimeTvNashville team</strong>", { top: 22 })}
@@ -87,9 +87,11 @@ export function closeoutSteps() {
 
 // ── Signed closeout ─────────────────────────────────────────────────────────
 
-// `view` is publicView(); `signatureCid` and `photoCids` refer to inline
-// attachments the route adds.
-export function buildCloseoutSignedEmail({ b, view, installers = [], signatureCid, photoCids = [], url, forCustomer = false }) {
+// `view` is publicView(); `signatureSrc` and `photoSrcs` are absolute image
+// URLs on the site. Images are linked rather than embedded because several
+// mail apps hide embedded (cid:) images; the attached PDF holds the full
+// record either way.
+export function buildCloseoutSignedEmail({ b, view, installers = [], signatureSrc, photoSrcs = [], url, forCustomer = false }) {
   const s = view.signed
   const name = fullNameOf(b)
   const first = firstNameOf(b)
@@ -99,15 +101,15 @@ export function buildCloseoutSignedEmail({ b, view, installers = [], signatureCi
     ${view.workItems.map(item => `<p style="margin:0 0 8px;font-size:15px;line-height:1.45;color:${BRAND.ink};"><span style="color:#059669;font-weight:700;">✓</span>&nbsp; ${esc(item)}</p>`).join("")}
     ${s.notes ? panel({ tone: "neutral", title: "Notes", html: escLines(s.notes) }) : ""}`
 
-  const signature = signatureCid ? `
+  const signature = signatureSrc ? `
     ${sectionTitle("Customer signature", { top: 22 })}
-    <img src="cid:${signatureCid}" alt="Signature of ${esc(s.name)}" width="320" style="display:block;width:100%;max-width:320px;height:auto;border:1px solid ${BRAND.line};border-radius:8px;background:#ffffff;">
+    <img src="${esc(signatureSrc)}" alt="Signature of ${esc(s.name)}" width="320" style="display:block;width:100%;max-width:320px;height:auto;border:1px solid ${BRAND.line};border-radius:8px;background:#ffffff;">
     ${para(`<strong>${esc(s.name)}</strong> · ${esc(fmtSignedAt(s.at))}`, { size: 13, top: 6, muted: true })}
     ${para(`“${esc(CONFIRM_TEXT)}”`, { size: 13, top: 4, muted: true })}` : ""
 
-  const photos = photoCids.length ? `
-    ${sectionTitle(`Photos (${photoCids.length})`, { top: 22 })}
-    ${photoCids.map(cid => `<img src="cid:${cid}" alt="Finished work" width="520" style="display:block;width:100%;max-width:520px;height:auto;border-radius:8px;border:1px solid ${BRAND.line};margin:8px 0;">`).join("")}` : ""
+  const photos = photoSrcs.length ? `
+    ${sectionTitle(`Photos (${photoSrcs.length})`, { top: 22 })}
+    ${photoSrcs.map(src => `<img src="${esc(src)}" alt="Finished work" width="520" style="display:block;width:100%;max-width:520px;height:auto;border-radius:8px;border:1px solid ${BRAND.line};margin:8px 0;">`).join("")}` : ""
 
   if (forCustomer) {
     const html = emailDocument({
@@ -122,6 +124,7 @@ export function buildCloseoutSignedEmail({ b, view, installers = [], signatureCi
           Number(s.tip) > 0 ? ["Tip", esc(fmtTip(s.tip, s.tipMethod))] : null,
         ], { top: 16 })}
         ${work}
+    ${panel({ tone: "info", title: "📄 PDF attached", html: "A copy of the full record — details, signature and photos — is attached as a PDF." })}
         ${photos}
         ${signature}
         ${para(`Questions about your installation? Call <a href="${BRAND.tel}" style="color:${BRAND.red};font-weight:700;text-decoration:none;">${BRAND.phone}</a> or reply to this email.`, { muted: true, size: 13, top: 22 })}
@@ -142,9 +145,10 @@ export function buildCloseoutSignedEmail({ b, view, installers = [], signatureCi
         ["Signed", esc(fmtSignedAt(s.at))],
         ["Installer", esc(installers.join(", ") || "—")],
         ["Tip", `<strong>${esc(fmtTip(s.tip, s.tipMethod))}</strong>`],
-        ["Photos", String(photoCids.length)],
+        ["Photos", String(photoSrcs.length)],
       ], { top: 16 })}
       ${work}
+    ${panel({ tone: "info", title: "📄 PDF attached", html: "The full record — details, signature and photos — is attached as a PDF." })}
       ${signature}
       ${photos}
       ${url ? buttons([{ href: url, label: "Open the closeout" }]) : ""}

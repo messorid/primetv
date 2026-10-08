@@ -8,8 +8,9 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import {
-  loadCloseout, validateSignoff, workItemsOf, publicView, crewFor, closeoutUrl, decodeDataUrl,
+  loadCloseout, validateSignoff, workItemsOf, publicView, crewFor, closeoutUrl, closeoutRecord, siteUrl,
 } from "@/app/lib/closeout.js"
+import { buildCloseoutPdf, closeoutPdfName } from "@/app/lib/closeoutPdf.js"
 import { buildCloseoutSignedEmail } from "@/app/lib/closeoutEmails.js"
 import { getTransport, mailFrom, notifyTo, canSendMail } from "@/app/lib/mailer.js"
 import { isValidEmail } from "@/app/lib/formValidation.js"
@@ -55,7 +56,7 @@ export async function POST(request, { params }) {
     const crew = await crewFor(sql, data.booking)
     const view = publicView({ ...data, closeout: row }, crew.map(m => m.installerName).filter(Boolean))
 
-    runAfterResponse(() => sendSignedEmails(sql, data.booking, row, view))
+    runAfterResponse(() => sendSignedEmails(sql, data.booking, token))
     return json({ ok: true, view })
   } catch (err) {
     console.error("closeout sign error", err)
@@ -64,38 +65,32 @@ export async function POST(request, { params }) {
 }
 
 // The office gets the signed record; the customer gets a copy of what they
-// signed. Either failing is logged and does not undo the signature.
-async function sendSignedEmails(sql, booking, closeout, view) {
+// signed. Both carry the record as a PDF, and show the images from the site.
+// Either failing is logged and does not undo the signature.
+async function sendSignedEmails(sql, booking, token) {
   if (!canSendMail()) return
-  const transporter = getTransport()
-
-  const attachments = []
-  const sig = decodeDataUrl(closeout.signature)
-  if (sig) attachments.push({ filename: "signature.png", content: sig.buffer, contentType: sig.mime, cid: "signature@primetv" })
-
-  const photoCids = []
+  let record, pdf
   try {
-    const rows = await sql`
-      SELECT data_url FROM closeout_photos WHERE booking_id = ${booking.id} ORDER BY created_at ASC
-    `
-    rows.forEach((r, i) => {
-      const img = decodeDataUrl(r.data_url)
-      if (!img) return
-      const cid = `closeout${i}@primetv`
-      photoCids.push(cid)
-      attachments.push({ filename: `finished-work-${i + 1}.jpg`, content: img.buffer, contentType: img.mime, cid })
-    })
+    record = await closeoutRecord(sql, token)
+    if (!record) return
+    pdf = await buildCloseoutPdf(record)
   } catch (err) {
-    console.error("closeout photos for email failed", err)
+    console.error("closeout record/PDF for email failed", err)
+    if (!record) return
   }
-
+  const { view } = record
+  const attachments = pdf
+    ? [{ filename: closeoutPdfName(view), content: Buffer.from(pdf), contentType: "application/pdf" }]
+    : []
   const common = {
     b: booking, view, installers: view.installers,
-    signatureCid: sig ? "signature@primetv" : null, photoCids,
+    signatureSrc: siteUrl(view.signed.signatureUrl),
+    photoSrcs: view.photos.map(p => siteUrl(p.url)),
   }
+  const transporter = getTransport()
 
   try {
-    const office = buildCloseoutSignedEmail({ ...common, url: closeoutUrl(closeout.token) })
+    const office = buildCloseoutSignedEmail({ ...common, url: closeoutUrl(token) })
     await transporter.sendMail({ from: mailFrom("PrimeTvNashville"), to: notifyTo(), subject: office.subject, html: office.html, attachments })
   } catch (err) {
     console.error("closeout office email failed", err)

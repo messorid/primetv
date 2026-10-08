@@ -135,6 +135,11 @@ function SignedRecord({ view }) {
           <PhotoGrid photos={view.photos} />
         </Card>
       )}
+
+      <a href={`/api/job/${view.token}/pdf`}
+        className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border-2 border-black/12 bg-white px-6 text-base font-semibold text-black transition hover:bg-black/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/15">
+        <span aria-hidden="true">📄</span> Download PDF
+      </a>
     </>
   )
 }
