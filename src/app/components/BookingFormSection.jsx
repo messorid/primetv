@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { validateCoupon } from "@/app/lib/coupons"
 import { TV_SIZES, priceHintForSize } from "@/app/lib/tvSizes"
 import { MiniCalendar, TimeSlots } from "./DateTimePicker"
+import {
+  TextField, PhoneField, EmailField, ZipField, SelectField, ChoiceGroup,
+  CheckboxField, ErrorSummary, StepHeading, PrimaryButton, SecondaryButton, focusField,
+} from "./forms/FormKit"
+import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAGES } from "../lib/formValidation"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -31,6 +36,7 @@ const HOME_INSTALL_SERVICES = [
   { id: "furniture",      label: "Furniture Assembly",       icon: "🪑" },
   { id: "mirror_picture", label: "Picture / Mirror Hanging", icon: "🪞" },
   { id: "shelves_wall",   label: "Shelves & Wall Install",   icon: "📐" },
+  { id: "ceiling_fan",    label: "Ceiling Fan Install",      icon: "🌀" },
   { id: "gazebo",         label: "Gazebo / Pergola",         icon: "⛺" },
   { id: "playset",        label: "Playground / Playset",     icon: "🛝" },
   { id: "other",          label: "Other Installation",       icon: "🔧" },
@@ -60,6 +66,17 @@ export default function BookingFormSection() {
   const [direction, setDirection] = useState(1)
   const [status,    setStatus]    = useState("idle")
   const topRef = useRef(null)
+  // Errors for a step appear once Continue has been pressed on it, or a field
+  // has been left. Pressing Continue with something missing now lists what is
+  // missing, instead of a greyed-out button that never explains itself.
+  const [tried,   setTried]   = useState({})
+  const [touched, setTouched] = useState({})
+  const blur = field => () => setTouched(t => ({ ...t, [field]: true }))
+  // Moves focus to the new step's heading once its slide-in animation ends,
+  // so keyboard and screen reader users land on "Service Address" rather than
+  // on a button that has just disappeared.
+  const headingRef = useRef(null)
+  const navigated  = useRef(false)
 
   useEffect(() => {
     if (status === "ok") {
@@ -119,21 +136,79 @@ export default function BookingFormSection() {
     ? homeInstallService !== "" && homeInstallDetails.trim().length > 0
     : bundleDetails.trim().length > 0 // "bundle" mode
 
-  const stepValid = [
-    date && timePreference,
-    step1Valid,
-    address.street.trim() && address.city.trim() && address.state && /^\d{5}$/.test(address.zip),
-    info.firstName.trim() && info.lastName.trim() && info.email.includes("@") &&
-      info.phone.trim() && info.referral && info.payment && info.agreed,
+  // What, specifically, is missing on the service step — it has several modes
+  // and the person needs to know which part to fill in.
+  function step1Problem() {
+    if (appliedCoupon?.customQuote) {
+      if (customPrice === "" || isNaN(parseFloat(customPrice))) return "Enter the installation price for this coupon."
+      return customMode === "sized" ? "Choose the TV size for this coupon." : "Describe the job for this coupon."
+    }
+    if (bookingMode === "standard") {
+      const bad = tvs.findIndex(tv => !tvValid(tv))
+      if (bad === -1) return ""
+      const tv = tvs[bad]
+      const which = tvs.length > 1 ? `TV ${bad + 1}: ` : ""
+      if (!tv.wallType) return `${which}choose the wall type.`
+      return tv.model === "frame" ? `${which}enter the Frame TV measurements.` : `${which}choose the TV size.`
+    }
+    if (bookingMode === "promo") return "Choose a promotion."
+    if (bookingMode === "homeinstall") return homeInstallService ? "Describe what you need installed." : "Choose the home installation service."
+    return "Describe the installation you need."
+  }
+
+  const stepErrors = [
+    validate([
+      ["date", !!date,           "Choose a date on the calendar."],
+      ["time", !!timePreference, "Choose a time window."],
+    ]),
+    step1Valid ? {} : { service: step1Problem() },
+    validate([
+      ["street", address.street.trim().length >= 3, "Enter the street address, like 123 Main St."],
+      ["city",   address.city.trim().length >= 2,   "Enter the city."],
+      ["state",  !!address.state,                   "Choose the state."],
+      ["zip",    isValidZip(address.zip),           MESSAGES.zip],
+    ]),
+    validate([
+      ["firstName", isValidName(info.firstName), "Enter your first name."],
+      ["lastName",  isValidName(info.lastName),  "Enter your last name."],
+      ["email",     isValidEmail(info.email),    MESSAGES.email],
+      ["phone",     isValidUSPhone(info.phone),  MESSAGES.phone],
+      ["referral",  !!info.referral,             "Tell us how you heard about us."],
+      ["payment",   !!info.payment,              "Choose how you'd like to pay."],
+      ["agreed",    info.agreed,                 "Please accept the Terms & Conditions to book."],
+    ]),
   ]
+  const stepValid = stepErrors.map(e => Object.keys(e).length === 0)
+  const shown = field => (tried[step] || touched[field]) ? stepErrors[step][field] : undefined
+
+  // Ids of the fields an error summary can jump to. Anything without its own
+  // field (the calendar, the service step) jumps to the step heading instead.
+  const FIELD_IDS = {
+    street: "bk-street", city: "bk-city", state: "bk-state", zip: "bk-zip",
+    firstName: "bk-first", lastName: "bk-last", email: "bk-email", phone: "bk-phone",
+    referral: "bk-referral", payment: "bk-payment", agreed: "bk-agreed",
+  }
+  const ERROR_LABELS = {
+    date: "Date", time: "Time", service: "Service",
+    street: "Street", city: "City", state: "State", zip: "ZIP code",
+    firstName: "First name", lastName: "Last name", email: "Email", phone: "Phone",
+    referral: "How you heard about us", payment: "Payment", agreed: "Terms",
+  }
+  function jumpTo(key) {
+    if (FIELD_IDS[key]) focusField(FIELD_IDS[key])
+    else headingRef.current?.focus()
+  }
 
   function goNext() {
+    setTried(t => ({ ...t, [step]: true }))
     if (!stepValid[step]) return
+    navigated.current = true
     setDirection(1)
     setStep(s => s + 1)
   }
 
   function goBack() {
+    navigated.current = true
     setDirection(-1)
     setStep(s => s - 1)
   }
@@ -161,6 +236,7 @@ export default function BookingFormSection() {
   }
 
   async function submit() {
+    setTried(t => ({ ...t, 3: true }))
     if (!stepValid[3]) return
     setStatus("sending")
     try {
@@ -253,12 +329,12 @@ export default function BookingFormSection() {
         </div>
 
         {/* progress */}
-        <div className="flex items-center mb-7">
+        <ol aria-label="Booking progress" className="flex items-center mb-7">
           {STEPS.map((label, i) => {
             const passed = i < step
             const active = i === step
             return (
-              <div key={i} className="flex-1 flex flex-col items-center relative">
+              <li key={i} aria-current={active ? "step" : undefined} className="flex-1 flex flex-col items-center relative">
                 {i < STEPS.length - 1 && (
                   <div className={`absolute top-4 left-1/2 w-full h-[2px] transition-colors duration-500 ${passed ? "bg-[#E50914]" : "bg-black/10"}`} />
                 )}
@@ -269,15 +345,14 @@ export default function BookingFormSection() {
                 }`}>
                   {passed ? "✓" : i + 1}
                 </div>
-                <span className={`mt-1 text-[11px] font-medium hidden sm:block ${
-                  active ? "text-black" : "text-black/35"
-                }`}>
+                <span className={`mt-1 text-[11px] font-medium ${active ? "block text-black" : "hidden sm:block text-black/35"}`}>
                   {label}
+                  <span className="sr-only">{passed ? " (done)" : active ? " (current step)" : ""}</span>
                 </span>
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ol>
 
         {/* animated card */}
         <AnimatePresence mode="wait" custom={direction}>
@@ -293,13 +368,19 @@ export default function BookingFormSection() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.28 }}
-            className="rounded-2xl border border-black/10 bg-white p-6 shadow-lg"
+            onAnimationComplete={def => {
+              if (def === "center" && navigated.current) {
+                navigated.current = false
+                headingRef.current?.focus()
+              }
+            }}
+            className="rounded-2xl border border-black/10 bg-white p-5 sm:p-6 shadow-lg"
           >
 
             {/* ── STEP 0 — Date & Time ── */}
             {step === 0 && (
               <div>
-                <StepHeader title="When do you need our services?" sub="Choose a date and preferred time window" />
+                <StepHeading ref={headingRef} as="h2" step={1} total={4} sub="Pick a day on the calendar, then a time window that suits you.">When do you need us?</StepHeading>
 
                 <div className="space-y-4">
                   <MiniCalendar
@@ -324,7 +405,7 @@ export default function BookingFormSection() {
             {/* ── STEP 1 — TV Details ── */}
             {step === 1 && (
               <div>
-                <StepHeader title="Service Details" sub="Tell us about your installation" />
+                <StepHeading ref={headingRef} as="h2" step={2} total={4} sub="Tell us what we are installing so we can bring the right hardware.">Service details</StepHeading>
 
                 {/* 3+ TVs toggle */}
                 <div className="mb-5 rounded-xl border border-black/10 bg-gray-50 p-3">
@@ -365,15 +446,16 @@ export default function BookingFormSection() {
                         Pricing for 3+ TVs varies. We&apos;ll contact you to confirm the total before the appointment.
                       </p>
                       <div>
-                        <label className="text-xs font-semibold text-black/60">
+                        <label htmlFor="bk-more-tvs" className="text-xs font-semibold text-black/60">
                           How many TVs & any details <span className="font-normal">(optional)</span>
                         </label>
                         <textarea
+                          id="bk-more-tvs"
                           rows={3}
                           value={moreTvsComment}
                           onChange={e => setMoreTvsComment(e.target.value)}
                           placeholder="e.g. 4 TVs — 2 in living room, 1 bedroom, 1 office. All drywall."
-                          className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                          className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200 resize-none"
                         />
                       </div>
                       <CouponField
@@ -477,15 +559,16 @@ export default function BookingFormSection() {
 
                               {tv.model === "frame" && (
                                 <div>
-                                  <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
+                                  <label htmlFor={`bk-tv-${i}-measurements`} className="text-xs font-semibold text-black/60 uppercase tracking-wide">
                                     Measurements <span className="text-[#E50914]">*</span>
                                   </label>
                                   <input
+                                    id={`bk-tv-${i}-measurements`}
                                     type="text"
                                     value={tv.measurements}
                                     onChange={e => updateTv(i, "measurements", e.target.value)}
                                     placeholder='e.g. 48" wide x 28" tall — Samsung Frame 55" (2024)'
-                                    className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                                    className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200"
                                   />
                                   <p className="mt-1 text-[11px] text-black/40">
                                     Width and height of the TV, plus the model or year if you know it.
@@ -516,18 +599,19 @@ export default function BookingFormSection() {
                               </div>
 
                               <div>
-                                <label className="text-xs font-semibold text-black/60 uppercase tracking-wide">
+                                <label htmlFor={`bk-tv-${i}-comments`} className="text-xs font-semibold text-black/60 uppercase tracking-wide">
                                   {tv.model === "frame" ? "Description" : "Comments"}{" "}
                                   <span className="normal-case font-normal">(optional)</span>
                                 </label>
                                 <textarea
+                                  id={`bk-tv-${i}-comments`}
                                   rows={2}
                                   value={tv.comments}
                                   onChange={e => updateTv(i, "comments", e.target.value)}
                                   placeholder={tv.model === "frame"
                                     ? "Mount you have, One Connect Box location, Art Mode setup, wall finish…"
                                     : "Fireplace, high wall, specific location…"}
-                                  className="mt-1.5 w-full rounded-xl border border-black/15 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none bg-white"
+                                  className="mt-1.5 w-full rounded-xl border border-black/15 px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200 resize-none bg-white"
                                 />
                               </div>
                             </div>
@@ -591,19 +675,20 @@ export default function BookingFormSection() {
                     {bookingMode === "bundle" && (
                       <div>
                         <div className="rounded-xl border border-black/10 bg-gray-50 p-4">
-                          <p className="text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
+                          <label htmlFor="bk-bundle" className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
                             Describe your installation
-                          </p>
+                          </label>
                           <p className="text-xs text-black/40 mb-3 leading-relaxed">
                             Tell us what you need — number of TVs, locations, wall types, any special requirements.
                             Our team will review and reach out to confirm everything before the appointment.
                           </p>
                           <textarea
+                            id="bk-bundle"
                             rows={5}
                             value={bundleDetails}
                             onChange={e => setBundleDetails(e.target.value)}
                             placeholder="e.g. 2 TVs — living room on brick wall + master bedroom on drywall. Also need a soundbar mounted below the bedroom TV..."
-                            className="w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                            className="w-full rounded-xl border border-black/15 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200 resize-none"
                           />
                           <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium">
                             We&apos;ll reach out to confirm availability and details — no payment required now.
@@ -640,7 +725,7 @@ export default function BookingFormSection() {
                         </div>
 
                         <div className="rounded-xl border border-black/10 bg-gray-50 p-4">
-                          <label className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
+                          <label htmlFor="bk-home-install" className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
                             Describe what you need <span className="text-[#E50914]">*</span>
                           </label>
                           <p className="text-xs text-black/40 mb-3 leading-relaxed">
@@ -648,11 +733,12 @@ export default function BookingFormSection() {
                             quote it accurately.
                           </p>
                           <textarea
+                            id="bk-home-install"
                             rows={5}
                             value={homeInstallDetails}
                             onChange={e => setHomeInstallDetails(e.target.value)}
                             placeholder="e.g. IKEA PAX wardrobe, 2 units, already delivered. Also a 40 lb mirror to hang on a drywall hallway wall."
-                            className="w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                            className="w-full rounded-xl border border-black/15 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200 resize-none"
                           />
                           <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium">
                             Home installations are priced by quote. We&apos;ll review your request and reach out
@@ -691,28 +777,25 @@ export default function BookingFormSection() {
             {/* ── STEP 2 — Address ── */}
             {step === 2 && (
               <div>
-                <StepHeader title="Service Address" sub="Where should our technician go?" />
-                <div className="space-y-4">
-                  <FormInput label="Street Address" value={address.street}
-                    onChange={v => setAddress(a => ({ ...a, street: v }))} placeholder="123 Main St" />
-                  <FormInput label="Apt / Suite (optional)" value={address.apt}
-                    onChange={v => setAddress(a => ({ ...a, apt: v }))} placeholder="Apt 4B" />
-                  <FormInput label="City" value={address.city}
-                    onChange={v => setAddress(a => ({ ...a, city: v }))} placeholder="Nashville" />
+                <StepHeading ref={headingRef} as="h2" step={3} total={4} sub="Where should our technician go?">Service address</StepHeading>
+                <div className="space-y-5">
+                  <TextField id="bk-street" label="Street address" required autoComplete="address-line1"
+                    value={address.street} onChange={v => setAddress(a => ({ ...a, street: v }))}
+                    onBlur={blur("street")} error={shown("street")} placeholder="123 Main St" enterKeyHint="next" />
+                  <TextField id="bk-apt" label="Apt / Suite" optional autoComplete="address-line2"
+                    value={address.apt} onChange={v => setAddress(a => ({ ...a, apt: v }))}
+                    placeholder="Apt 4B" hint="Include a gate code if there is one." enterKeyHint="next" />
+                  <TextField id="bk-city" label="City" required autoComplete="address-level2" autoCapitalize="words"
+                    value={address.city} onChange={v => setAddress(a => ({ ...a, city: v }))}
+                    onBlur={blur("city")} error={shown("city")} placeholder="Nashville" enterKeyHint="next" />
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm font-semibold">State</label>
-                      <select value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))}
-                        className="mt-1 w-full rounded-xl border border-black/15 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 bg-white">
-                        {US_STATES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <FormInput label="ZIP Code" value={address.zip}
-                      onChange={v => setAddress(a => ({ ...a, zip: v }))} placeholder="37209" />
+                    <SelectField id="bk-state" label="State" required placeholder=""
+                      value={address.state} onChange={v => setAddress(a => ({ ...a, state: v }))}
+                      onBlur={blur("state")} error={shown("state")} options={US_STATES} />
+                    <ZipField id="bk-zip" label="ZIP code" required
+                      value={address.zip} onChange={v => setAddress(a => ({ ...a, zip: v }))}
+                      onBlur={blur("zip")} error={shown("zip")} hint="5 digits." enterKeyHint="next" />
                   </div>
-                  {address.zip && !/^\d{5}$/.test(address.zip) && (
-                    <p className="text-xs text-red-500">Please enter a valid 5-digit ZIP code</p>
-                  )}
                 </div>
               </div>
             )}
@@ -720,38 +803,34 @@ export default function BookingFormSection() {
             {/* ── STEP 3 — Personal Info ── */}
             {step === 3 && (
               <div>
-                <StepHeader title="Your Information" sub="We'll use this to confirm your booking" />
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormInput label="First Name" value={info.firstName}
-                      onChange={v => setInfo(i => ({ ...i, firstName: v }))} />
-                    <FormInput label="Last Name" value={info.lastName}
-                      onChange={v => setInfo(i => ({ ...i, lastName: v }))} />
+                <StepHeading ref={headingRef} as="h2" step={4} total={4} sub={<>We use this to confirm your booking. Fields marked <span className="text-[#E50914]">*</span> are required.</>}>Your information</StepHeading>
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 min-[420px]:gap-3">
+                    <TextField id="bk-first" label="First name" required autoComplete="given-name" autoCapitalize="words"
+                      value={info.firstName} onChange={v => setInfo(i => ({ ...i, firstName: v }))}
+                      onBlur={blur("firstName")} error={shown("firstName")} enterKeyHint="next" />
+                    <TextField id="bk-last" label="Last name" required autoComplete="family-name" autoCapitalize="words"
+                      value={info.lastName} onChange={v => setInfo(i => ({ ...i, lastName: v }))}
+                      onBlur={blur("lastName")} error={shown("lastName")} enterKeyHint="next" />
                   </div>
-                  <FormInput label="Email" type="email" value={info.email}
-                    onChange={v => setInfo(i => ({ ...i, email: v }))} placeholder="your@email.com" />
-                  <FormInput label="Phone Number" type="tel" value={info.phone}
-                    onChange={v => setInfo(i => ({ ...i, phone: v }))} placeholder="(615) 000-0000" />
+                  <EmailField id="bk-email" label="Email" required
+                    value={info.email} onChange={v => setInfo(i => ({ ...i, email: v }))}
+                    onBlur={blur("email")} error={shown("email")} enterKeyHint="next"
+                    hint="Your confirmation and calendar invite go here." />
+                  <PhoneField id="bk-phone" label="Mobile phone" required
+                    value={info.phone} onChange={v => setInfo(i => ({ ...i, phone: v }))}
+                    onBlur={blur("phone")} error={shown("phone")} enterKeyHint="done"
+                    hint="10-digit US number, for updates about your appointment." />
 
-                  <div>
-                    <label className="text-sm font-semibold">How did you hear about us?</label>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {REFERRAL_OPTIONS.map(r => (
-                        <Chip key={r} label={r} active={info.referral === r}
-                          onClick={() => setInfo(i => ({ ...i, referral: r }))} />
-                      ))}
-                    </div>
-                  </div>
+                  <ChoiceGroup id="bk-referral" legend="How did you hear about us?" required
+                    columns={3} size="sm" options={REFERRAL_OPTIONS}
+                    value={info.referral} onChange={v => setInfo(i => ({ ...i, referral: v }))}
+                    error={shown("referral")} />
 
-                  <div>
-                    <label className="text-sm font-semibold">Preferred Payment Method</label>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {PAYMENT_OPTIONS.map(p => (
-                        <Chip key={p} label={p} active={info.payment === p}
-                          onClick={() => setInfo(i => ({ ...i, payment: p }))} />
-                      ))}
-                    </div>
-                  </div>
+                  <ChoiceGroup id="bk-payment" legend="Preferred payment method" required
+                    columns={3} size="sm" options={PAYMENT_OPTIONS}
+                    value={info.payment} onChange={v => setInfo(i => ({ ...i, payment: v }))}
+                    error={shown("payment")} hint="No payment is required now." />
 
                   {/* Wall liability notice */}
                   <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
@@ -772,18 +851,14 @@ export default function BookingFormSection() {
                     </a>
                   </div>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" checked={info.agreed}
-                      onChange={e => setInfo(i => ({ ...i, agreed: e.target.checked }))}
-                      className="mt-0.5 h-4 w-4 accent-[#E50914] flex-none" />
-                    <span className="text-sm text-black/65 leading-snug">
-                      I have read and agree to the{" "}
-                      <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-black underline underline-offset-1">
-                        Terms &amp; Conditions
-                      </a>
-                      {" "}including the wall liability notice, and authorize PrimeTvNashville to perform the requested services.
-                    </span>
-                  </label>
+                  <CheckboxField id="bk-agreed" required checked={info.agreed}
+                    onChange={v => setInfo(i => ({ ...i, agreed: v }))} error={shown("agreed")}>
+                    I have read and agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-black underline underline-offset-1">
+                      Terms &amp; Conditions
+                    </a>
+                    {" "}including the wall liability notice, and authorize PrimeTvNashville to perform the requested services.
+                  </CheckboxField>
                 </div>
 
                 {status === "error" && (
@@ -794,25 +869,27 @@ export default function BookingFormSection() {
               </div>
             )}
 
+            {/* what is still missing on this step */}
+            {tried[step] && !stepValid[step] && (
+              <div className="mt-6">
+                <ErrorSummary errors={stepErrors[step]} labels={ERROR_LABELS} onJump={jumpTo} />
+              </div>
+            )}
+
             {/* nav buttons */}
             <div className="mt-6 flex justify-between gap-3">
               {step > 0 ? (
-                <button type="button" onClick={goBack}
-                  className="rounded-full border border-black/15 px-6 py-3 text-sm font-semibold hover:bg-black/5 transition">
-                  ← Back
-                </button>
+                <SecondaryButton onClick={goBack} className="flex-none">← Back</SecondaryButton>
               ) : <div />}
 
               {step < 3 ? (
-                <button type="button" onClick={goNext} disabled={!stepValid[step]}
-                  className="rounded-full bg-[#E50914] px-7 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-red-500/30 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                <PrimaryButton type="button" onClick={goNext} className="flex-1 sm:flex-none">
                   Continue →
-                </button>
+                </PrimaryButton>
               ) : (
-                <button type="button" onClick={submit} disabled={!stepValid[3] || status === "sending"}
-                  className="rounded-full bg-[#E50914] px-7 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-red-500/30 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                  {status === "sending" ? "Booking…" : "Confirm Booking"}
-                </button>
+                <PrimaryButton type="button" onClick={submit} busy={status === "sending"} busyLabel="Booking…" className="flex-1 sm:flex-none">
+                  Confirm booking
+                </PrimaryButton>
               )}
             </div>
 
@@ -910,11 +987,14 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
     <div ref={wrapRef} className="relative">
       <input
         type="text"
+        aria-label="TV size in inches"
+        inputMode="numeric"
+        autoComplete="off"
         value={open ? query : (value ? `${value}"` : "")}
         onFocus={() => { setOpen(true); setQuery("") }}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search TV size…"
-        className={`w-full rounded-xl border ${border} bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${ring}`}
+        className={`w-full rounded-xl border ${border} bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-2 ${ring}`}
       />
       {open && (
         <div className={`absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border ${border} bg-white shadow-lg`}>
@@ -989,41 +1069,44 @@ function CouponField({
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-emerald-800">Qty</label>
+                    <label htmlFor="bk-coupon-qty" className="text-xs font-semibold text-emerald-800">Qty</label>
                     <input
-                      type="number" min="1"
+                      id="bk-coupon-qty"
+                      type="number" min="1" inputMode="numeric"
                       value={customTvQty}
                       onChange={e => onCustomTvQtyChange(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-emerald-200"
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-semibold text-emerald-800">Installation Price ($)</label>
+                <label htmlFor="bk-coupon-price" className="text-xs font-semibold text-emerald-800">Installation Price ($)</label>
                 <input
-                  type="number" step="0.01" min="0"
+                  id="bk-coupon-price"
+                  type="number" step="0.01" min="0" inputMode="decimal"
                   value={customPrice}
                   onChange={e => onCustomPriceChange(e.target.value)}
                   placeholder="0.00"
-                  className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  className="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-emerald-200"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-emerald-800">
+                <label htmlFor="bk-coupon-comment" className="text-xs font-semibold text-emerald-800">
                   {customMode === "commentOnly" ? "Job Description" : "Additional comments"}
                   {customMode === "sized" && <span className="font-normal text-black/40"> (optional)</span>}
                 </label>
                 <textarea
+                  id="bk-coupon-comment"
                   rows={3}
                   value={couponComment}
                   onChange={e => onCommentChange(e.target.value)}
                   placeholder={customMode === "commentOnly"
                     ? "Describe the job — what's being installed and where…"
                     : "Anything you'd like us to know about the installation…"}
-                  className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                  className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-emerald-200 resize-none"
                 />
               </div>
             </div>
@@ -1031,15 +1114,16 @@ function CouponField({
 
           {appliedCoupon.skipTvDetails && !appliedCoupon.customQuote && (
             <div className="border-t border-emerald-200 px-3 pb-3 pt-2.5 bg-white/60">
-              <label className="text-xs font-semibold text-emerald-800">
+              <label htmlFor="bk-coupon-comment-2" className="text-xs font-semibold text-emerald-800">
                 Additional comments <span className="font-normal text-black/40">(optional)</span>
               </label>
               <textarea
+                id="bk-coupon-comment-2"
                 rows={3}
                 value={couponComment}
                 onChange={e => onCommentChange(e.target.value)}
                 placeholder="Anything you'd like us to know about the installation…"
-                className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                className="mt-1.5 w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-emerald-200 resize-none"
               />
             </div>
           )}
@@ -1048,10 +1132,14 @@ function CouponField({
         <div className="mt-1.5 flex gap-2">
           <input
             type="text"
+            aria-label="Coupon code"
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
             value={couponCode}
             onChange={e => onCodeChange(e.target.value)}
             placeholder="Enter coupon code"
-            className={`flex-1 rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 uppercase placeholder:normal-case placeholder:text-black/30 transition ${
+            className={`flex-1 rounded-xl border px-3.5 py-3 text-base focus:outline-none focus:ring-2 uppercase placeholder:normal-case placeholder:text-black/30 transition ${
               couponStatus === "invalid" ? "border-red-400 focus:ring-red-200" : "border-black/15 focus:ring-red-300"
             }`}
           />
@@ -1072,40 +1160,5 @@ function CouponField({
   )
 }
 
-function StepHeader({ title, sub }) {
-  return (
-    <div className="mb-5">
-      <h3 className="text-xl font-bold">{title}</h3>
-      {sub && <p className="mt-0.5 text-sm text-black/55">{sub}</p>}
-    </div>
-  )
-}
 
-function FormInput({ label, value, onChange, placeholder = "", type = "text" }) {
-  return (
-    <div className="flex flex-col">
-      <label className="text-sm font-semibold">{label}</label>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        className="mt-1 rounded-xl border border-black/15 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-      />
-    </div>
-  )
-}
 
-function Chip({ label, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-xs font-medium border transition ${
-        active ? "bg-[#E50914] text-white border-[#E50914]" : "border-black/15 hover:bg-black/5"
-      }`}
-    >
-      {label}
-    </button>
-  )
-}

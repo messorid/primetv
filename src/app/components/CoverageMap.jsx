@@ -227,18 +227,22 @@ function ZipQuickCheck() {
 
       <div className="mt-4 flex items-center gap-2">
 
+        <label htmlFor="coverage-zip" className="sr-only">ZIP code</label>
         <input
+          id="coverage-zip"
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
+          autoComplete="postal-code"
           maxLength={5}
           value={zip}
           onChange={(e)=>setZip(e.target.value.replace(/\D/g,""))}
           placeholder="ZIP code"
-          className="w-full rounded-xl border border-black/15 px-3 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+          className="w-full min-h-[48px] rounded-xl border border-black/20 px-4 py-3 text-base focus:outline-none focus:ring-4 focus:ring-[#E50914]/15 focus:border-[#E50914]"
         />
 
         <span
+          aria-live="polite"
           className={`whitespace-nowrap rounded-xl px-3 py-3 text-sm font-semibold ${
             status === "in"
             ? "bg-emerald-600 text-white"
