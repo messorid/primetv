@@ -496,6 +496,14 @@ export async function DELETE(request) {
     } catch (photoErr) {
       console.error("Could not delete photos for booking", id, photoErr)
     }
+    // Same for the closeout: its link stops working with the booking.
+    try {
+      await ensureCloseoutTables(sql)
+      await sql`DELETE FROM closeout_photos WHERE booking_id=${id}`
+      await sql`DELETE FROM job_closeouts WHERE booking_id=${id}`
+    } catch (closeoutErr) {
+      console.error("Could not delete the closeout for booking", id, closeoutErr)
+    }
     return Response.json({ ok: true })
   } catch (err) {
     console.error(err)
