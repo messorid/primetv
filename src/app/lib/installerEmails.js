@@ -14,6 +14,7 @@ import {
   buttons, appointmentBlock, customerCard, mapsHref, telHref, BRAND,
 } from "./emailLayout.js"
 import { HOME_INSTALL_LABELS } from "./clientEmail.js"
+import { closeoutSteps } from "./closeoutEmails.js"
 
 function safe(v) {
   return String(v ?? "-").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
@@ -79,7 +80,7 @@ export function buildCustomerNotes(b) {
 
 // `photoAttachments` are the inline images already prepared by the route; each
 // carries the cid the HTML refers to.
-export function buildInstallerJobEmail({ b, installerName, crew = null, photoAttachments = [] }) {
+export function buildInstallerJobEmail({ b, installerName, crew = null, photoAttachments = [], closeoutUrl = null }) {
   const serviceDetail = buildServiceDetail(b)
   const customerNotes = buildCustomerNotes(b)
   const fullAddress = fullAddressOf(b)
@@ -114,6 +115,7 @@ export function buildInstallerJobEmail({ b, installerName, crew = null, photoAtt
       ${b.notes ? panel({ tone: "purple", title: "🗒️ Office notes", html: escLines(b.notes) }) : ""}
       ${photoHtml}
       ${customerCard({ name: `${b.first_name || ""} ${b.last_name || ""}`.trim(), phone: b.phone })}
+      ${closeoutUrl ? `${closeoutSteps()}${buttons([{ href: closeoutUrl, label: "✍️ Open job closeout" }], { top: 14 })}` : ""}
       ${para(`Questions? Contact the office at <a href="${BRAND.tel}" style="color:#E50914;font-weight:700;text-decoration:none;">${BRAND.phone}</a> or reply to this email.`, { muted: true, size: 13, top: 20 })}
     `,
   })

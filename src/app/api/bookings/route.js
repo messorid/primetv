@@ -5,10 +5,12 @@ import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
-import { getTransport, mailFrom } from "../../lib/mailer.js"
+import { getTransport, mailFrom, canSendMail } from "../../lib/mailer.js"
 import { buildInstallerJobEmail, buildCancellationEmail, fullAddressOf } from "../../lib/installerEmails.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
+import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
+import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -50,6 +52,8 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_tv_qty INT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS custom_price NUMERIC(10,2)`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_requested_at TIMESTAMPTZ`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_request_count INT DEFAULT 0`
 
   // ADD COLUMN IF NOT EXISTS cannot correct a column declared with the wrong
   // type. Those corrections live here.
@@ -75,12 +79,30 @@ export async function GET(request) {
     await ensureTable(sql)
     const rows = await sql`SELECT * FROM bookings ORDER BY created_at DESC`
     const crewByBooking = await getCrewFor(sql, rows.map(r => r.id))
+    // Which jobs the customer has signed off, for the badge on each card. Only
+    // a badge, so a failure here must not take the bookings list down with it.
+    let signed = []
+    try {
+      await ensureCloseoutTables(sql)
+      signed = await sql`
+        SELECT booking_id, signed_at, tip_amount, tip_method FROM job_closeouts WHERE signed_at IS NOT NULL
+      `
+    } catch (closeoutErr) {
+      console.error("Could not load closeout status", closeoutErr)
+    }
+    const signedBy = new Map(signed.map(c => [c.booking_id, c]))
     return Response.json({
       ok: true,
-      bookings: rows.map(r => ({
-        ...toBooking(r),
-        crew: crewOrLegacy(crewByBooking.get(r.id), r),
-      })),
+      bookings: rows.map(r => {
+        const c = signedBy.get(r.id)
+        return {
+          ...toBooking(r),
+          crew: crewOrLegacy(crewByBooking.get(r.id), r),
+          closeoutSignedAt:  c?.signed_at ?? null,
+          closeoutTip:       c ? Number(c.tip_amount) || 0 : null,
+          closeoutTipMethod: c?.tip_method ?? null,
+        }
+      }),
     })
   } catch (err) {
     console.error(err)
@@ -324,6 +346,43 @@ export async function PATCH(request) {
       }
     }
 
+    // ── Ask the customer for a Google review ─────────────────────────────────
+    // Sent only when the office presses the button, as often as it chooses;
+    // the date and count are kept so the card shows it was already asked.
+    if (body.sendReviewRequest) {
+      await ensureTable(sql)
+      const [row] = await sql`SELECT * FROM bookings WHERE id=${id}`
+      if (!row) return Response.json({ ok: false, error: "Booking not found" }, { status: 404 })
+      if (!row.email) {
+        return Response.json({ ok: false, error: "This booking has no email address" }, { status: 400 })
+      }
+      if (!canSendMail()) {
+        return Response.json({ ok: false, error: "Email is not configured on the server" }, { status: 500 })
+      }
+      try {
+        const mail = buildReviewRequestEmail(row)
+        await getTransport().sendMail({
+          from: mailFrom("PrimeTvNashville"),
+          to: row.email,
+          subject: mail.subject,
+          html: mail.html,
+        })
+      } catch (mailErr) {
+        console.error("review request email failed", mailErr)
+        return Response.json({ ok: false, error: mailErr?.message || "Could not send the email" }, { status: 502 })
+      }
+      const [u] = await sql`
+        UPDATE bookings
+        SET review_requested_at = NOW(), review_request_count = COALESCE(review_request_count, 0) + 1
+        WHERE id=${id}
+        RETURNING review_requested_at, review_request_count
+      `
+      return Response.json({
+        ok: true, sentTo: row.email,
+        reviewRequestedAt: u.review_requested_at, reviewRequestCount: u.review_request_count,
+      })
+    }
+
     // ── Update date / time ────────────────────────────────────────────────────
     if (body.updateSchedule) {
       await sql`UPDATE bookings SET date=${body.date || ""}, time_pref=${body.timePref || ""} WHERE id=${id}`
@@ -518,7 +577,15 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
     ...photoAttachments,
   ]
 
-  const mail = buildInstallerJobEmail({ b, installerName, crew, photoAttachments })
+  // The closeout link, so the installer has it on the job without asking.
+  let closeoutLink = null
+  try {
+    closeoutLink = closeoutUrl(await closeoutTokenFor(db(), b.id))
+  } catch (linkErr) {
+    console.error("Could not create the closeout link for installer email", linkErr)
+  }
+
+  const mail = buildInstallerJobEmail({ b, installerName, crew, photoAttachments, closeoutUrl: closeoutLink })
   await transporter.sendMail({
     from:    mailFrom("PrimeTvNashville"),
     to:      installerEmail,
@@ -590,6 +657,8 @@ function toBooking(row) {
     profitType:         row.profit_type,
     profitValue:        row.profit_value,
     completedAt:        row.completed_at,
+    reviewRequestedAt:  row.review_requested_at ?? null,
+    reviewRequestCount: row.review_request_count ?? 0,
     createdAt:          row.created_at,
   }
 }

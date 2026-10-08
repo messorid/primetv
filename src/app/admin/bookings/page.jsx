@@ -325,6 +325,31 @@ export default function BookingsPage() {
     return res.json()
   }
 
+  // ── Ask the customer for a Google review ────────────────────────────────────
+  async function sendReviewRequest(bookingId) {
+    try {
+      const res  = await fetch("/api/bookings", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: bookingId, sendReviewRequest: true }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setBookings(prev => prev.map(b => b._id === bookingId
+          ? { ...b, reviewRequestedAt: data.reviewRequestedAt, reviewRequestCount: data.reviewRequestCount } : b))
+      }
+      return data
+    } catch {
+      return { ok: false, error: "No connection" }
+    }
+  }
+
+  // Keeps the list's signed badge in step with what the closeout panel loads.
+  function updateCloseout(bookingId, fields) {
+    setBookings(prev => prev.map(b => b._id === bookingId &&
+      (b.closeoutSignedAt !== fields.closeoutSignedAt || b.closeoutTip !== fields.closeoutTip)
+      ? { ...b, ...fields } : b))
+  }
+
   // ── Correct a customer's name, email or phone ───────────────────────────────
   async function saveCustomer(bookingId, fields) {
     const res  = await fetch("/api/bookings", {
@@ -733,6 +758,8 @@ export default function BookingsPage() {
               onEditSchedule={() => openSchedModal(b)}
               onResend={() => resendInstallerEmail(b._id)}
               onResendClient={() => resendClientEmail(b._id)}
+              onReviewRequest={() => sendReviewRequest(b._id)}
+              onCloseoutChange={fields => updateCloseout(b._id, fields)}
               onSaveCustomer={fields => saveCustomer(b._id, fields)}
               onMaterialsUpdate={updateMaterials}
               onProfitUpdate={updateProfit}
@@ -1079,7 +1106,7 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [crewPick,          setCrewPick]          = useState([])
   const [savingCrew,        setSavingCrew]        = useState(false)
@@ -1122,6 +1149,20 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
   const [resendingClient,   setResendingClient]   = useState(false)
   const [clientResendState, setClientResendState] = useState("idle") // idle | ok | error
   const [clientResendMsg,   setClientResendMsg]   = useState("")
+  const [reviewState,       setReviewState]       = useState("idle") // idle | sending | ok | error
+  const [reviewMsg,         setReviewMsg]         = useState("")
+
+  async function handleReviewRequest() {
+    if (b.reviewRequestedAt) {
+      const when = new Date(b.reviewRequestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      if (!confirm(`A review request already went to ${b.email} on ${when}. Send it again?`)) return
+    }
+    setReviewState("sending"); setReviewMsg("")
+    const data = await onReviewRequest()
+    if (data?.ok) setReviewState("ok")
+    else { setReviewState("error"); setReviewMsg(data?.error || "Could not send") }
+    setTimeout(() => setReviewState("idle"), 5000)
+  }
 
   async function handleSaveCustomer() {
     setSavingCust(true); setCustErr("")
@@ -1214,6 +1255,16 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
         {b.status === "completed" && b.companyProfit != null && (
           <span className="text-xs font-semibold text-emerald-600 flex-none">+${Number(b.companyProfit).toFixed(0)}</span>
+        )}
+
+        {b.closeoutSignedAt && (
+          <span title="Signed off by the customer" aria-label="Signed off by the customer"
+            className="flex-none text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-1">
+            ✍️<span className="hidden sm:inline"> Signed</span>
+          </span>
+        )}
+        {b.reviewRequestedAt && (
+          <span title="Google review requested" aria-label="Google review requested" className="flex-none text-sm">⭐</span>
         )}
 
         <span className={`inline-flex text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-full border flex-none ${sc.color}`}>{sc.label}</span>
@@ -1319,6 +1370,33 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   {!b.email && (
                     <p className="mt-1 text-[10px] text-gray-400">
                       Add an email above to enable this.
+                    </p>
+                  )}
+
+                  {/* Google review request — sent only when you press it */}
+                  <button
+                    onClick={handleReviewRequest}
+                    disabled={reviewState === "sending" || !b.email}
+                    className={`mt-2 w-full rounded-xl border text-xs font-bold py-2 transition disabled:opacity-40 ${
+                      reviewState === "ok"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : reviewState === "error"
+                        ? "border-red-200 bg-red-50 text-red-600"
+                        : "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                    }`}
+                  >
+                    {reviewState === "sending"
+                      ? "Sending…"
+                      : reviewState === "ok"
+                      ? "✓ Review request sent"
+                      : reviewState === "error"
+                      ? (reviewMsg || "Could not send")
+                      : b.reviewRequestedAt ? "⭐ Ask for a Google review again" : "⭐ Ask for a Google review"}
+                  </button>
+                  {b.reviewRequestedAt && (
+                    <p className="mt-1 text-[10px] text-gray-400">
+                      Sent {new Date(b.reviewRequestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {b.reviewRequestCount > 1 ? ` · ${b.reviewRequestCount} times` : ""}
                     </p>
                   )}
                 </>
@@ -1677,6 +1755,9 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
 
+              <JobCloseout bookingId={b._id} active={expanded} hasCrew={crew.some(m => m.installerEmail)}
+                onChange={onCloseoutChange} />
+
               <JobPhotos bookingId={b._id} active={expanded} />
 
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Internal Notes</label>
@@ -1766,6 +1847,156 @@ function compressImage(file, maxDim = 1600, quality = 0.75) {
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Unreadable image")) }
     img.src = url
   })
+}
+
+// The customer's end-of-job sign-off: its link (to open, copy, share or email
+// to the crew), and once signed, who signed, the tip, the photos and the
+// signature.
+function JobCloseout({ bookingId, active, hasCrew, onChange }) {
+  const [info,    setInfo]    = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [err,     setErr]     = useState("")
+  const [flash,   setFlash]   = useState("")
+  const [busy,    setBusy]    = useState("")
+
+  function apply(data) {
+    if (!data?.ok) { setErr(data?.error || "Could not load the closeout."); return }
+    setInfo(data)
+    const s = data.view.signed
+    onChange?.({
+      closeoutSignedAt: s ? s.at : null,
+      closeoutTip: s ? s.tip : null,
+      closeoutTipMethod: s ? s.tipMethod : null,
+    })
+  }
+
+  useEffect(() => {
+    if (!active || info) return
+    let cancelled = false
+    setLoading(true)
+    fetch(`/api/bookings/closeout?bookingId=${bookingId}`)
+      .then(r => r.json())
+      .then(d => { if (!cancelled) apply(d) })
+      .catch(() => { if (!cancelled) setErr("Could not load the closeout.") })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, bookingId])
+
+  function say(msg) { setFlash(msg); setTimeout(() => setFlash(""), 4000) }
+
+  async function copy() {
+    try { await navigator.clipboard.writeText(info.url); say("✓ Link copied") }
+    catch { window.prompt("Copy this link:", info.url) }
+  }
+
+  async function share() {
+    try { await navigator.share({ title: "Job closeout", url: info.url }) } catch {}
+  }
+
+  async function post(action) {
+    setBusy(action); setErr("")
+    try {
+      const res  = await fetch("/api/bookings/closeout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, action }),
+      })
+      const data = await res.json()
+      if (action === "sendToCrew") {
+        if (data.ok) say(`✓ Sent to ${data.sentTo.join(", ")}${data.failed?.length ? ` (failed: ${data.failed.join(", ")})` : ""}`)
+        else setErr(data.error || "Could not send.")
+      } else {
+        apply(data)
+        if (data.ok) say("✓ Reopened — it can be signed again")
+      }
+    } catch {
+      setErr("No connection.")
+    } finally {
+      setBusy("")
+    }
+  }
+
+  async function reopen() {
+    if (!confirm("Clear the customer's signature, tip and notes so the job can be signed again? Photos are kept.")) return
+    post("reopen")
+  }
+
+  const v = info?.view
+  const s = v?.signed
+  const canShare = typeof navigator !== "undefined" && !!navigator.share
+
+  return (
+    <div className="mb-5 rounded-xl border border-gray-200 p-3">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">✍️ Job closeout</p>
+        {loading ? <span className="text-[10px] text-gray-400">Loading…</span>
+          : v && (s
+            ? <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">Signed</span>
+            : <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">Not signed</span>)}
+      </div>
+
+      {v && s && (
+        <div className="mb-3 space-y-1 text-xs text-gray-700">
+          <p><span className="text-gray-400">Signed by</span> <strong>{s.name}</strong>
+            {" · "}{new Date(s.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
+          <p><span className="text-gray-400">Tip</span> <strong className={s.tip > 0 ? "text-emerald-700" : ""}>
+            {s.tip > 0 ? `$${Number(s.tip).toFixed(2)}${s.tipMethod ? ` · ${s.tipMethod}` : ""}` : "No tip"}</strong></p>
+          {s.notes && <p className="whitespace-pre-line"><span className="text-gray-400">Notes</span> {s.notes}</p>}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${s.signatureUrl}?t=${encodeURIComponent(s.at)}`} alt={`Signature of ${s.name}`}
+            className="mt-1.5 h-16 w-auto rounded-lg border border-gray-200 bg-white" />
+        </div>
+      )}
+
+      {v && v.photos.length > 0 && (
+        <div className="mb-3 grid grid-cols-4 gap-1.5">
+          {v.photos.map((p, i) => (
+            <a key={p.id} href={p.url} target="_blank" rel="noreferrer"
+              className="block aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt={`Finished work ${i + 1}`} className="h-full w-full object-cover" loading="lazy" />
+            </a>
+          ))}
+        </div>
+      )}
+      {v && !s && v.photos.length === 0 && (
+        <p className="mb-3 text-[11px] text-gray-400">The installer opens this at the end of the job, adds photos, and the customer tips and signs.</p>
+      )}
+
+      {v && (
+        <div className="grid grid-cols-2 gap-1.5">
+          <a href={info.path} target="_blank" rel="noreferrer"
+            className="rounded-lg border border-gray-200 py-2 text-center text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">
+            Open ↗
+          </a>
+          <button type="button" onClick={canShare ? share : copy}
+            className="rounded-lg border border-gray-200 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">
+            {canShare ? "Share link" : "Copy link"}
+          </button>
+          <button type="button" onClick={() => post("sendToCrew")} disabled={!!busy || !hasCrew}
+            title={hasCrew ? "" : "Assign an installer with an email first"}
+            className="col-span-2 rounded-lg bg-gray-900 py-2 text-xs font-bold text-white hover:bg-black transition disabled:opacity-40">
+            {busy === "sendToCrew" ? "Sending…" : "✉️ Email link to crew"}
+          </button>
+          {canShare && (
+            <button type="button" onClick={copy}
+              className="col-span-2 text-[11px] font-semibold text-gray-400 hover:text-gray-700">
+              Copy link
+            </button>
+          )}
+          {s && (
+            <button type="button" onClick={reopen} disabled={!!busy}
+              className="col-span-2 text-[11px] font-semibold text-gray-400 hover:text-red-500 disabled:opacity-40">
+              {busy === "reopen" ? "Reopening…" : "Reopen for a new signature"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {flash && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-600">{flash}</p>}
+      {err && <p role="alert" className="mt-2 text-[11px] font-medium text-red-500">{err}</p>}
+    </div>
+  )
 }
 
 function JobPhotos({ bookingId, active }) {
