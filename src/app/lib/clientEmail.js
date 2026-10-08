@@ -11,6 +11,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { validateCoupon } from "./coupons.js"
+import {
+  BRAND, emailDocument, heading, para, sectionTitle, details, panel, priceBox, buttons, fmtDate,
+  appointmentBlock,
+} from "./emailLayout.js"
 
 export const PROMO_PRICES = {
   '2 TVs up to 55"':                  "From $199",
@@ -22,6 +26,7 @@ export const HOME_INSTALL_LABELS = {
   furniture:      "Furniture Assembly",
   mirror_picture: "Picture / Mirror Hanging",
   shelves_wall:   "Shelves & Wall Installation",
+  ceiling_fan:    "Ceiling Fan Installation",
   gazebo:         "Gazebo / Pergola Assembly",
   playset:        "Playground / Playset Installation",
   other:          "Other Installation",
@@ -89,6 +94,11 @@ export function formatAddress(address) {
 
 // Builds the full confirmation message. `organizer` is the sending mailbox,
 // needed for the calendar invite.
+//
+// Built from the shared email layout: tables rather than flex, so the price
+// sits beside its label in every client instead of wrapping under it in
+// Outlook and the Gmail app; a real date ("Thursday, October 1") instead of
+// "2026-10-01"; and a phone number the customer can tap.
 export function buildClientEmail(b, { organizer } = {}) {
   const firstName      = b.firstName || ""
   const lastName       = b.lastName || ""
@@ -121,79 +131,68 @@ export function buildClientEmail(b, { organizer } = {}) {
       ? parseFloat(b.customPrice)
       : null
 
-  const homeInstallBlock = isHomeInst ? `
-    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:16px 20px;margin-top:20px;">
-      <p style="margin:0;font-size:12px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.05em;">
-        🔧 Home Installation — Quote Based
-      </p>
-      <p style="margin:8px 0 0;font-size:15px;font-weight:700;color:#1e3a8a;">${safe(homeInstLbl)}</p>
-      ${b.comboDetails ? `<p style="margin:8px 0 0;font-size:13px;color:#1e40af;">${safe(b.comboDetails).replace(/\n/g, "<br>")}</p>` : ""}
-      <p style="margin:10px 0 0;font-size:12px;color:#3b82f6;">
-        We will review this request and contact you with pricing before the appointment.
-      </p>
-    </div>
-  ` : ""
+  const serviceRow = isHomeInst
+    ? ["Service", `${safe(homeInstLbl)} — quote based`]
+    : isCombo
+    ? ["Service", "Custom Installation"]
+    : hasPromo
+    ? ["Package", safe(b.selectedPromo)]
+    : b.moreTvs
+    ? ["TVs", "3+ TVs — custom quote"]
+    : ["TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`]
 
-  const frameTvBlock = anyFrameTv ? `
-    <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin-top:12px;">
-      <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
-        🖼️ Frame TV — Quote Based
-      </p>
-      <p style="margin:6px 0 0;font-size:13px;color:#7f1d1d;">
-        Frame TV installations are quoted individually based on the measurements, the mount and the
-        wall. One of our sales representatives will confirm your exact price before the appointment.
-      </p>
-    </div>
-  ` : ""
+  // ── Price and quote blocks ────────────────────────────────────────────────
+  const promoPriceBlock = hasPromo ? priceBox({
+    label: "Package Price",
+    sub: safe(b.selectedPromo),
+    amount: promoPrice,
+    note: cableQty > 0 ? `🔌 + Cable Concealment ×${cableQty}: +$${cableTotal}` : "",
+  }) : ""
 
-  const promoPriceBlock = hasPromo ? `
-    <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Package Price</p>
-          <p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(b.selectedPromo)}</p>
-        </div>
-        <span style="font-size:28px;font-weight:900;color:#e50914;">${promoPrice}</span>
-      </div>
-      ${cableQty > 0 ? `<p style="margin:10px 0 0;font-size:13px;color:#e50914;font-weight:600;">🔌 + Cable Concealment ×${cableQty}: +$${cableTotal}</p>` : ""}
-    </div>
-  ` : ""
+  const customQuoteBlock = b.customQuote ? priceBox({
+    label: "Installation Price",
+    sub: b.customMode === "sized" && b.customTvSize
+      ? `${safe(b.customTvSize)}${b.customTvQty ? ` × ${safe(b.customTvQty)}` : ""}` : "",
+    amount: customPriceNum != null ? `$${customPriceNum.toFixed(2)}` : "",
+    note: b.couponComment ? `&ldquo;${safe(b.couponComment)}&rdquo;` : "",
+  }) : ""
 
-  const couponBlock = (b.couponCode && b.appliedCouponLabel && !b.customQuote) ? `
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-top:12px;">
-      ${!couponHidden ? `<p style="margin:0;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;">Coupon Applied — ${safe(b.couponCode)}</p>` : ""}
-      <p style="margin:${couponHidden ? "0" : "6px"} 0 0;font-size:14px;color:#166534;font-weight:600;">${safe(b.appliedCouponLabel)}</p>
-      ${b.couponComment ? `<p style="margin:8px 0 0;font-size:13px;color:#166534;font-style:italic;">"${safe(b.couponComment)}"</p>` : ""}
-    </div>
-  ` : ""
+  const couponBlock = (b.couponCode && b.appliedCouponLabel && !b.customQuote) ? panel({
+    tone: "success",
+    title: couponHidden ? "Offer applied" : `Coupon Applied — ${safe(b.couponCode)}`,
+    html: `<strong>${safe(b.appliedCouponLabel)}</strong>${b.couponComment ? `<br><em>&ldquo;${safe(b.couponComment)}&rdquo;</em>` : ""}`,
+  }) : ""
 
-  const customQuoteBlock = b.customQuote ? `
-    <div style="background:#fff5f5;border:2px solid #e50914;border-radius:10px;padding:16px 20px;margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <p style="margin:0;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">Installation Price</p>
-          ${b.customMode === "sized" && b.customTvSize ? `<p style="margin:4px 0 0;font-size:13px;color:#555;">${safe(b.customTvSize)}${b.customTvQty ? ` × ${b.customTvQty}` : ""}</p>` : ""}
-        </div>
-        ${customPriceNum != null ? `<span style="font-size:28px;font-weight:900;color:#e50914;">$${customPriceNum.toFixed(2)}</span>` : ""}
-      </div>
-      ${b.couponComment ? `<p style="margin:10px 0 0;font-size:13px;color:#78350f;font-style:italic;">"${safe(b.couponComment)}"</p>` : ""}
-    </div>
-  ` : ""
+  const moreTvsBlock = b.moreTvs ? panel({
+    tone: "warn",
+    title: "3+ TVs — Custom Quote",
+    html: `Pricing varies for 3 or more TVs. We will contact you to confirm the total before the appointment.${
+      b.moreTvsComment ? `<br><em>&ldquo;${safe(b.moreTvsComment)}&rdquo;</em>` : ""}`,
+  }) : ""
 
-  const moreTvsBlock = b.moreTvs ? `
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:12px;">
-      <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">3+ TVs — Custom Quote</p>
-      <p style="margin:6px 0 0;font-size:13px;color:#78350f;">Pricing varies for 3 or more TVs. We will contact you to confirm the total before the appointment.</p>
-      ${b.moreTvsComment ? `<p style="margin:8px 0 0;font-size:13px;color:#78350f;font-style:italic;">"${safe(b.moreTvsComment)}"</p>` : ""}
-    </div>
-  ` : ""
+  const bundleBlock = (isCombo && b.comboDetails) ? panel({
+    tone: "warn",
+    title: "Your Installation",
+    html: safe(b.comboDetails).replace(/\n/g, "<br>"),
+  }) : ""
 
-  const bundleBlock = (isCombo && b.comboDetails) ? `
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-top:12px;">
-      <p style="margin:0;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Your Installation</p>
-      <p style="margin:8px 0 0;font-size:13px;color:#78350f;">${safe(b.comboDetails).replace(/\n/g, "<br>")}</p>
-    </div>
-  ` : ""
+  const homeInstallBlock = isHomeInst ? panel({
+    tone: "info",
+    title: "🔧 Home Installation — Quote Based",
+    html: `<strong style="font-size:15px;">${safe(homeInstLbl)}</strong>${
+      b.comboDetails ? `<br>${safe(b.comboDetails).replace(/\n/g, "<br>")}` : ""
+    }<br><span style="font-size:13px;">We will review this request and contact you with pricing before the appointment.</span>`,
+  }) : ""
+
+  const frameTvBlock = anyFrameTv ? panel({
+    tone: "brand",
+    title: "🖼️ Frame TV — Quote Based",
+    html: "Frame TV installations are quoted individually based on the measurements, the mount and the wall. One of our sales representatives will confirm your exact price before the appointment.",
+  }) : ""
+
+  // The appointment itself, large, because it is the one thing the customer
+  // comes back to this email to check.
+  const appointment = appointmentBlock({ date, time: timePreference, address: fullAddress, top: 22 })
 
   const ics = buildICS({
     uid:         `${date || "nodate"}-${(b.email || "").replace(/[^a-z0-9]/gi, "")}@primetv`,
@@ -206,72 +205,54 @@ export function buildClientEmail(b, { organizer } = {}) {
     attendees:   [{ name: fullName, email: b.email }],
   })
 
-  const html = `
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;">
-            📺 Your Booking is Confirmed!
-          </h2>
+  const body = `
+    ${heading("Your Booking is Confirmed!", { kicker: "Booking received" })}
+    ${para(`Hi ${safe(firstName)},`, { top: 18 })}
+    ${para("Thank you for choosing <strong>PrimeTvNashville</strong>! We&rsquo;ve received your booking request and will contact you shortly to confirm your appointment.", { top: 8 })}
 
-          <p style="color:#444;margin-top:16px;font-size:15px;">
-            Hi ${safe(firstName)},
-          </p>
-          <p style="color:#444;font-size:15px;">
-            Thank you for choosing <strong>PrimeTvNashville</strong>! We've received your booking request and will contact you shortly to confirm your appointment.
-          </p>
+    ${appointment}
 
-          <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:24px;">
-            <h4 style="margin:0 0 14px;color:#222;font-size:15px;">Booking Summary</h4>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              ${crow("Date", date)}
-              ${crow("Time Window", timePreference)}
-              ${crow("Address", fullAddress)}
-              ${isHomeInst
-                ? crow("Service", `${safe(homeInstLbl)} — quote based`)
-                : isCombo
-                ? crow("Service", "Custom Installation")
-                : hasPromo
-                ? crow("Package", b.selectedPromo)
-                : b.moreTvs
-                ? crow("TVs", "3+ TVs — custom quote")
-                : crow("TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`)
-              }
-              ${cableQty > 0 && !isCombo && !isHomeInst ? crow("Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`) : ""}
-            </table>
-          </div>
+    ${sectionTitle("Booking Summary")}
+    ${details([
+      // The dark appointment block already shows these; repeat them only when
+      // there is no date and so no block.
+      date ? null : ["Time window", safe(timePreference)],
+      date ? null : ["Address", fullAddress],
+      serviceRow,
+      cableQty > 0 && !isCombo && !isHomeInst ? ["Add-on", `Cable Concealment ×${cableQty} (+$${cableTotal})`] : null,
+    ])}
 
-          ${promoPriceBlock}
-          ${customQuoteBlock}
-          ${couponBlock}
-          ${moreTvsBlock}
-          ${bundleBlock}
-          ${isHomeInst ? homeInstallBlock : ""}
-          ${frameTvBlock}
+    ${promoPriceBlock}
+    ${customQuoteBlock}
+    ${couponBlock}
+    ${moreTvsBlock}
+    ${bundleBlock}
+    ${homeInstallBlock}
+    ${frameTvBlock}
 
-          <p style="margin-top:24px;color:#444;font-size:14px;">
-            Questions? Call us at <strong>(615) 669-0251</strong> or reply to this email.
-          </p>
+    ${sectionTitle("Questions or changes?")}
+    ${para(`Call or text us at <a href="${BRAND.tel}" style="color:#E50914;font-weight:700;text-decoration:none;">${BRAND.phone}</a>, or simply reply to this email.`, { top: 0 })}
+    ${buttons([
+      { href: BRAND.tel, label: "📞 Call us" },
+      { href: BRAND.sms, label: "💬 Text us", variant: "secondary" },
+    ], { top: 14 })}
 
-          <!-- Liability notice -->
-          <div style="margin-top:28px;border:2px solid #e50914;border-radius:12px;padding:18px 20px;background:#fff5f5;">
-            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e50914;text-transform:uppercase;letter-spacing:.05em;">
-              ⚠️ Important — Wall Liability Notice
-            </p>
-            <p style="margin:0 0 8px;font-size:13px;color:#555;line-height:1.6;">
-              <strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.
-            </p>
-            <p style="margin:0;font-size:13px;color:#555;">
-              By booking this service, you acknowledge and accept these conditions. Please read our full
-              <a href="https://www.primetvnashville.com/terms" style="color:#e50914;font-weight:600;">Terms &amp; Conditions</a>
-              for complete details.
-            </p>
-          </div>
+    ${panel({
+      tone: "danger",
+      top: 24,
+      title: "⚠️ Important — Wall Liability Notice",
+      html: `<strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.<br><br>By booking this service, you acknowledge and accept these conditions. Please read our full <a href="https://www.primetvnashville.com/terms" style="color:#E50914;font-weight:700;">Terms &amp; Conditions</a> for complete details.`,
+    })}
+  `
 
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#aaa;">
-            PrimeTvNashville — Expert TV Mounting in Nashville, TN ·
-            <a href="https://www.primetvnashville.com/terms" style="color:#aaa;">Terms &amp; Conditions</a>
-          </div>
-        </div>
-      `
+  const html = emailDocument({
+    title: "Booking Confirmed — PrimeTvNashville",
+    preheader: date
+      ? `${fmtDate(date)}${timePreference ? `, ${timePreference}` : ""} — we'll be in touch to confirm.`
+      : "We've received your booking and will be in touch to confirm.",
+    body,
+    footerNote: `You're receiving this because you booked an installation at primetvnashville.com. <a href="https://www.primetvnashville.com/terms" style="color:#9ca3af;">Terms &amp; Conditions</a>`,
+  })
 
   return {
     subject: "Booking Confirmed — PrimeTvNashville",

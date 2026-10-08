@@ -27,6 +27,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import nodemailer from "nodemailer"
+import { htmlToText } from "./emailLayout.js"
 
 // SMTP_* is preferred and EMAIL_* is the long-standing name in this project.
 // Both are read so the existing Vercel configuration keeps working untouched.
@@ -99,9 +100,17 @@ export function smtpConfig() {
 
 // Returns null rather than a broken transport when nothing is configured, so a
 // caller cannot accidentally attempt a send that was never going to work.
+//
+// Every message also gets a plain-text part generated from its HTML. Mail
+// with HTML alone scores worse with spam filters, and some people read in
+// text-only clients — doing it here covers every email the site sends.
 export function getTransport() {
   if (!canSendMail()) return null
-  return nodemailer.createTransport(smtpConfig())
+  const transport = nodemailer.createTransport(smtpConfig())
+  const send = transport.sendMail.bind(transport)
+  transport.sendMail = (opts, ...rest) =>
+    send(opts && opts.html && !opts.text ? { ...opts, text: htmlToText(opts.html) } : opts, ...rest)
+  return transport
 }
 
 // Where every internal notification goes: new bookings, quick quotes,

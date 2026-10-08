@@ -151,3 +151,22 @@ test("a real transport is produced once both are present", () => {
   assert.ok(t, "expected a transport")
   assert.equal(typeof t.sendMail, "function")
 })
+
+test("every message gets a plain-text part generated from its HTML", async () => {
+  process.env.SMTP_HOST = "smtp.hostinger.com"
+  const t = getTransport()
+  // Capture what reaches nodemailer instead of opening a connection.
+  const seen = []
+  t.transporter.send = (mail, cb) => { seen.push(mail.data); cb(null, { messageId: "x" }) }
+  await t.sendMail({ from: "a@b.com", to: "c@d.com", subject: "s", html: "<p>Hello <b>Ada</b></p>" })
+  assert.equal(seen[0].text, "Hello Ada")
+})
+
+test("an explicit text part is left alone", async () => {
+  process.env.SMTP_HOST = "smtp.hostinger.com"
+  const t = getTransport()
+  const seen = []
+  t.transporter.send = (mail, cb) => { seen.push(mail.data); cb(null, { messageId: "x" }) }
+  await t.sendMail({ from: "a@b.com", to: "c@d.com", subject: "s", html: "<p>HTML</p>", text: "Hand written" })
+  assert.equal(seen[0].text, "Hand written")
+})

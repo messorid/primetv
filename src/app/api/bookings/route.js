@@ -6,6 +6,7 @@ import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
 import { getTransport, mailFrom } from "../../lib/mailer.js"
+import { buildInstallerJobEmail, buildCancellationEmail, fullAddressOf } from "../../lib/installerEmails.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 
@@ -478,77 +479,6 @@ function buildICS({ uid, date, timePref, summary, description, location, organiz
   ].filter(Boolean).join("\r\n")
 }
 
-// Every free-text field the customer or office can fill in. These were being
-// dropped from the work order, so an installer arrived without the wall notes,
-// the bundle description or the custom-quote instructions.
-const HOME_INSTALL_LABELS = {
-  furniture:      "Furniture Assembly",
-  mirror_picture: "Picture / Mirror Hanging",
-  shelves_wall:   "Shelves & Wall Installation",
-  gazebo:         "Gazebo / Pergola Assembly",
-  playset:        "Playground / Playset Installation",
-  other:          "Other Installation",
-}
-
-function buildServiceDetail(b) {
-  const parts = []
-
-  if (b.booking_mode === "homeinstall") {
-    const label = HOME_INSTALL_LABELS[b.home_install_service] || b.home_install_service || "Installation"
-    parts.push(`<strong>🔧 Home Installation:</strong> ${safe(label)}`)
-  }
-
-  if (b.promo) parts.push(`<strong>Package:</strong> ${safe(b.promo)}`)
-
-  if (b.custom_quote && b.custom_tv_size) {
-    parts.push(`<strong>Custom job:</strong> ${safe(b.custom_tv_size)}${b.custom_tv_qty ? ` × ${safe(b.custom_tv_qty)}` : ""}`)
-  }
-
-  const tvs = Array.isArray(b.tvs) ? b.tvs : []
-  if (tvs.length) {
-    parts.push(tvs.map((tv, i) => {
-      // A Frame TV needs the slim-fit mount and One Connect Box handled, so the
-      // installer has to see the model and measurements, not just the size.
-      const isFrame = tv.model === "frame"
-      const head = `TV #${i + 1}: ${isFrame ? '<strong style="color:#e50914;">Frame TV</strong> · ' : ""}` +
-        `${tv.size ? `${safe(tv.size)}"` : "size n/a"}${tv.exactSize ? ` (${safe(tv.exactSize)}")` : ""} · ${safe(tv.wallType)}`
-      const meas = tv.measurements ? `<br><span style="color:#b45309;">↳ Measurements: ${safe(tv.measurements)}</span>` : ""
-      const note = tv.comments ? `<br><span style="color:#b45309;">↳ ${safe(tv.comments)}</span>` : ""
-      return head + meas + note
-    }).join("<br>"))
-  }
-
-  if (b.more_tvs) parts.push(`<strong>3 or more TVs</strong> — custom quote`)
-
-  const cableQty = parseInt(b.cable_concealment) || 0
-  if (cableQty > 0) parts.push(`<strong>🔌 Cable concealment ×${cableQty}</strong>`)
-
-  return parts.length ? parts.join("<br>") : "—"
-}
-
-// Free-text the customer typed, shown as its own highlighted block so it can't
-// be skimmed past.
-function buildCustomerNotes(b) {
-  const notes = [
-    [b.booking_mode === "homeinstall" ? "Installation request" : "Job description", b.combo_details],
-    ["TV details (3+ TVs)", b.more_tvs_comment],
-    ["Quote note", b.coupon_comment],
-  ].filter(([, v]) => v && String(v).trim())
-
-  if (!notes.length) return ""
-
-  return `
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:20px;margin-top:16px;">
-      <h4 style="margin:0 0 12px;font-size:15px;color:#92400e;">📋 Customer Description</h4>
-      ${notes.map(([label, value]) => `
-        <p style="margin:0 0 10px;font-size:13px;color:#78350f;">
-          <strong>${label}:</strong><br>${safe(value).replace(/\n/g, "<br>")}
-        </p>
-      `).join("")}
-    </div>
-  `
-}
-
 // ── Installer assignment email ─────────────────────────────────────────────────
 async function sendInstallerEmail(b, installerName, installerEmail, crew = null) {
   const user = process.env.EMAIL_USER
@@ -556,16 +486,10 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
   if (!user || !pass) return
 
   const transporter = getTransport()
-
-  const serviceDetail = buildServiceDetail(b)
-  const customerNotes = buildCustomerNotes(b)
-
-  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
-    .filter(Boolean).join(", ")
+  const fullAddress = fullAddressOf(b)
 
   // Job photos uploaded from the admin panel, attached and shown inline.
   let photoAttachments = []
-  let photoHtml = ""
   try {
     const sql = db()
     await ensurePhotoTable(sql)
@@ -574,22 +498,6 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
       WHERE booking_id = ${b.id} ORDER BY created_at ASC
     `
     photoAttachments = rows.map((r, i) => photoToAttachment(r, i)).filter(Boolean)
-    if (photoAttachments.length) {
-      photoHtml = `
-        <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:20px;margin-top:16px;">
-          <h4 style="margin:0 0 12px;font-size:15px;color:#1d4ed8;">
-            📸 Job Photos (${photoAttachments.length})
-          </h4>
-          ${photoAttachments.map(a => `
-            <img src="cid:${a.cid}" alt="Job photo"
-                 style="width:100%;max-width:520px;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:10px;display:block;">
-          `).join("")}
-          <p style="margin:4px 0 0;font-size:12px;color:#64748b;">
-            Photos are also attached to this email.
-          </p>
-        </div>
-      `
-    }
   } catch (photoErr) {
     console.error("Could not load job photos for installer email", photoErr)
   }
@@ -610,73 +518,13 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
     ...photoAttachments,
   ]
 
-  const mapsUrl = fullAddress
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
-    : null
-
+  const mail = buildInstallerJobEmail({ b, installerName, crew, photoAttachments })
   await transporter.sendMail({
     from:    mailFrom("PrimeTvNashville"),
     to:      installerEmail,
-    subject: `New Job Assigned — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
+    subject: mail.subject,
     attachments,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-        <h2 style="color:#e50914;border-bottom:3px solid #e50914;padding-bottom:12px;margin-bottom:0;">
-          📺 New Job Assignment
-        </h2>
-
-        <p style="color:#444;margin-top:16px;font-size:15px;">
-          Hi <strong>${safe(installerName)}</strong>, you have been assigned a new installation job.
-        </p>
-
-        ${crew && crew.length > 1 ? `
-          <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:14px 18px;margin-top:16px;">
-            <p style="margin:0;font-size:12px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.05em;">
-              👥 Working with
-            </p>
-            <p style="margin:6px 0 0;font-size:13px;color:#4c1d95;">
-              ${crew.filter(m => m.installerName !== installerName).map(m => safe(m.installerName)).join(", ")}
-            </p>
-          </div>
-        ` : ""}
-
-        <div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-top:20px;">
-          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Job Details</h4>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            ${irow("📅 Date",     b.date || "TBD")}
-            ${irow("🕐 Time",     b.time_pref || "Flexible")}
-            ${irow("📍 Address",  mapsUrl
-                ? `${safe(fullAddress)}<br><a href="${mapsUrl}" style="color:#e50914;font-weight:600;">Open in Google Maps →</a>`
-                : "—")}
-            ${irow("🔧 Service",  serviceDetail)}
-            ${b.payment ? irow("💵 Payment", safe(b.payment)) : ""}
-          </table>
-        </div>
-
-        ${customerNotes}
-
-        ${b.notes ? `
-          <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:20px;margin-top:16px;">
-            <h4 style="margin:0 0 10px;font-size:15px;color:#5b21b6;">🗒️ Office Notes</h4>
-            <p style="margin:0;font-size:13px;color:#4c1d95;">${safe(b.notes).replace(/\n/g, "<br>")}</p>
-          </div>
-        ` : ""}
-
-        ${photoHtml}
-
-        <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:20px;margin-top:16px;">
-          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Customer</h4>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            ${irow("👤 Name",  `${safe(b.first_name)} ${safe(b.last_name)}`)}
-            ${b.phone ? irow("📞 Phone", `<a href="tel:${safe(b.phone).replace(/[^0-9+]/g, "")}" style="color:#e50914;font-weight:600;">${safe(b.phone)}</a>`) : ""}
-          </table>
-        </div>
-
-        <p style="margin-top:24px;color:#888;font-size:12px;">
-          Questions? Contact the office at <strong>(615) 669-0251</strong> or reply to this email.
-        </p>
-      </div>
-    `,
+    html:    mail.html,
   })
 }
 
@@ -687,52 +535,15 @@ async function sendCancellationEmail(b) {
   if (!user || !pass || !b.installer_email) return
 
   const transporter = getTransport()
-
-  const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip]
-    .filter(Boolean).join(", ")
-
+  const mail = buildCancellationEmail(b)
   await transporter.sendMail({
     from:    mailFrom("PrimeTvNashville"),
     to:      b.installer_email,
-    subject: `❌ Job Cancelled — ${b.date || "TBD"} | ${safe(b.first_name)} ${safe(b.last_name)}`,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-        <h2 style="color:#dc2626;border-bottom:3px solid #dc2626;padding-bottom:12px;margin-bottom:0;">
-          ❌ Job Cancelled
-        </h2>
-
-        <p style="color:#444;margin-top:16px;font-size:15px;">
-          Hi <strong>${safe(b.installer_name)}</strong>,<br><br>
-          The following job that was assigned to you has been <strong style="color:#dc2626;">cancelled</strong>.
-          You do not need to attend this appointment.
-        </p>
-
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px;margin-top:20px;">
-          <h4 style="margin:0 0 14px;font-size:15px;color:#222;">Cancelled Job Details</h4>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            ${irow("📅 Date",    b.date || "TBD")}
-            ${irow("🕐 Time",    b.time_pref || "Flexible")}
-            ${irow("📍 Address", fullAddress || "—")}
-            ${irow("👤 Customer", `${safe(b.first_name)} ${safe(b.last_name)}`)}
-          </table>
-        </div>
-
-        <p style="margin-top:24px;color:#888;font-size:12px;">
-          Questions? Contact the office at <strong>(615) 669-0251</strong> or reply to this email.
-        </p>
-      </div>
-    `,
+    subject: mail.subject,
+    html:    mail.html,
   })
 }
 
-function irow(label, value) {
-  return `
-    <tr>
-      <td style="padding:6px 0;width:130px;font-weight:600;color:#555;font-size:13px;vertical-align:top;">${label}</td>
-      <td style="padding:6px 0;font-size:13px;color:#333;">${value}</td>
-    </tr>
-  `
-}
 
 function safe(v) {
   return String(v ?? "-").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
