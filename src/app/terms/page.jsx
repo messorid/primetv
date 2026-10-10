@@ -101,7 +101,7 @@ export default function TermsPage() {
           <div>
             <h2 className="text-base font-bold text-black mb-2">4. Booking and Payment</h2>
             <p>
-              All bookings must be made via our website, phone, or email. Payment is due upon service completion unless otherwise arranged. We accept cash, Zelle, card, PayPal, Venmo, and other agreed methods.
+              All bookings must be made via our website, phone, or email. Payment is due upon service completion unless otherwise arranged. We accept cash, Zelle, PayPal, Venmo, and other agreed methods. We do not accept credit or debit cards, or checks.
             </p>
             <p className="mt-2">
               All prices published on this website are starting prices. The final cost depends on the difficulty of the installation, the wall type and the mount or bracket being installed, and is confirmed by one of our sales representatives before work begins. Pull-down mantel mounts (MantelMount and similar) are priced separately. Additional fees may apply for services beyond the initial scope, including additional materials, unforeseen installation complexities, or wall type surcharges (brick, tile, concrete, metal, from +$25).

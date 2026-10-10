@@ -291,8 +291,13 @@ function SignoffForm({ view, onSigned }) {
                 inputMode="decimal" placeholder="25" autoComplete="off" error={errors.tip} />
             )}
             {tipNum > 0 && (
-              <ChoiceGroup id="tipMethod" legend="How will you pay the tip?" size="sm" columns={3}
-                value={tipMethod} onChange={field("tipMethod", setTipMethod)} options={TIP_METHODS} error={errors.tipMethod} required />
+              <>
+                <ChoiceGroup id="tipMethod" legend="How will you pay the tip?" size="sm" columns={2}
+                  value={tipMethod} onChange={field("tipMethod", setTipMethod)} options={TIP_METHODS} error={errors.tipMethod} required />
+                <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-sm font-semibold text-amber-900">
+                  <span aria-hidden="true">🚫</span> We do not accept credit/debit cards or checks.
+                </p>
+              </>
             )}
 
             <TextAreaField id="notes" label="Notes" optional value={notes} onChange={field("notes", setNotes)} rows={2}

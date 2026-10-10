@@ -121,3 +121,8 @@ test("the PDF builds, with characters the PDF fonts cannot draw dropped", async 
   assert.equal(Buffer.from(pdf.slice(0, 5)).toString(), "%PDF-")
   assert.equal(closeoutPdfName(view), "job-completion-jose-nunez-2026-10-08.pdf")
 })
+
+test("cards are not a tip payment option", () => {
+  const r = validateSignoff({ ...good, tip: "20", tipMethod: "Card" })
+  assert.ok(r.errors.tipMethod)
+})

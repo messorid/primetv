@@ -49,7 +49,8 @@ const PROMOS = [
 ]
 
 const REFERRAL_OPTIONS = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Other"]
-const PAYMENT_OPTIONS  = ["Cash", "Zelle", "Card", "PayPal", "Venmo", "Other"]
+// No cards and no checks — the note under the choices says so too.
+const PAYMENT_OPTIONS  = ["Cash", "Zelle", "PayPal", "Venmo", "Other"]
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
   "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
@@ -831,6 +832,9 @@ export default function BookingFormSection() {
                     columns={3} size="sm" options={PAYMENT_OPTIONS}
                     value={info.payment} onChange={v => setInfo(i => ({ ...i, payment: v }))}
                     error={shown("payment")} hint="No payment is required now." />
+                  <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-sm font-semibold text-amber-900">
+                    <span aria-hidden="true">🚫</span> We do not accept credit/debit cards or checks.
+                  </p>
 
                   {/* Wall liability notice */}
                   <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">

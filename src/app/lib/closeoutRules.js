@@ -11,7 +11,8 @@ export const MAX_PHOTO_CHARS = 3_000_000
 // A finger-drawn signature as a PNG is typically 10–60 KB.
 export const MAX_SIGNATURE_CHARS = 500_000
 export const MAX_TIP = 1000
-export const TIP_METHODS = ["Cash", "Zelle", "Card"]
+// No cards and no checks.
+export const TIP_METHODS = ["Cash", "Zelle"]
 export const TIP_PRESETS = [10, 20, 30, 50]
 export const MAX_NOTES = 1000
 

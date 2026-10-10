@@ -9,7 +9,7 @@ const DOW          = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
 const TV_SIZES   = ['Under 32"', '32" – 42"', '43" – 55"', '56" – 65"', '66" – 75"', '75"+']
 const WALL_TYPES = ["Drywall (standard)", "Concrete / Brick", "Tile", "Above fireplace"]
-const PAYMENTS   = ["Cash", "Zelle", "Card"]
+const PAYMENTS   = ["Cash", "Zelle", "PayPal", "Venmo", "Other"] // no cards, no checks
 
 const BLANK_FORM = {
   firstName: "", lastName: "", email: "", phone: "",
