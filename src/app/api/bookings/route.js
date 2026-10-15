@@ -260,6 +260,7 @@ export async function PATCH(request) {
           SET materials_cost=${materials}, amount_paid_workers=${amountPaidWorkers}, company_profit=${companyProfit}
           WHERE id=${id}
         `
+        await resplitCrew(sql, id, amountPaidWorkers)
         return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
       }
       return Response.json({ ok: false }, { status: 404 })
@@ -280,6 +281,7 @@ export async function PATCH(request) {
               amount_paid_workers=${amountPaidWorkers}, company_profit=${companyProfit}
           WHERE id=${id}
         `
+        await resplitCrew(sql, id, amountPaidWorkers)
         return Response.json({ ok: true, profit: companyProfit, amountPaidWorkers })
       }
       return Response.json({ ok: false }, { status: 404 })
@@ -545,6 +547,25 @@ function buildICS({ uid, date, timePref, summary, description, location, organiz
     ),
     "STATUS:CONFIRMED","END:VEVENT","END:VCALENDAR",
   ].filter(Boolean).join("\r\n")
+}
+
+// Editing materials or profit after completion changes the job's worker pay;
+// each crew member's amount has to follow, or Earnings pays out the old split
+// (a job whose crew amounts no longer add up to its worker pay).
+async function resplitCrew(sql, bookingId, amountPaidWorkers) {
+  await ensureCrewTable(sql)
+  const rows = await sql`
+    SELECT installer_id, share_pct FROM booking_crew
+    WHERE booking_id = ${bookingId}
+    ORDER BY share_pct DESC NULLS LAST, installer_name ASC
+  `
+  if (!rows.length) return
+  const paid = splitAmount(amountPaidWorkers, rows.map(r => ({
+    installerId: r.installer_id, sharePct: r.share_pct == null ? 0 : Number(r.share_pct),
+  })))
+  for (const m of paid) {
+    await sql`UPDATE booking_crew SET amount = ${m.amount} WHERE booking_id = ${bookingId} AND installer_id = ${m.installerId}`
+  }
 }
 
 // ── Installer assignment email ─────────────────────────────────────────────────
