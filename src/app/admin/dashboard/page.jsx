@@ -74,6 +74,12 @@ export default function LeadsPage() {
 
   useEffect(() => { load() }, [])
 
+  // A link with ?q=… (from Today or the search) opens with that search filled in.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")
+    if (q) setSearch(q)
+  }, [])
+
   async function setLeadStatus(id, next) {
     setSaving(id)
     try {

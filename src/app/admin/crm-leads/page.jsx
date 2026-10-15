@@ -50,7 +50,15 @@ export default function CrmLeadsPage() {
         const [leadsData, evData] = await Promise.all([leadsRes.json(), eventsRes.json()]);
         if (leadsData.success) {
           setLeads(leadsData.leads);
-          setFilteredLeads(leadsData.leads);
+          // A link with ?q=… (from the search) opens with that search applied.
+          const q = (new URLSearchParams(window.location.search).get('q') || '').toLowerCase();
+          setSearch(q);
+          setFilteredLeads(q ? leadsData.leads.filter(
+            (lead) =>
+              lead.fullName?.toLowerCase().includes(q) ||
+              lead.email?.toLowerCase().includes(q) ||
+              lead.phone?.toLowerCase().includes(q)
+          ) : leadsData.leads);
         } else {
           setError(leadsData.error || 'No se pudieron cargar los leads del CRM.');
         }

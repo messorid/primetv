@@ -3,9 +3,10 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 
-// Bookings and the report stand alone; the rest sit in small groups so the
-// mobile bar stays at five readable entries instead of eight squeezed ones.
+// Today, Bookings and the report stand alone; the rest sit in small groups so
+// the mobile bar stays at six readable entries instead of nine squeezed ones.
 const MENU = [
+  { href: "/admin/today",    label: "Today",    icon: "☀️" },
   { href: "/admin/bookings", label: "Bookings", icon: "📅" },
   { key: "people", label: "People", icon: "👥", items: [
     { href: "/admin/customers",  label: "Customers",  icon: "👥", desc: "Everyone who has booked" },
