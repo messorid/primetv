@@ -80,7 +80,7 @@ export function buildCustomerNotes(b) {
 
 // `photoAttachments` are the inline images already prepared by the route; each
 // carries the cid the HTML refers to.
-export function buildInstallerJobEmail({ b, installerName, crew = null, photoAttachments = [], closeoutUrl = null }) {
+export function buildInstallerJobEmail({ b, installerName, crew = null, photoAttachments = [], closeoutUrl = null, crewPageUrl = null }) {
   const serviceDetail = buildServiceDetail(b)
   const customerNotes = buildCustomerNotes(b)
   const fullAddress = fullAddressOf(b)
@@ -116,6 +116,7 @@ export function buildInstallerJobEmail({ b, installerName, crew = null, photoAtt
       ${photoHtml}
       ${customerCard({ name: `${b.first_name || ""} ${b.last_name || ""}`.trim(), phone: b.phone })}
       ${closeoutUrl ? `${closeoutSteps()}${buttons([{ href: closeoutUrl, label: "✍️ Open job closeout" }], { top: 14 })}` : ""}
+      ${crewPageUrl ? para(`📋 All your jobs: <a href="${esc(crewPageUrl)}" style="color:#E50914;font-weight:700;">open my jobs page</a>`, { size: 14, top: 10 }) : ""}
       ${para(`Questions? Contact the office at <a href="${BRAND.tel}" style="color:#E50914;font-weight:700;text-decoration:none;">${BRAND.phone}</a> or reply to this email.`, { muted: true, size: 13, top: 20 })}
     `,
   })
@@ -143,4 +144,21 @@ export function buildCancellationEmail(b) {
     subject: `❌ Job Cancelled — ${b.date || "TBD"} | ${plain(b.first_name)} ${plain(b.last_name)}`,
     html,
   }
+}
+
+// The installer's own page, sent from the Installers screen.
+export function buildCrewPageEmail({ installerName, url }) {
+  const html = emailDocument({
+    title: "Your jobs page",
+    preheader: "All your PrimeTvNashville jobs in one place — save this link.",
+    body: `
+      ${heading("Your jobs page", { kicker: "Crew",
+          sub: `Hi <strong>${esc(installerName || "there")}</strong>, this page always shows your jobs: today, the coming weeks and the past week.` })}
+      ${para("Each job has directions, the customer's phone, the work to do, and the job closeout for the customer to sign. Save it to your phone's home screen.")}
+      ${buttons([{ href: url, label: "📋 Open my jobs" }])}
+      ${para(`<a href="${esc(url)}" style="color:${BRAND.muted};word-break:break-all;">${esc(url)}</a>`, { muted: true, size: 12, top: 2 })}
+      ${para("This link is just for you — please don't share it.", { muted: true, size: 13, top: 14 })}
+    `,
+  })
+  return { subject: "📋 Your PrimeTvNashville jobs page", html }
 }

@@ -6,9 +6,10 @@ import StickyGate from "./StickyGate"
 
 export default function RootContent({ children }) {
   const path = usePathname()
-  // The admin and the job closeout page (handed to a customer to sign) are
+  // The admin, the job closeout (handed to a customer to sign) and the crew
+  // page are
   // tools, not marketing pages: no site header, footer or call-to-action bar.
-  const bare = path.startsWith("/admin") || path.startsWith("/job/")
+  const bare = path.startsWith("/admin") || path.startsWith("/job/") || path.startsWith("/crew/")
 
   if (bare) return <>{children}</>
 

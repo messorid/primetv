@@ -4,5 +4,6 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 Disallow: /job/
+Disallow: /crew/
 
 Sitemap: https://www.primetvnashville.com/sitemap.xml

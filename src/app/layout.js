@@ -34,9 +34,9 @@ export default function Layout({ children }) {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            // Job closeout links carry a private token in the path; keep them
-            // out of analytics.
-            if (!location.pathname.startsWith('/job/')) {
+            // Job closeout and crew links carry a private token in the path;
+            // keep them out of analytics.
+            if (!location.pathname.startsWith('/job/') && !location.pathname.startsWith('/crew/')) {
               gtag('config', 'G-QJMH27JB3N');
               gtag('config', 'AW-18358938788');
             }
@@ -64,7 +64,7 @@ export default function Layout({ children }) {
   s.parentNode.insertBefore(t,s)
 })(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-if (!location.pathname.startsWith('/job/')) {
+if (!location.pathname.startsWith('/job/') && !location.pathname.startsWith('/crew/')) {
   fbq('init', '1015602400177523');
   fbq('track', 'PageView');
 }

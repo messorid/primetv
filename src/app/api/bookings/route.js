@@ -11,6 +11,7 @@ import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
 import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
+import { portalTokenForEmail, crewPageUrl } from "../../lib/crewPortal.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -593,7 +594,15 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
     console.error("Could not create the closeout link for installer email", linkErr)
   }
 
-  const mail = buildInstallerJobEmail({ b, installerName, crew, photoAttachments, closeoutUrl: closeoutLink })
+  let crewLink = null
+  try {
+    const t = await portalTokenForEmail(db(), installerEmail)
+    if (t) crewLink = crewPageUrl(t)
+  } catch (linkErr) {
+    console.error("Could not create the crew page link for installer email", linkErr)
+  }
+
+  const mail = buildInstallerJobEmail({ b, installerName, crew, photoAttachments, closeoutUrl: closeoutLink, crewPageUrl: crewLink })
   await transporter.sendMail({
     from:    mailFrom("PrimeTvNashville"),
     to:      installerEmail,

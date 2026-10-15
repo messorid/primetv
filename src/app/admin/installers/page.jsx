@@ -110,7 +110,8 @@ export default function InstallersPage() {
         ) : (
           <ul className="divide-y divide-gray-100">
             {installers.map(inst => (
-              <li key={inst.id} className="flex items-center gap-4 px-6 py-4">
+              <li key={inst.id} className="px-6 py-4">
+                <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
                   <span className="text-[#E50914] font-bold text-sm">
                     {inst.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
@@ -128,6 +129,8 @@ export default function InstallersPage() {
                 >
                   Remove
                 </button>
+                </div>
+                <CrewPageLink installer={inst} />
               </li>
             ))}
           </ul>
@@ -136,3 +139,70 @@ export default function InstallersPage() {
     </div>
   )
 }
+
+// The installer's own jobs page: open it, copy or share the link, email it to
+// them, or replace it if it ever ends up with the wrong person.
+function CrewPageLink({ installer }) {
+  const [info, setInfo] = useState(null)
+  const [busy, setBusy] = useState("")
+  const [msg, setMsg] = useState("")
+  const [err, setErr] = useState("")
+
+  async function load() {
+    setErr("")
+    try {
+      const d = await fetch(`/api/installers/portal?id=${installer.id}`).then(r => r.json())
+      if (d.ok) setInfo(d); else setErr(d.error || "Could not load the link.")
+    } catch { setErr("No connection.") }
+  }
+  const say = m => { setMsg(m); setTimeout(() => setMsg(""), 4000) }
+
+  async function post(action) {
+    if (action === "rotate" && !confirm(`Make a new link for ${installer.name}? The current link will stop working.`)) return
+    setBusy(action); setErr("")
+    try {
+      const d = await fetch("/api/installers/portal", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: installer.id, action }),
+      }).then(r => r.json())
+      if (!d.ok) setErr(d.error || "Could not do that.")
+      else if (action === "email") say(`✓ Sent to ${d.sentTo}`)
+      else { setInfo(d); say("✓ New link made — the old one no longer works") }
+    } catch { setErr("No connection.") } finally { setBusy("") }
+  }
+
+  async function copy() {
+    try {
+      if (navigator.share) await navigator.share({ title: `${installer.name} — jobs`, url: info.url })
+      else { await navigator.clipboard.writeText(info.url); say("✓ Link copied") }
+    } catch { /* share sheet closed */ }
+  }
+
+  if (!info) {
+    return (
+      <div className="mt-2 pl-14">
+        <button onClick={load} className="text-xs font-semibold text-blue-600 hover:underline">📋 Jobs page link</button>
+        {err && <p className="mt-1 text-[11px] text-red-500">{err}</p>}
+      </div>
+    )
+  }
+  return (
+    <div className="mt-3 ml-14 rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">📋 Jobs page</p>
+      <div className="flex flex-wrap gap-1.5">
+        <a href={info.path} target="_blank" rel="noreferrer" className={linkBtn}>Open ↗</a>
+        <button onClick={copy} className={linkBtn}>{typeof navigator !== "undefined" && navigator.share ? "Share link" : "Copy link"}</button>
+        <button onClick={() => post("email")} disabled={!!busy || !installer.email} className={linkBtn}>
+          {busy === "email" ? "Sending…" : "✉️ Email to installer"}
+        </button>
+        <button onClick={() => post("rotate")} disabled={!!busy} className={`${linkBtn} text-gray-400`}>
+          {busy === "rotate" ? "…" : "New link"}
+        </button>
+      </div>
+      {msg && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-600">{msg}</p>}
+      {err && <p role="alert" className="mt-2 text-[11px] text-red-500">{err}</p>}
+    </div>
+  )
+}
+
+const linkBtn = "rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition disabled:opacity-40"
