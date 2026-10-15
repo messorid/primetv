@@ -192,12 +192,13 @@ export default function EarningsPage() {
       ) : (
         <>
           {/* ── Totals ──────────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
             <Stat label="Revenue"        value={money(t.revenue)}       bg="bg-blue-50"    color="text-blue-700" hint={`${t.jobs} job${t.jobs !== 1 ? "s" : ""}`} />
             <Stat label="Materials"      value={money(t.materials)}     bg="bg-orange-50"  color="text-orange-600" />
             <Stat label="Installer pay"  value={money(t.installerPay)}  bg="bg-amber-50"   color="text-amber-700" hint="Paid to workers" />
             <Stat label="Company profit" value={money(t.companyProfit)} bg="bg-emerald-50" color="text-emerald-600" />
             <Stat label="Margin"         value={t.margin == null ? "—" : `${t.margin.toFixed(1)}%`} bg="bg-purple-50" color="text-purple-700" hint="Profit ÷ revenue" />
+            <Stat label="Tips"           value={money(t.tips)}          bg="bg-yellow-50"  color="text-yellow-700" hint="For the crew · from closeouts" />
           </div>
 
           {/* ── Per installer ───────────────────────────────────────────────── */}
@@ -276,6 +277,9 @@ export default function EarningsPage() {
                       <div className="text-right flex-none">
                         <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Earned</p>
                         <p className="text-lg font-extrabold text-amber-700">{money(i.installerPay)}</p>
+                        {i.tips > 0 && (
+                          <p className="text-[11px] font-semibold text-yellow-700">+ {money2(i.tips)} tips</p>
+                        )}
                       </div>
 
                       <div className="text-right flex-none">
@@ -349,6 +353,66 @@ export default function EarningsPage() {
               })}
             </div>
           </div>
+
+          {/* ── Weekly payouts ──────────────────────────────────────────────── */}
+          {data.weeks?.length > 0 && (
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm mb-6 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-800">
+                  Weekly payouts <span className="text-gray-400 font-normal">({data.weeks.length})</span>
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  What each person earned per week (Sunday–Saturday): their pay plus tips. Tips are split evenly
+                  between the crew on a job. If a cash tip was handed to the installer at the job, don&apos;t pay it twice.
+                </p>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {data.weeks.map((w, wi) => (
+                  <details key={w.start} open={wi === 0} className="group">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3 hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+                      <span className="flex-1 text-sm font-bold text-gray-800">
+                        {fmtDay(w.start)} – {fmtDay(w.end)}
+                      </span>
+                      <span className="text-xs text-gray-500">{money2(w.pay)} pay{w.tips > 0 ? ` + ${money2(w.tips)} tips` : ""}</span>
+                      <span className="text-sm font-extrabold text-gray-900">{money2(w.total)}</span>
+                      <span aria-hidden="true" className="text-xs text-gray-400 transition group-open:rotate-180">▾</span>
+                    </summary>
+                    <div className="overflow-x-auto px-5 pb-4">
+                      <table className="w-full min-w-[480px] text-sm">
+                        <thead>
+                          <tr className="text-left text-[10px] uppercase tracking-wide text-gray-400">
+                            <th className="py-2 font-semibold">Installer</th>
+                            <th className="py-2 font-semibold text-right">Jobs</th>
+                            <th className="py-2 font-semibold text-right">Pay</th>
+                            <th className="py-2 font-semibold text-right">Tips</th>
+                            <th className="py-2 font-semibold text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {w.people.map(p => (
+                            <tr key={p.key}>
+                              <td className="py-2 font-semibold text-gray-800">{p.name}</td>
+                              <td className="py-2 text-right text-gray-600">{p.jobs}</td>
+                              <td className="py-2 text-right text-gray-800">{money2(p.pay)}</td>
+                              <td className="py-2 text-right text-yellow-700">
+                                {p.tips > 0 ? money2(p.tips) : "—"}
+                                {p.tips > 0 && (
+                                  <span className="block text-[10px] text-gray-400">
+                                    {[p.tipsCash > 0 && `${money2(p.tipsCash)} cash`, p.tipsZelle > 0 && `${money2(p.tipsZelle)} Zelle`, p.tipsOther > 0 && `${money2(p.tipsOther)} other`].filter(Boolean).join(" · ")}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 text-right font-extrabold text-gray-900">{money2(p.total)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── Daily ───────────────────────────────────────────────────────── */}
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
