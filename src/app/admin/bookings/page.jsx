@@ -103,6 +103,8 @@ export default function BookingsPage() {
   const [search,         setSearch]         = useState("")
   const [filter,         setFilter]         = useState("all")
   const [expanded,       setExpanded]       = useState(null)
+  const [openTab,        setOpenTab]        = useState(null) // tab to show on a deep-linked card
+  const [showPast,       setShowPast]       = useState(false)
   const [noteEdit,       setNoteEdit]       = useState({})
   const [installers,     setInstallers]     = useState([])
 
@@ -149,6 +151,27 @@ export default function BookingsPage() {
   }, [searchParams])
 
   useEffect(() => { loadBookings(); loadInstallers() }, [])
+
+  // Arriving from Today or the search with ?open=<id> opens that booking,
+  // scrolled into view; &complete=1 goes straight to the completion form.
+  const openId = searchParams.get("open")
+  useEffect(() => {
+    if (!openId || loading) return
+    const b = bookings.find(x => x._id === openId)
+    window.history.replaceState(null, "", "/admin/bookings")
+    if (!b) return
+    setPeriod({ key: "all", from: "", to: "" })
+    setFilter("all")
+    setSearch("")
+    setShowPast(true)
+    setExpanded(b._id)
+    setOpenTab(searchParams.get("tab"))
+    if (searchParams.get("complete") === "1" && b.status !== "completed") {
+      openCompleteModal(b._id, `${b.firstName} ${b.lastName}`)
+    }
+    setTimeout(() => document.getElementById(`booking-${b._id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId, loading])
 
   async function loadInstallers() {
     const res  = await fetch("/api/installers")
@@ -464,6 +487,40 @@ export default function BookingsPage() {
 
   const todayISO  = isoDate(new Date())
 
+  // The list in calendar order: upcoming (soonest first) then past (most
+  // recent first), each split into days. Past jobs stay folded away unless
+  // asked for, or a search, date range or status filter is narrowing things.
+  const groups = useMemo(() => {
+    const up = [], past = [], undated = []
+    for (const b of filtered) {
+      if (!b.date) undated.push(b)
+      else if (b.date >= todayISO) up.push(b)
+      else past.push(b)
+    }
+    up.sort((a, b) => a.date.localeCompare(b.date))
+    past.sort((a, b) => b.date.localeCompare(a.date))
+    const byDay = list => {
+      const days = []
+      for (const b of list) {
+        const last = days[days.length - 1]
+        if (last && last.date === b.date) last.items.push(b)
+        else days.push({ date: b.date, items: [b] })
+      }
+      return days
+    }
+    return { upcoming: byDay(up), past: byDay(past), undated, pastCount: past.length, upCount: up.length }
+  }, [filtered, todayISO])
+  const pastOpen = showPast || !!range || !!search.trim() || filter !== "all"
+
+  function dayLabel(iso) {
+    if (iso === todayISO) return "Today"
+    if (iso === addDays(todayISO, 1)) return "Tomorrow"
+    if (iso === addDays(todayISO, -1)) return "Yesterday"
+    return fmtDay(iso, iso.slice(0, 4) === todayISO.slice(0, 4)
+      ? { weekday: "long", month: "short", day: "numeric" }
+      : { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+  }
+
   function choosePeriod(key) {
     if (key === "custom") {
       setPeriod(p => ({ key: "custom", from: p.from || todayISO, to: p.to || todayISO }))
@@ -489,6 +546,32 @@ export default function BookingsPage() {
   const showPreview = completeForm.amountCharged || completeForm.materialsCost || completeForm.profitValue
   const crewTotal   = crewSplit.reduce((t, m) => t + (Number(m.sharePct) || 0), 0)
   const crewValid   = crewSplit.length === 0 || Math.abs(crewTotal - 100) < 0.5
+
+  const renderCard = b => (
+    <BookingCard
+        key={b._id}
+        initialTab={expanded === b._id ? openTab : null}
+        booking={b}
+        expanded={expanded === b._id}
+        noteValue={noteEdit[b._id] ?? b.notes ?? ""}
+        onToggle={() => setExpanded(e => e === b._id ? null : b._id)}
+        onStatus={s => s === "completed" ? openCompleteModal(b._id, `${b.firstName} ${b.lastName}`) : updateStatus(b._id, s)}
+        onNoteChange={v => setNoteEdit(prev => ({ ...prev, [b._id]: v }))}
+        onNoteSave={() => saveNote(b._id)}
+        onDelete={() => deleteBooking(b._id)}
+        installers={installers}
+        onAssign={installer => assignInstaller(b._id, installer)}
+        onAssignCrew={ids => assignCrew(b._id, ids)}
+        onEditSchedule={() => openSchedModal(b)}
+        onResend={() => resendInstallerEmail(b._id)}
+        onResendClient={() => resendClientEmail(b._id)}
+        onReviewRequest={() => sendReviewRequest(b._id)}
+        onCloseoutChange={fields => updateCloseout(b._id, fields)}
+        onSaveCustomer={fields => saveCustomer(b._id, fields)}
+        onMaterialsUpdate={updateMaterials}
+        onProfitUpdate={updateProfit}
+            />
+  )
 
   // Calendar grid
   const firstDow    = new Date(calYear, calMonth, 1).getDay()
@@ -740,31 +823,49 @@ export default function BookingsPage() {
             : "No bookings found."}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map(b => (
-            <BookingCard
-              key={b._id}
-              booking={b}
-              expanded={expanded === b._id}
-              noteValue={noteEdit[b._id] ?? b.notes ?? ""}
-              onToggle={() => setExpanded(e => e === b._id ? null : b._id)}
-              onStatus={s => s === "completed" ? openCompleteModal(b._id, `${b.firstName} ${b.lastName}`) : updateStatus(b._id, s)}
-              onNoteChange={v => setNoteEdit(prev => ({ ...prev, [b._id]: v }))}
-              onNoteSave={() => saveNote(b._id)}
-              onDelete={() => deleteBooking(b._id)}
-              installers={installers}
-              onAssign={installer => assignInstaller(b._id, installer)}
-              onAssignCrew={ids => assignCrew(b._id, ids)}
-              onEditSchedule={() => openSchedModal(b)}
-              onResend={() => resendInstallerEmail(b._id)}
-              onResendClient={() => resendClientEmail(b._id)}
-              onReviewRequest={() => sendReviewRequest(b._id)}
-              onCloseoutChange={fields => updateCloseout(b._id, fields)}
-              onSaveCustomer={fields => saveCustomer(b._id, fields)}
-              onMaterialsUpdate={updateMaterials}
-              onProfitUpdate={updateProfit}
-            />
+        <div className="space-y-6">
+          {[
+            { key: "upcoming", title: "Upcoming", days: groups.upcoming, count: groups.upCount, open: true },
+            { key: "past", title: "Past", days: groups.past, count: groups.pastCount, open: pastOpen },
+          ].filter(g => g.count > 0).map(g => (
+            <section key={g.key} aria-label={`${g.title} bookings`}>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-500">{g.title}</h2>
+                <span className="text-xs font-semibold text-gray-400 bg-white border border-gray-200 rounded-full px-2 py-0.5">{g.count}</span>
+                <div className="flex-1 h-px bg-gray-200" />
+                {g.key === "past" && !range && !search.trim() && filter === "all" && (
+                  <button type="button" onClick={() => setShowPast(v => !v)} aria-expanded={pastOpen}
+                    className="text-xs font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 bg-white rounded-lg px-2.5 py-1">
+                    {pastOpen ? "Hide" : "Show"}
+                  </button>
+                )}
+              </div>
+              {g.open && (
+                <div className="space-y-4">
+                  {g.days.map(d => (
+                    <div key={d.date}>
+                      <p className={`mb-2 text-xs font-bold ${d.date === todayISO ? "text-[#E50914]" : "text-gray-500"}`}>
+                        {dayLabel(d.date)} <span className="font-normal text-gray-400">· {d.items.length} job{d.items.length !== 1 ? "s" : ""}</span>
+                      </p>
+                      <div className="space-y-2">
+                        {d.items.map(renderCard)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           ))}
+          {groups.undated.length > 0 && (
+            <section aria-label="Bookings without a date">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-500">No date</h2>
+                <span className="text-xs font-semibold text-gray-400 bg-white border border-gray-200 rounded-full px-2 py-0.5">{groups.undated.length}</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              <div className="space-y-2">{groups.undated.map(renderCard)}</div>
+            </section>
+          )}
         </div>
       )}
 
@@ -935,6 +1036,17 @@ export default function BookingsPage() {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md p-5 sm:p-6">
             <h2 className="text-lg font-extrabold text-gray-900 mb-0.5">Complete Booking</h2>
             <p className="text-sm text-gray-500 mb-5">{completeModal.name}</p>
+            {(() => {
+              const cb = bookings.find(x => x._id === completeModal.id)
+              if (!cb?.closeoutSignedAt) return null
+              return (
+                <p className="-mt-3 mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                  ✍️ Signed off by the customer{cb.closeoutTip > 0
+                    ? <> · tip <strong>${Number(cb.closeoutTip).toFixed(2)}</strong>{cb.closeoutTipMethod ? ` (${cb.closeoutTipMethod})` : ""} for the crew — not part of the amounts below.</>
+                    : " · no tip."}
+                </p>
+              )
+            })()}
             <div className="space-y-4">
               <AmountField label="Amount Charged to Customer" value={completeForm.amountCharged}
                 onChange={v => setCompleteForm(f => ({ ...f, amountCharged: v }))} />
@@ -1106,13 +1218,17 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [crewPick,          setCrewPick]          = useState([])
   const [savingCrew,        setSavingCrew]        = useState(false)
   const [crewErr,           setCrewErr]           = useState("")
 
   const crew = Array.isArray(b.crew) ? b.crew : []
+
+  // The open card is split into tabs; a deep link can choose which one.
+  const [tab, setTab] = useState(initialTab || "customer")
+  useEffect(() => { if (initialTab) setTab(initialTab) }, [initialTab])
 
   // Start the picker from the crew already on the job, so adding a second
   // installer is one click rather than re-selecting everyone. Re-syncs whenever
@@ -1238,7 +1354,7 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
   const createdTime = new Date(b.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div id={`booking-${b._id}`} className="scroll-mt-20 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 cursor-pointer hover:bg-gray-50 transition" onClick={onToggle}>
         <div className={`w-2.5 h-2.5 rounded-full flex-none ${sc.dot}`} />
@@ -1267,7 +1383,16 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
           <span title="Google review requested" aria-label="Google review requested" className="flex-none text-sm">⭐</span>
         )}
 
-        <span className={`inline-flex text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-full border flex-none ${sc.color}`}>{sc.label}</span>
+        {/* Change the status without opening the card. Completed still goes
+            through the completion form, as from inside the card. */}
+        <label className="relative flex-none" onClick={e => e.stopPropagation()}>
+          <span className="sr-only">Status for {b.firstName} {b.lastName}</span>
+          <select value={b.status} onChange={e => onStatus(e.target.value)}
+            className={`appearance-none cursor-pointer text-xs font-semibold pl-2 sm:pl-2.5 pr-5 py-1 rounded-full border focus:outline-none focus:ring-2 focus:ring-red-300 ${sc.color}`}>
+            {STATUS_FLOW.map(st => <option key={st} value={st}>{STATUS_CONFIG[st].label}</option>)}
+          </select>
+          <span aria-hidden="true" className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] opacity-70">▾</span>
+        </label>
 
         <div className="text-right flex-none hidden md:block">
           <p className="text-xs text-gray-400">{createdDate}</p>
@@ -1279,11 +1404,57 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
 
       {/* Expanded */}
       {expanded && (
-        <div className="border-t border-gray-100 px-5 pb-5 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="border-t border-gray-100 px-4 sm:px-5 pb-5 pt-4">
+          {/* Signed off but not closed in the books yet: one tap to finish it */}
+          {b.closeoutSignedAt && b.status !== "completed" && b.status !== "cancelled" && (
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="flex-1 min-w-[12rem] text-sm text-emerald-900">
+                <strong>✍️ Customer signed off</strong> on {new Date(b.closeoutSignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {b.closeoutTip > 0 ? ` · tip $${Number(b.closeoutTip).toFixed(2)}${b.closeoutTipMethod ? ` (${b.closeoutTipMethod})` : ""}` : ""}.
+              </p>
+              <button type="button" onClick={() => onStatus("completed")}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
+                Mark as completed
+              </button>
+            </div>
+          )}
 
-            {/* Col 1 — Customer */}
-            <section>
+          {/* Status — always in view */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4" role="group" aria-label="Status">
+            {STATUS_FLOW.map(s => (
+              <button key={s} onClick={() => onStatus(s)} aria-pressed={b.status === s}
+                className={`rounded-xl border py-2 text-xs font-semibold transition ${
+                  b.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                }`}>
+                {STATUS_CONFIG[s].label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div role="tablist" aria-label="Booking details"
+            className="-mx-4 sm:mx-0 px-4 sm:px-0 mb-4 flex gap-1 overflow-x-auto border-b border-gray-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {[
+              { id: "customer", label: "Customer" },
+              { id: "job",      label: "Job" },
+              { id: "crew",     label: "Crew & pay", flag: crew.length === 0 && b.status !== "cancelled" ? "!" : "" },
+              { id: "photos",   label: "Photos & closeout", flag: b.closeoutSignedAt ? "✓" : "" },
+              { id: "notes",    label: "Notes", flag: (noteValue || "").trim() ? "•" : "" },
+            ].map(t => (
+              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
+                className={`shrink-0 -mb-px border-b-2 px-3 py-2 text-sm font-semibold transition ${
+                  tab === t.id ? "border-[#E50914] text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}>
+                {t.label}
+                {t.flag && (
+                  <span className={`ml-1.5 text-xs font-bold ${t.flag === "!" ? "text-amber-600" : t.flag === "✓" ? "text-emerald-600" : "text-gray-400"}`}>{t.flag}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {tab === "customer" && (
+            <section role="tabpanel" aria-label="Customer" className="max-w-xl">
               <div className="flex items-center justify-between mb-3">
                 <SectionTitleRaw>Customer</SectionTitleRaw>
                 {!editCustomer && (
@@ -1402,9 +1573,10 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </>
               )}
             </section>
+          )}
 
-            {/* Col 2 — Service */}
-            <section>
+          {tab === "job" && (
+            <section role="tabpanel" aria-label="Job" className="max-w-2xl">
               <div className="flex items-center justify-between mb-3">
                 <SectionTitleRaw>Service Details</SectionTitleRaw>
                 <button onClick={e => { e.stopPropagation(); onEditSchedule() }}
@@ -1511,9 +1683,11 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </div>
               )}
             </section>
+          )}
 
-            {/* Col 3 — Installer + Status + Notes */}
-            <section>
+          {tab === "crew" && (
+            <section role="tabpanel" aria-label="Crew and pay" className="grid gap-6 md:grid-cols-2">
+              <div>
               <SectionTitle>Crew</SectionTitle>
 
               {crew.length > 0 ? (
@@ -1644,19 +1818,9 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   })()}
                 </div>
               )}
-
-              <SectionTitle>Status & Notes</SectionTitle>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {STATUS_FLOW.map(s => (
-                  <button key={s} onClick={() => onStatus(s)}
-                    className={`rounded-xl border py-2 text-xs font-semibold transition ${
-                      b.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                    }`}>
-                    {STATUS_CONFIG[s].label}
-                  </button>
-                ))}
               </div>
-
+              <div>
+                <SectionTitle>Money</SectionTitle>
               {b.status === "completed" && b.amountCharged != null && (
                 <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
                   <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">Financials</p>
@@ -1754,12 +1918,26 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                   </div>
                 </div>
               )}
+                {!(b.status === "completed" && b.amountCharged != null) && (
+                  <p className="text-xs text-gray-400">
+                    The amounts are recorded when the job is marked <strong>Completed</strong>.
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
 
-              <JobCloseout bookingId={b._id} active={expanded} hasCrew={crew.some(m => m.installerEmail)}
-                onChange={onCloseoutChange} />
+          {tab === "photos" && (
+            <section role="tabpanel" aria-label="Photos and closeout" className="grid gap-6 md:grid-cols-2">
+              <div><JobCloseout bookingId={b._id} active={expanded} hasCrew={crew.some(m => m.installerEmail)}
+                onChange={onCloseoutChange} /></div>
 
-              <JobPhotos bookingId={b._id} active={expanded} />
+              <div><JobPhotos bookingId={b._id} active={expanded} /></div>
+            </section>
+          )}
 
+          {tab === "notes" && (
+            <section role="tabpanel" aria-label="Notes" className="max-w-xl">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Internal Notes</label>
               <textarea rows={3} value={noteValue} onChange={e => onNoteChange(e.target.value)}
                 placeholder="Add notes about this booking…"
@@ -1773,7 +1951,7 @@ function BookingCard({ booking: b, expanded, noteValue, onToggle, onStatus, onNo
                 </button>
               </div>
             </section>
-          </div>
+          )}
         </div>
       )}
     </div>
