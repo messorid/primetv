@@ -5,7 +5,6 @@ import CoverageMap from "../components/CoverageMap";
 import WhyChooseSection from "../components/WhyChooseSection";
 import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
-import StickyActionBar from "../components/StickyActionBar";
 import TvBrandSizeLinks from "../components/TvBrandSizeLinks";
 import HeroReusable from "../components/HeroReusable"
 import LocalCitySection from "../components/LocalCitySection"
@@ -27,7 +26,7 @@ export const metadata = {
   alternates: { canonical: "https://www.primetvnashville.com/tv-mounting-la-vergne" },
 };
 
-export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 };
+export const viewport = { width: "device-width", initialScale: 1 };
 
 export default function TvMountingLaVergnePage() {
   const jsonLd = {
@@ -69,7 +68,6 @@ export default function TvMountingLaVergnePage() {
       <CityFaqSection city="la-vergne" />
       <FaqsSection />
       <TvBrandSizeLinks city="La Vergne" />
-      <StickyActionBar />
     </>
   );
 }

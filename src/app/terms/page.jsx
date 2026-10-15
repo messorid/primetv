@@ -20,7 +20,7 @@ export default function TermsPage() {
         <h1 className="text-3xl md:text-4xl font-extrabold text-black mb-2">
           Terms &amp; Conditions
         </h1>
-        <p className="text-sm text-black/40 mb-10">
+        <p className="text-sm text-muted mb-10">
           Last updated: August 2026 · PrimeTvNashville · Nashville, TN
         </p>
 

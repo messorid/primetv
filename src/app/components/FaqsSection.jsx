@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useMemo } from "react"
-import { motion } from "framer-motion"
+import { Section, SectionHeader } from "./ui/Section"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
@@ -11,9 +11,9 @@ const FAQS = [
     q: "Do you bring the TV bracket?",
     a: (
       <>
-        Prices do not include the bracket mount and we do not sell mounts. 
-        We help you choose the correct model for your TV and wall. 
-        We install customer supplied VESA compatible mounts safely.
+        Prices do not include the bracket, and we don&apos;t sell mounts. 
+        We help you choose the right model for your TV and wall, 
+        and we install the VESA-compatible mount you buy.
       </>
     ),
   },
@@ -21,8 +21,8 @@ const FAQS = [
     q: "Can you hide the cables?",
     a: (
       <>
-        Yes. Cable concealment is a 60 add on per TV. 
-        We use an in wall power kit or external raceway depending on the wall type.
+        Yes. Cable concealment is a $60 add-on per TV. 
+        We use an in-wall power kit or an external raceway, depending on the wall type.
       </>
     ),
   },
@@ -37,10 +37,10 @@ const FAQS = [
     ),
   },
   {
-    q: "What if my wall is brick concrete tile stone or metal?",
+    q: "What if my wall is brick, concrete, tile, stone or metal?",
     a: (
       <>
-        There is a 25 surcharge for hard surfaces to cover anchors and drilling. 
+        There is a $25 surcharge for hard surfaces, to cover the anchors and drilling. 
         Drywall has no extra charge.
       </>
     ),
@@ -49,8 +49,8 @@ const FAQS = [
     q: "Can you mount over a fireplace?",
     a: (
       <>
-        Yes. Fireplace handling starts from 25 extra. 
-        We check heat clearance and choose the safest mounting height.
+        Yes. Fireplace mounting starts from $25 extra. 
+        We check the heat clearance and choose the safest mounting height.
       </>
     ),
   },
@@ -58,8 +58,8 @@ const FAQS = [
     q: "What TV sizes do you handle?",
     a: (
       <>
-        We mount most TVs from 32 to 85 plus. 
-        For very large or commercial installations we may request photos.
+        We mount most TVs from 32 inches to 85 inches and up. 
+        For very large or commercial installations we may ask for photos first.
       </>
     ),
   },
@@ -80,11 +80,11 @@ const FAQS = [
     ),
   },
   {
-    q: "Warranty and reschedule",
+    q: "Is there a warranty, and can I reschedule?",
     a: (
       <>
-        Workmanship warranty included. 
-        You can reschedule depending on availability with 24 hours notice.
+        Yes — a workmanship warranty is included. 
+        You can reschedule with 24 hours&apos; notice, depending on availability.
       </>
     ),
   },
@@ -115,103 +115,27 @@ export default function FaqsSection() {
   }, [])
 
   return (
-
-    <section
-      id="faqs"
-      className="relative w-full bg-gray-50 text-black overflow-hidden"
-    >
-
-      {/* background glow */}
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 top-0 w-[900px] h-[350px] bg-red-500/10 blur-3xl"
-      />
-
-      <div className="relative max-w-6xl mx-auto px-5 md:px-6 py-16 md:py-20">
-
-        <header className="max-w-3xl">
-
-          <h2 className="text-3xl md:text-4xl font-extrabold">
-            FAQs
-          </h2>
-
-          <p className="mt-2 text-black/70">
-            Quick answers for common questions about TV mounting
-          </p>
-
-        </header>
-
-
-        <div className="mt-10 grid gap-4">
-
-          {FAQS.map((item,i)=>(
-            <motion.details
-              key={i}
-              initial={{opacity:0,y:20}}
-              whileInView={{opacity:1,y:0}}
-              viewport={{once:true}}
-              transition={{duration:.4,delay:i*0.05}}
-              className="group rounded-2xl border border-black/10 bg-white p-6 shadow-sm open:shadow-lg transition"
-            >
-
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
-
-                <h3 className="text-base md:text-lg font-bold">
-                  {item.q}
-                </h3>
-
-                <span
-                  className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/20 text-black transition group-open:rotate-45"
-                >
-                  +
-                </span>
-
-              </summary>
-
-              <div className="mt-3 text-sm text-black/80">
-                {item.a}
-              </div>
-
-              <div className="pointer-events-none mt-4 h-px w-full bg-gradient-to-r from-transparent via-[#E50914]/40 to-transparent"/>
-
-            </motion.details>
-          ))}
-
-        </div>
-
-
-        {/* CTA */}
-
-        <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-
-          <Link
-            href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-7 py-4 font-semibold text-white hover:shadow-lg hover:shadow-red-500/30 transition"
-          >
-            Book installation
-          </Link>
-
-          <Link
-            href="#quick-quote"
-            className="inline-flex items-center justify-center rounded-full border border-black/15 px-7 py-4 font-semibold hover:bg-black/5 transition"
-          >
-            Get a quick quote
-          </Link>
-
-        </div>
-
+    <Section id="faqs" tone="soft" labelledBy="faqs-title">
+      <SectionHeader id="faqs-title" eyebrow="FAQ" title="Questions people ask before booking" />
+      <div className="mt-8 space-y-3">
+        {FAQS.map(item => (
+          <details key={item.q} className="group rounded-2xl border border-zinc-200 bg-white open:shadow-sm">
+            <summary className="flex min-h-[60px] cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 [&::-webkit-details-marker]:hidden">
+              <h3 className="text-base sm:text-lg font-bold text-ink">{item.q}</h3>
+              <span aria-hidden="true" className="flex size-8 flex-none items-center justify-center rounded-full border-2 border-zinc-300 text-lg font-bold text-ink transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <div className="px-5 pb-5 text-base leading-relaxed text-body">{item.a}</div>
+          </details>
+        ))}
       </div>
-
-
-      {/* SEO FAQ JSON LD */}
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
-    </section>
-
+      <p className="mt-6 text-base text-body">
+        Another question?{" "}
+        <a href="tel:+16156690251" className="font-bold text-ink underline decoration-brand decoration-2 underline-offset-4">Call (615) 669-0251</a>{" "}
+        or{" "}
+        <a href="sms:+16156690251" className="font-bold text-ink underline decoration-brand decoration-2 underline-offset-4">send us a text</a>.
+      </p>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    </Section>
   )
 }
 
@@ -226,6 +150,14 @@ function renderToStringSafe(node){
   }
 }
 
+// Plain text for the FAQPage schema. renderToStaticMarkup escapes quotes and
+// apostrophes, so they are decoded back or Google would read "don&#x27;t".
 function stripHtml(html){
-  return html.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()
+  return html
+    .replace(/<[^>]*>/g," ")
+    .replace(/&#x27;|&#39;|&apos;/g,"'")
+    .replace(/&quot;/g,'"')
+    .replace(/&lt;/g,"<").replace(/&gt;/g,">")
+    .replace(/&amp;/g,"&")
+    .replace(/\s+/g," ").trim()
 }

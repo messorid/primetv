@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
   SeoCta, AffiliationFootnote, PhotoStrip,
@@ -37,7 +36,7 @@ export const metadata = {
   alternates: { canonical: URL },
 }
 
-export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 }
+export const viewport = { width: "device-width", initialScale: 1 }
 
 const FAQS = [
   {
@@ -162,7 +161,7 @@ export default function CeilingFanHubPage() {
                 <h3 className="mt-2 text-sm font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
                   {t.name}
                 </h3>
-                <p className="mt-2 text-xs text-black/55 leading-relaxed">{t.blurb}</p>
+                <p className="mt-2 text-xs text-muted leading-relaxed">{t.blurb}</p>
                 <span className="mt-3 block text-xs font-semibold text-[#E50914]">Read more →</span>
               </Link>
             ))}
@@ -185,7 +184,7 @@ export default function CeilingFanHubPage() {
               <div key={b.name} className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-extrabold text-black leading-snug">{b.name}</h3>
-                  <span className="shrink-0 rounded-full border border-black/10 bg-gray-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black/50">
+                  <span className="shrink-0 rounded-full border border-black/10 bg-gray-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
                     {b.where}
                   </span>
                 </div>
@@ -220,7 +219,6 @@ export default function CeilingFanHubPage() {
       />
 
       <AffiliationFootnote text={FAN_AFFILIATION_NOTE} />
-      <StickyActionBar />
     </>
   )
 }

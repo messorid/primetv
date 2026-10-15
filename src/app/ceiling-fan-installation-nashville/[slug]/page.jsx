@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import StickyActionBar from "../../components/StickyActionBar"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
   RelatedLinks, SeoCta, AffiliationFootnote,
@@ -45,7 +44,7 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 }
+export const viewport = { width: "device-width", initialScale: 1 }
 
 export default async function FanTypePage({ params }) {
   const { slug } = await params
@@ -167,7 +166,6 @@ export default async function FanTypePage({ params }) {
       />
 
       <AffiliationFootnote text={FAN_AFFILIATION_NOTE} />
-      <StickyActionBar />
     </>
   )
 }

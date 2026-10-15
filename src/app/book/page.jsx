@@ -19,8 +19,8 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <main className="bg-white text-black min-h-screen">
+    <div className="bg-white text-black min-h-screen">
       <BookingFormSection />
-    </main>
+    </div>
   )
 }

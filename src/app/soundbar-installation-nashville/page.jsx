@@ -4,7 +4,6 @@ import WhyChooseSection from "../components/WhyChooseSection"
 import QuickQuoteForm from "../components/QuickQuoteForm"
 import CoverageMap from "../components/CoverageMap"
 import FaqsSection from "../components/FaqsSection"
-import StickyActionBar from "../components/StickyActionBar"
 
 export const metadata = {
   title: "Soundbar Installation in Nashville TN | PrimeTvNashville",
@@ -34,8 +33,7 @@ export const metadata = {
 
 export const viewport = {
   width: "device-width",
-  initialScale: 1,
-  maximumScale: 1
+  initialScale: 1
 }
 
 export default function SoundbarInstallationPage() {
@@ -59,7 +57,6 @@ export default function SoundbarInstallationPage() {
 
       <FaqsSection />
 
-      <StickyActionBar />
     </>
   )
 }

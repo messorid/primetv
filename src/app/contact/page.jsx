@@ -49,9 +49,9 @@ export default function ContactPage() {
       />
       
       {/* Contenedor semántico que renderiza la UI del cliente */}
-      <main className="flex min-h-screen flex-col bg-gray-50/50">
+      <div className="flex min-h-screen flex-col bg-gray-50/50">
         <ContactUI />
-      </main>
+      </div>
     </>
   )
 }

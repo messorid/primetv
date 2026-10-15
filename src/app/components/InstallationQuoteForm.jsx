@@ -228,11 +228,11 @@ export default function InstallationQuoteForm() {
           return (
             <li key={name} aria-current={current ? "step" : undefined} className="flex flex-1 items-center gap-2">
               <span className={`flex size-8 flex-none items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                done || current ? "bg-[#E50914] text-white" : "bg-black/[0.06] text-black/45"
+                done || current ? "bg-[#E50914] text-white" : "bg-black/[0.06] text-muted"
               } ${current ? "ring-4 ring-red-100" : ""}`}>
                 {done ? <span aria-hidden="true">✓</span> : n}
               </span>
-              <span className={`text-xs font-semibold ${current ? "text-black" : "text-black/45"}`}>
+              <span className={`text-xs font-semibold ${current ? "text-black" : "text-muted"}`}>
                 {name}<span className="sr-only">{done ? " (done)" : current ? " (current step)" : ""}</span>
               </span>
               {n < STEP_NAMES.length && (

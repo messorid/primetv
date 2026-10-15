@@ -301,7 +301,7 @@ export default function BookingFormSection() {
             We&apos;ve sent a confirmation to <strong>{info.email}</strong>.
             Our team will contact you shortly to confirm your appointment.
           </p>
-          <p className="mt-4 text-sm text-black/50">
+          <p className="mt-4 text-sm text-muted">
             Questions? Call us at{" "}
             <a href="tel:+16156690251" className="text-[#E50914] font-semibold">
               (615) 669-0251
@@ -326,7 +326,7 @@ export default function BookingFormSection() {
         {/* header */}
         <div className="text-center mb-6">
           <h1 className="text-3xl md:text-4xl font-extrabold">Book Your Installation</h1>
-          <p className="mt-1 text-black/55 text-sm">Fast and easy — takes less than 2 minutes</p>
+          <p className="mt-1 text-muted text-sm">Fast and easy — takes less than 2 minutes</p>
         </div>
 
         {/* progress */}
@@ -342,11 +342,11 @@ export default function BookingFormSection() {
                 <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   passed ? "bg-[#E50914] text-white" :
                   active ? "bg-[#E50914] text-white ring-4 ring-red-200" :
-                           "bg-black/10 text-black/40"
+                           "bg-black/10 text-muted"
                 }`}>
                   {passed ? "✓" : i + 1}
                 </div>
-                <span className={`mt-1 text-[11px] font-medium ${active ? "block text-black" : "hidden sm:block text-black/35"}`}>
+                <span className={`mt-1 text-[11px] font-medium ${active ? "block text-black" : "hidden sm:block text-muted"}`}>
                   {label}
                   <span className="sr-only">{passed ? " (done)" : active ? " (current step)" : ""}</span>
                 </span>
@@ -394,7 +394,7 @@ export default function BookingFormSection() {
                       <p className="text-sm font-semibold text-black/70 mb-2">
                         {new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                         {" — "}
-                        <span className="font-normal text-black/50">Select a time</span>
+                        <span className="font-normal text-muted">Select a time</span>
                       </p>
                       <TimeSlots selected={timePreference} onChange={setTimePreference} />
                     </div>
@@ -434,7 +434,7 @@ export default function BookingFormSection() {
                   >
                     <div>
                       <span className="block text-sm font-bold">3 or more TVs</span>
-                      <span className={`block text-xs mt-0.5 ${moreTvs ? "text-white/60" : "text-black/45"}`}>
+                      <span className={`block text-xs mt-0.5 ${moreTvs ? "text-white/60" : "text-muted"}`}>
                         Pricing varies — we&apos;ll confirm your quote
                       </span>
                     </div>
@@ -494,7 +494,7 @@ export default function BookingFormSection() {
                           className={`rounded-xl py-2 text-xs font-bold transition ${
                             bookingMode === m.id
                               ? "bg-white shadow text-black"
-                              : "text-black/45 hover:text-black/70"
+                              : "text-muted hover:text-black/70"
                           }`}
                         >
                           {m.label}
@@ -571,7 +571,7 @@ export default function BookingFormSection() {
                                     placeholder='e.g. 48" wide x 28" tall — Samsung Frame 55" (2024)'
                                     className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3.5 py-3 text-base focus:outline-none focus:ring-4 focus:ring-red-200"
                                   />
-                                  <p className="mt-1 text-[11px] text-black/40">
+                                  <p className="mt-1 text-[11px] text-muted">
                                     Width and height of the TV, plus the model or year if you know it.
                                   </p>
                                 </div>
@@ -588,13 +588,13 @@ export default function BookingFormSection() {
                                           : "border-black/15 bg-white hover:bg-black/5"
                                       }`}>
                                       <span className="block text-xs font-semibold">{w.label}</span>
-                                      <span className={`block text-[11px] mt-0.5 ${tv.wallType === w.label ? "text-white/80" : "text-black/45"}`}>
+                                      <span className={`block text-[11px] mt-0.5 ${tv.wallType === w.label ? "text-white/80" : "text-muted"}`}>
                                         {w.note}
                                       </span>
                                     </button>
                                   ))}
                                 </div>
-                                <p className="mt-1.5 text-[11px] text-black/40">
+                                <p className="mt-1.5 text-[11px] text-muted">
                                   Surfaces other than drywall are quoted based on the material and difficulty.
                                 </p>
                               </div>
@@ -620,7 +620,7 @@ export default function BookingFormSection() {
                         </div>
 
                         <button type="button" onClick={addTv}
-                          className="mt-4 w-full rounded-xl border-2 border-dashed border-black/20 py-3 text-sm font-semibold text-black/50 hover:border-[#E50914] hover:text-[#E50914] transition">
+                          className="mt-4 w-full rounded-xl border-2 border-dashed border-black/20 py-3 text-sm font-semibold text-muted hover:border-[#E50914] hover:text-[#E50914] transition">
                           + Add Another TV
                         </button>
                       </div>
@@ -659,7 +659,7 @@ export default function BookingFormSection() {
                             <div className="mt-3 flex items-center justify-between rounded-xl bg-[#E50914]/8 border border-[#E50914]/20 px-4 py-3">
                               <div>
                                 <p className="text-xs font-semibold text-[#E50914] uppercase tracking-wide">Promo price</p>
-                                <p className="text-xs text-black/55 mt-0.5">{selectedPromo}</p>
+                                <p className="text-xs text-muted mt-0.5">{selectedPromo}</p>
                               </div>
                               <span className="text-2xl font-extrabold text-[#E50914]">{promo?.price}</span>
                             </div>
@@ -667,7 +667,7 @@ export default function BookingFormSection() {
                         })()}
 
                         {!selectedPromo && (
-                          <p className="mt-3 text-xs text-black/40">Select the promo that fits your installation</p>
+                          <p className="mt-3 text-xs text-muted">Select the promo that fits your installation</p>
                         )}
                       </div>
                     )}
@@ -676,10 +676,10 @@ export default function BookingFormSection() {
                     {bookingMode === "bundle" && (
                       <div>
                         <div className="rounded-xl border border-black/10 bg-gray-50 p-4">
-                          <label htmlFor="bk-bundle" className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
+                          <label htmlFor="bk-bundle" className="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">
                             Describe your installation
                           </label>
-                          <p className="text-xs text-black/40 mb-3 leading-relaxed">
+                          <p className="text-xs text-muted mb-3 leading-relaxed">
                             Tell us what you need — number of TVs, locations, wall types, any special requirements.
                             Our team will review and reach out to confirm everything before the appointment.
                           </p>
@@ -726,10 +726,10 @@ export default function BookingFormSection() {
                         </div>
 
                         <div className="rounded-xl border border-black/10 bg-gray-50 p-4">
-                          <label htmlFor="bk-home-install" className="block text-xs font-semibold text-black/50 uppercase tracking-wide mb-1">
+                          <label htmlFor="bk-home-install" className="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">
                             Describe what you need <span className="text-[#E50914]">*</span>
                           </label>
-                          <p className="text-xs text-black/40 mb-3 leading-relaxed">
+                          <p className="text-xs text-muted mb-3 leading-relaxed">
                             Item, quantity, brand or model, approximate size, and anything else that helps us
                             quote it accurately.
                           </p>
@@ -752,7 +752,7 @@ export default function BookingFormSection() {
                     {/* ── Add-ons (Standard + Promos only) ── */}
                     {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
                       <div className="mt-5 rounded-2xl border-2 border-dashed border-black/15 bg-gray-50 p-4">
-                        <p className="text-xs font-bold text-black/40 uppercase tracking-widest mb-3">Add-ons</p>
+                        <p className="text-xs font-bold text-muted uppercase tracking-widest mb-3">Add-ons</p>
                         <CableToggle count={cableConcealment} onChange={setCableConcealment} />
                       </div>
                     )}
@@ -911,7 +911,7 @@ export default function BookingFormSection() {
           </p>
         </div>
 
-        <p className="mt-3 text-xs text-black/40 text-center">
+        <p className="mt-3 text-xs text-muted text-center">
           Drywall standard · Concrete / Tile / Stone / Metal by quote · Fireplace by quote ·
           Frame TV &amp; home installations by quote
         </p>
@@ -930,7 +930,7 @@ function CableToggle({ count, onChange }) {
       <div className="flex items-center justify-between gap-3 bg-white rounded-xl border border-black/10 px-4 py-3">
         <div>
           <span className="text-sm font-bold">🔌 Hidden Cable Concealment</span>
-          <span className="block text-xs text-black/50 mt-0.5">
+          <span className="block text-xs text-muted mt-0.5">
             In-wall routing or raceway — <strong className="text-black/70">from $60 per run</strong>
           </span>
         </div>
@@ -1003,7 +1003,7 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
       {open && (
         <div className={`absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border ${border} bg-white shadow-lg`}>
           {filtered.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-black/40">No matches</p>
+            <p className="px-3 py-2 text-xs text-muted">No matches</p>
           ) : filtered.map(s => (
             <button
               key={s}
@@ -1014,7 +1014,7 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
               }`}
             >
               <span>{s}&quot;</span>
-              <span className="text-xs text-black/40">
+              <span className="text-xs text-muted">
                 {showPrice ? priceHintForSize(s) : "By quote"}
               </span>
             </button>
@@ -1100,7 +1100,7 @@ function CouponField({
               <div>
                 <label htmlFor="bk-coupon-comment" className="text-xs font-semibold text-emerald-800">
                   {customMode === "commentOnly" ? "Job Description" : "Additional comments"}
-                  {customMode === "sized" && <span className="font-normal text-black/40"> (optional)</span>}
+                  {customMode === "sized" && <span className="font-normal text-muted"> (optional)</span>}
                 </label>
                 <textarea
                   id="bk-coupon-comment"
@@ -1119,7 +1119,7 @@ function CouponField({
           {appliedCoupon.skipTvDetails && !appliedCoupon.customQuote && (
             <div className="border-t border-emerald-200 px-3 pb-3 pt-2.5 bg-white/60">
               <label htmlFor="bk-coupon-comment-2" className="text-xs font-semibold text-emerald-800">
-                Additional comments <span className="font-normal text-black/40">(optional)</span>
+                Additional comments <span className="font-normal text-muted">(optional)</span>
               </label>
               <textarea
                 id="bk-coupon-comment-2"
@@ -1143,7 +1143,7 @@ function CouponField({
             value={couponCode}
             onChange={e => onCodeChange(e.target.value)}
             placeholder="Enter coupon code"
-            className={`flex-1 rounded-xl border px-3.5 py-3 text-base focus:outline-none focus:ring-2 uppercase placeholder:normal-case placeholder:text-black/30 transition ${
+            className={`flex-1 rounded-xl border px-3.5 py-3 text-base focus:outline-none focus:ring-2 uppercase placeholder:normal-case placeholder:text-muted transition ${
               couponStatus === "invalid" ? "border-red-400 focus:ring-red-200" : "border-black/15 focus:ring-red-300"
             }`}
           />

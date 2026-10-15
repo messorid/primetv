@@ -1,7 +1,10 @@
 "use client"
-
-import { useState } from "react"
+// Real installations. Each photo opens larger in a dialog that can be used
+// with a keyboard: arrow keys move between photos, Escape closes, and focus
+// returns to the photo that was opened.
+import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { Section, SectionHeader } from "./ui/Section"
 
 const PHOTOS = [
   { src: "/images/tvs/tv-over-fireplace-dark-accent-wall-nashville.jpeg",              alt: "TV mounted over a fireplace on a dark accent wall with a floating mantel and no visible cables, Nashville TN" },
@@ -16,123 +19,74 @@ const PHOTOS = [
 
 export default function GallerySection() {
   const [open, setOpen] = useState(null)
+  const triggers = useRef([])
+  const closeRef = useRef(null)
+  const last = useRef(null)
 
-  function prev() { setOpen(i => (i - 1 + PHOTOS.length) % PHOTOS.length) }
-  function next() { setOpen(i => (i + 1) % PHOTOS.length) }
+  const close = useCallback(() => {
+    setOpen(null)
+    // Back to the photo the visitor opened.
+    setTimeout(() => triggers.current[last.current]?.focus(), 0)
+  }, [])
+  const step = useCallback(d => setOpen(i => (i + d + PHOTOS.length) % PHOTOS.length), [])
+
+  useEffect(() => {
+    if (open === null) return
+    closeRef.current?.focus()
+    const onKey = e => {
+      if (e.key === "Escape") close()
+      else if (e.key === "ArrowRight") step(1)
+      else if (e.key === "ArrowLeft") step(-1)
+    }
+    document.addEventListener("keydown", onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow }
+  }, [open, close, step])
 
   return (
-    <section className="w-full bg-white py-20 px-4">
-      <div className="max-w-5xl mx-auto">
+    <Section id="our-work" labelledBy="work-title">
+      <SectionHeader id="work-title" eyebrow="Our work" title="Real installations in Nashville homes"
+        sub="Every mount clean, level and built to last. These are our own photos from recent jobs." />
 
-        <div className="text-center mb-10">
-          <span className="inline-block text-xs font-bold tracking-widest uppercase text-[#E50914] mb-2">
-            Our Work
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-black">
-            Real Installations, Real Results
-          </h2>
-          <p className="mt-2 text-black/50 text-sm max-w-md mx-auto">
-            Every mount is clean, level, and built to last. See what we&apos;ve done for our Nashville customers.
-          </p>
-        </div>
-
-        {/* Grid: first photo spans 2 rows on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {PHOTOS.map((photo, i) => (
+      <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {PHOTOS.map((p, i) => (
+          <li key={p.src} className={i === 0 ? "col-span-2 row-span-2" : ""}>
             <button
-              key={i}
+              ref={el => (triggers.current[i] = el)}
               type="button"
-              onClick={() => setOpen(i)}
-              className={`relative overflow-hidden rounded-2xl bg-gray-100 group cursor-zoom-in ${
-                i === 0 ? "col-span-2 md:col-span-1 row-span-1 md:row-span-2" : ""
-              }`}
-              style={{ aspectRatio: i === 0 ? "4/3" : "4/3" }}
-              aria-label={`View photo ${i + 1}`}
+              onClick={() => { last.current = i; setOpen(i) }}
+              className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-100"
             >
-              <Image
-                src={photo.src}
-                alt={photo.alt}
-                fill
-                sizes="(max-width: 768px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                <svg
-                  className="w-9 h-9 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                >
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                </svg>
-              </div>
+              <Image src={p.src} alt={p.alt} fill sizes={i === 0 ? "(max-width:768px) 100vw, 50vw" : "(max-width:768px) 50vw, 25vw"}
+                className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105" />
+              <span className="sr-only">— view larger</span>
             </button>
-          ))}
-        </div>
+          </li>
+        ))}
+      </ul>
 
-      </div>
-
-      {/* Lightbox */}
       {open !== null && (
-        <div
-          className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center p-4"
-          onClick={() => setOpen(null)}
-        >
-          <div
-            className="relative w-full max-w-3xl"
-            style={{ maxHeight: "85vh", aspectRatio: "4/3" }}
-            onClick={e => e.stopPropagation()}
-          >
-            <Image
-              src={PHOTOS[open].src}
-              alt={PHOTOS[open].alt}
-              fill
-              sizes="90vw"
-              className="object-contain rounded-xl"
-              priority
-            />
+        <div role="dialog" aria-modal="true" aria-label={`Photo ${open + 1} of ${PHOTOS.length}`}
+          className="fixed inset-0 z-[70] flex flex-col bg-black/95 p-3 sm:p-6"
+          onClick={e => { if (e.target === e.currentTarget) close() }}>
+          <div className="flex items-center justify-between gap-3 text-white">
+            <p className="text-sm font-semibold" aria-live="polite">{open + 1} / {PHOTOS.length}</p>
+            <button ref={closeRef} type="button" onClick={close} aria-label="Close photo"
+              className="flex size-12 items-center justify-center rounded-full bg-white/15 text-2xl hover:bg-white/30">✕</button>
           </div>
-
-          {/* Close */}
-          <button
-            type="button"
-            onClick={() => setOpen(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white text-lg flex items-center justify-center transition"
-          >
-            ✕
-          </button>
-
-          {/* Prev */}
-          <button
-            type="button"
-            onClick={e => { e.stopPropagation(); prev() }}
-            className="absolute left-3 md:left-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/30 text-white text-2xl font-bold flex items-center justify-center transition"
-          >
-            ‹
-          </button>
-
-          {/* Next */}
-          <button
-            type="button"
-            onClick={e => { e.stopPropagation(); next() }}
-            className="absolute right-3 md:right-8 w-12 h-12 rounded-full bg-white/15 hover:bg-white/30 text-white text-2xl font-bold flex items-center justify-center transition"
-          >
-            ›
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
-            {PHOTOS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={e => { e.stopPropagation(); setOpen(i) }}
-                className={`rounded-full transition-all ${
-                  i === open ? "w-5 h-2 bg-white" : "w-2 h-2 bg-white/40 hover:bg-white/70"
-                }`}
-              />
-            ))}
+          <div className="relative min-h-0 flex-1" onClick={e => { if (e.target === e.currentTarget) close() }}>
+            <Image src={PHOTOS[open].src} alt={PHOTOS[open].alt} fill sizes="95vw" className="object-contain" priority />
+          </div>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-white/85">{PHOTOS[open].alt}</p>
+          <div className="mt-3 flex justify-center gap-3">
+            <button type="button" onClick={() => step(-1)} aria-label="Previous photo"
+              className="flex size-12 items-center justify-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/30">‹</button>
+            <button type="button" onClick={() => step(1)} aria-label="Next photo"
+              className="flex size-12 items-center justify-center rounded-full bg-white/15 text-3xl text-white hover:bg-white/30">›</button>
           </div>
         </div>
       )}
-    </section>
+    </Section>
   )
 }

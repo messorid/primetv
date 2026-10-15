@@ -107,7 +107,7 @@ export default function LocalCitySection({ city }) {
               ))}
             </ul>
             <div className="mt-5 pt-4 border-t border-black/8">
-              <p className="text-xs text-black/50">
+              <p className="text-xs text-muted">
                 Don&apos;t see your neighborhood? Call us —
                 we cover all surrounding areas.
               </p>

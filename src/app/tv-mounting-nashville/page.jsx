@@ -5,7 +5,6 @@ import CoverageMap from "../components/CoverageMap";
 import WhyChooseSection from "../components/WhyChooseSection";
 import QuickQuoteForm from "../components/QuickQuoteForm";
 import FaqsSection from "../components/FaqsSection";
-import StickyActionBar from "../components/StickyActionBar";
 import TvBrandSizeLinks from "../components/TvBrandSizeLinks";
 import HeroReusable from "../components/HeroReusable"
 import LocalCitySection from "../components/LocalCitySection"
@@ -39,8 +38,7 @@ export const metadata = {
 
 export const viewport = {
   width: "device-width",
-  initialScale: 1,
-  maximumScale: 1
+  initialScale: 1
 };
 
 export default function TvMountingPage() {
@@ -110,7 +108,6 @@ export default function TvMountingPage() {
       <FaqsSection />
 
       <TvBrandSizeLinks city="Nashville" />
-      <StickyActionBar />
     </>
   );
 }

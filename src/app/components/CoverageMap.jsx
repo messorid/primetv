@@ -1,8 +1,10 @@
 "use client"
-
+// Where we work: the areas (linked to their own pages where one exists), a
+// quick ZIP check, and a map. The ZIP check comes first on a phone because it
+// answers the actual question — "do you come to me?" — fastest.
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import { Section, SectionHeader, ButtonLink } from "./ui/Section"
 
 const AREAS = [
   "Nashville",
@@ -31,264 +33,103 @@ const AREAS = [
   "Donelson"
 ]
 
+// Areas with their own TV mounting page.
+const PAGES = {
+  "Nashville": "/tv-mounting-nashville", "Franklin": "/tv-mounting-franklin", "Brentwood": "/tv-mounting-brentwood",
+  "Hendersonville": "/tv-mounting-hendersonville", "Gallatin": "/tv-mounting-gallatin", "Smyrna": "/tv-mounting-smyrna",
+  "Murfreesboro": "/tv-mounting-murfreesboro", "Mount Juliet": "/tv-mounting-mount-juliet", "Goodlettsville": "/tv-mounting-goodlettsville",
+  "Lebanon": "/tv-mounting-lebanon", "La Vergne": "/tv-mounting-la-vergne", "Nolensville": "/tv-mounting-nolensville",
+  "Spring Hill north": "/tv-mounting-spring-hill",
+}
+
 export default function CoverageMap() {
-
   return (
-    <section
-      id="coverage"
-      className="relative w-full bg-gray-50 text-black overflow-hidden"
-    >
+    <Section id="coverage" labelledBy="coverage-title">
+      <SectionHeader id="coverage-title" eyebrow="Service area" title="We come to you across Greater Nashville"
+        sub="Around 50 miles from downtown Nashville. Jobs outside that radius may include a small trip fee." />
 
-      {/* glow */}
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 top-0 w-[900px] h-[400px] bg-red-500/10 blur-3xl"
-      />
+      <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="order-2 lg:order-1">
+          <h3 className="text-lg font-extrabold text-ink">Areas we serve</h3>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {AREAS.map(name => (
+              <li key={name}>
+                {PAGES[name] ? (
+                  <Link href={PAGES[name]}
+                    className="inline-flex min-h-[44px] items-center rounded-full border-2 border-zinc-300 bg-white px-4 text-base font-semibold text-ink hover:border-ink">
+                    {name.replace(" north", "")}
+                  </Link>
+                ) : (
+                  <span className="inline-flex min-h-[44px] items-center rounded-full bg-soft px-4 text-base text-body">{name}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-sm text-muted">Linked areas have their own page with local details.</p>
+        </div>
 
-      <div className="relative max-w-6xl mx-auto px-5 md:px-6 py-16 md:py-20">
-
-        {/* header */}
-        <header className="max-w-3xl">
-
-          <h2 className="text-3xl md:text-4xl font-extrabold">
-            Coverage area
-          </h2>
-
-          <p className="mt-2 text-black/70">
-            We serve Greater Nashville and nearby areas. 
-            Jobs outside the radius may include a small trip fee
-          </p>
-
-        </header>
-
-
-        {/* MAP */}
-        <motion.div
-          initial={{ opacity:0, y:40 }}
-          whileInView={{ opacity:1, y:0 }}
-          viewport={{ once:true }}
-          transition={{ duration:.6 }}
-          className="mt-10 relative rounded-2xl border border-black/10 shadow-lg overflow-hidden"
-        >
-
-          <div className="aspect-[16/9]">
-
+        <div className="order-1 space-y-5 lg:order-2">
+          <ZipQuickCheck />
+          <div className="overflow-hidden rounded-2xl border border-zinc-200">
             <iframe
-              title="Nashville coverage map"
+              title="Map of the Nashville area we serve"
               src="https://www.google.com/maps?q=Nashville,+TN&hl=en&z=9&output=embed"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="h-full w-full"
+              className="block aspect-[16/10] w-full"
             />
-
           </div>
-
-          {/* center marker */}
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-
-            <div className="relative flex items-center justify-center">
-
-              <span className="absolute h-6 w-6 rounded-full bg-[#E50914]/40 animate-ping" />
-
-              <span className="relative h-3 w-3 rounded-full bg-[#E50914] shadow-lg" />
-
-            </div>
-
-          </div>
-
-        </motion.div>
-
-
-
-        {/* AREAS + ZIP */}
-        <div className="mt-10 grid md:grid-cols-2 gap-10">
-
-          {/* areas */}
-          <div>
-
-            <h3 className="text-xl font-bold">
-              Areas we serve
-            </h3>
-
-            {/* desktop chips */}
-            <div className="mt-4 hidden md:flex flex-wrap gap-2">
-
-              {AREAS.map((name) => (
-                <span
-                  key={name}
-                  className="inline-flex items-center rounded-full border border-black/15 bg-white px-3 py-1.5 text-sm hover:bg-black/5 transition"
-                >
-                  {name}
-                </span>
-              ))}
-
-            </div>
-
-            {/* mobile slider */}
-            <div className="md:hidden mt-3">
-
-              <div className="flex items-center gap-2 text-sm text-black/60">
-                <span>Swipe to browse areas</span>
-              </div>
-
-              <div className="mt-2 flex snap-x snap-mandatory overflow-x-auto gap-2">
-
-                {AREAS.map((name) => (
-                  <span
-                    key={name}
-                    className="snap-start shrink-0 rounded-full border border-black/15 bg-white px-3 py-1.5 text-sm"
-                  >
-                    {name}
-                  </span>
-                ))}
-
-              </div>
-
-            </div>
-
-            <p className="mt-4 text-sm text-black/60">
-              Our typical service radius is around 50 miles from downtown Nashville
-            </p>
-
-          </div>
-
-
-          {/* ZIP checker */}
-          <ZipQuickCheck />
-
         </div>
-
-
-
-        {/* CTA */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-
-          <Link
-            href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-7 py-4 font-semibold text-white hover:shadow-lg hover:shadow-red-500/30 transition"
-          >
-            Book installation
-          </Link>
-
-          <Link
-            href="#quick-quote"
-            className="inline-flex items-center justify-center rounded-full border border-black/15 px-7 py-4 font-semibold hover:bg-black/5 transition"
-          >
-            Get quick quote
-          </Link>
-
-        </div>
-
       </div>
-
-    </section>
+    </Section>
   )
 }
 
-
-
-/* ZIP CHECKER */
+const ZIP_STATUS = {
+  in:    { label: "Good news — you're very likely in our area.", cls: "border-emerald-300 bg-emerald-50 text-emerald-900" },
+  maybe: { label: "You may be in our area — book and we'll confirm.", cls: "border-amber-300 bg-amber-50 text-amber-950" },
+  out:   { label: "That looks outside our usual area. Call us and we'll check.", cls: "border-zinc-300 bg-soft text-ink" },
+}
 
 function ZipQuickCheck() {
-
   const [zip, setZip] = useState("")
   const [status, setStatus] = useState(null)
-
   useEffect(() => {
-
     const v = zip.trim()
-
-    if (v.length < 3) {
-      setStatus(null)
-      return
-    }
-
-    const prefix = v.slice(0,3)
-
-    if (["370","371","372"].includes(prefix)) setStatus("in")
-    else if (["373","385"].includes(prefix)) setStatus("maybe")
+    if (v.length < 5) { setStatus(null); return }
+    const prefix = v.slice(0, 3)
+    if (["370", "371", "372"].includes(prefix)) setStatus("in")
+    else if (["373", "385"].includes(prefix)) setStatus("maybe")
     else setStatus("out")
-
-  },[zip])
-
-
+  }, [zip])
+  const st = status && ZIP_STATUS[status]
   return (
-
-    <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
-
-      <h3 className="text-xl font-bold">
-        Quick ZIP check
-      </h3>
-
-      <p className="mt-1 text-sm text-black/70">
-        Enter your ZIP to see if you are likely inside our service area
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm">
+      <h3 className="text-lg font-extrabold text-ink">Do you come to my area?</h3>
+      <label htmlFor="coverage-zip" className="mt-3 block text-base font-semibold text-ink">Your ZIP code</label>
+      <input
+        id="coverage-zip"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="postal-code"
+        maxLength={5}
+        value={zip}
+        onChange={e => setZip(e.target.value.replace(/\D/g, ""))}
+        placeholder="37209"
+        aria-describedby="coverage-zip-result"
+        className="mt-1.5 w-full min-h-[52px] rounded-xl border-2 border-zinc-300 px-4 text-lg focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15"
+      />
+      <p id="coverage-zip-result" aria-live="polite"
+        className={`mt-3 rounded-xl border px-4 py-3 text-base font-semibold ${st ? st.cls : "border-transparent px-0 py-0 text-muted font-normal"}`}>
+        {st ? st.label : "Type all 5 digits to check. Final coverage is confirmed when you book."}
       </p>
-
-
-      <div className="mt-4 flex items-center gap-2">
-
-        <label htmlFor="coverage-zip" className="sr-only">ZIP code</label>
-        <input
-          id="coverage-zip"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          autoComplete="postal-code"
-          maxLength={5}
-          value={zip}
-          onChange={(e)=>setZip(e.target.value.replace(/\D/g,""))}
-          placeholder="ZIP code"
-          className="w-full min-h-[48px] rounded-xl border border-black/20 px-4 py-3 text-base focus:outline-none focus:ring-4 focus:ring-[#E50914]/15 focus:border-[#E50914]"
-        />
-
-        <span
-          aria-live="polite"
-          className={`whitespace-nowrap rounded-xl px-3 py-3 text-sm font-semibold ${
-            status === "in"
-            ? "bg-emerald-600 text-white"
-            : status === "maybe"
-            ? "bg-amber-500 text-white"
-            : status === "out"
-            ? "bg-black text-white"
-            : "bg-black/5 text-black/70"
-          }`}
-        >
-
-          {status === "in" && "Likely covered"}
-          {status === "maybe" && "Maybe covered"}
-          {status === "out" && "Outside radius"}
-          {status === null && "Status"}
-
-        </span>
-
-      </div>
-
-
-      <p className="mt-2 text-xs text-black/60">
-        This is only a quick guide. Final coverage is confirmed during booking
-      </p>
-
-
-      <div className="mt-4 flex gap-2">
-
-        <Link
-          href="/book"
-          className="rounded-full bg-[#E50914] px-4 py-2 text-sm font-semibold text-white"
-        >
-          Book with this ZIP
-        </Link>
-
-        <Link
-          href="#quote"
-          className="rounded-full border border-black/15 px-4 py-2 text-sm font-semibold hover:bg-black/5"
-        >
-          Start quote
-        </Link>
-
-      </div>
-
+      {st && (
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <ButtonLink href="/book" size="sm">Book installation</ButtonLink>
+          <ButtonLink href="tel:+16156690251" variant="secondary" size="sm">Call (615) 669-0251</ButtonLink>
+        </div>
+      )}
     </div>
-
   )
-
 }

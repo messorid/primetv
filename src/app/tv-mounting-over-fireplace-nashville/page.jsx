@@ -1,5 +1,4 @@
 ﻿import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import { PhotoStrip } from "../components/TvSeoLayout"
 import { photoSet } from "../lib/photos"
@@ -213,7 +212,6 @@ export default function FireplaceTvMountingPage() {
         photos={photoSet("fireplaceNiche", "fireplaceShiplap", "fireplaceStoneFeature", "fireplaceDarkWall", "fireplaceStackedStone", "outdoorPatio")}
       />
 
-      <StickyActionBar />
     </>
   )
 }

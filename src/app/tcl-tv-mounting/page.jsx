@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
@@ -36,7 +35,7 @@ export const metadata = {
   alternates: { canonical: URL },
 }
 
-export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 }
+export const viewport = { width: "device-width", initialScale: 1 }
 
 const FAQS = [
   {
@@ -260,7 +259,6 @@ export default function TclTvMountingPage() {
       />
 
       <AffiliationFootnote />
-      <StickyActionBar />
     </>
   )
 }

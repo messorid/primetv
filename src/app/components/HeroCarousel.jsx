@@ -25,6 +25,9 @@ const MAX_HOLDS = 2
 export default function HeroCarousel({ slides, className = "" }) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
+  // The visitor's own pause, from the button. Kept apart from `paused`, which
+  // is about focus and hidden tabs and clears itself.
+  const [stopped, setStopped] = useState(false)
   const rootRef = useRef(null)
   const holds = useRef(0)
   const count = slides.length
@@ -62,7 +65,7 @@ export default function HeroCarousel({ slides, className = "" }) {
   }, [])
 
   useEffect(() => {
-    if (paused || count < 2) return
+    if (paused || stopped || count < 2) return
     const id = setInterval(() => {
       setIndex(i => {
         const candidate = (i + 1) % count
@@ -78,7 +81,7 @@ export default function HeroCarousel({ slides, className = "" }) {
     // `index` is a dependency so the timer restarts on every change, including
     // a manual one. Without it, tapping a dot could leave only a sliver of the
     // current interval before the slide moved on again.
-  }, [paused, count, index, isReady])
+  }, [paused, stopped, count, index, isReady])
 
   const next = (index + 1) % count
 
@@ -129,39 +132,46 @@ export default function HeroCarousel({ slides, className = "" }) {
         )
       })}
 
-      {/* Gradient so the badges stay readable over a bright photo */}
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      {/* Gradient so the controls stay readable over a bright photo */}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 to-transparent" />
 
-      {/* Badges, unchanged from the static hero */}
-      <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-2">
-        <span className="text-[11px] sm:text-xs font-bold text-white bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
-          Nashville, TN
-        </span>
-
-        {/* Dots sit between the badges so they never cover the install */}
-        {count > 1 && (
-          <div className="flex items-center gap-1.5">
-            {slides.map((s, i) => (
+      {/* Controls: a pause button (moving content must be stoppable, WCAG
+          2.2.2) and one dot per photo. Each dot is a 24px target with the
+          visible mark drawn inside it. */}
+      {count > 1 && (
+        <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 sm:bottom-3 sm:left-3 sm:right-3">
+          <button
+            type="button"
+            onClick={() => setStopped(v => !v)}
+            aria-pressed={stopped}
+            aria-label={stopped ? "Play photo slideshow" : "Pause photo slideshow"}
+            className="flex size-11 flex-none items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm hover:bg-black/75"
+          >
+            {stopped ? (
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-current"><path d="M8 5v14l11-7z" /></svg>
+            ) : (
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-current"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
+            )}
+          </button>
+          <div className="flex flex-1 flex-wrap items-center justify-center">
+            {slides.map((sl, i) => (
               <button
-                key={s.src}
+                key={sl.src}
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-label={`Show installation photo ${i + 1} of ${count}`}
                 aria-current={i === index}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === index
-                    ? "w-5 bg-white"
-                    : "w-1.5 bg-white/45 hover:bg-white/75"
-                }`}
-              />
+                className="group flex size-6 items-center justify-center"
+              >
+                <span aria-hidden="true" className={`block h-2 rounded-full transition-all duration-300 ${
+                  i === index ? "w-5 bg-white" : "w-2 bg-white/60 group-hover:bg-white/90"
+                }`} />
+              </button>
             ))}
           </div>
-        )}
-
-        <span className="text-[11px] sm:text-xs font-bold text-white bg-[#E50914]/90 backdrop-blur-sm rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
-          Same-Day ⚡
-        </span>
-      </div>
+          <span aria-hidden="true" className="size-11 flex-none" />
+        </div>
+      )}
     </div>
   )
 }

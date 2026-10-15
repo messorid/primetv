@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import StickyActionBar from "../../components/StickyActionBar"
 import {
   PLAYSETS, getPlayset, playsetTime, playsetTierLabel, relatedPlaysets,
 } from "../../lib/playsets"
@@ -130,7 +129,7 @@ export default async function PlaysetModelPage({ params }) {
 
         <div className="relative max-w-5xl mx-auto px-5 md:px-6 py-14 md:py-20">
           {/* Breadcrumb */}
-          <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-black/40">
+          <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-muted">
             <Link href="/" className="hover:text-[#E50914] transition">Home</Link>
             <span>/</span>
             <Link href="/playset-installation-nashville" className="hover:text-[#E50914] transition">Playset Installation</Link>
@@ -175,7 +174,7 @@ export default async function PlaysetModelPage({ params }) {
               { label: "Installation cost", value: "By quote" },
             ].map(f => (
               <div key={f.label} className="rounded-2xl border border-black/10 bg-gray-50 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-black/35">{f.label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted">{f.label}</p>
                 <p className="mt-1 text-sm font-extrabold text-black">{f.value}</p>
               </div>
             ))}
@@ -298,7 +297,7 @@ export default async function PlaysetModelPage({ params }) {
                 href={`/playset-installation-nashville/${r.slug}`}
                 className="group rounded-2xl border border-black/10 bg-gray-50 p-5 hover:border-[#E50914]/30 hover:bg-white hover:shadow-md transition-all"
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">{r.brand}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{r.brand}</span>
                 <h3 className="mt-1 text-sm font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
                   {r.name}
                 </h3>
@@ -346,7 +345,6 @@ export default async function PlaysetModelPage({ params }) {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 
 export const metadata = {
   title: "Picture & Mirror Hanging Nashville TN | PrimeTvNashville",
@@ -200,7 +199,6 @@ export default function PictureMirrorPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

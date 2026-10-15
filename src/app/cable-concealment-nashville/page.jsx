@@ -1,5 +1,4 @@
 ﻿import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import { PhotoStrip } from "../components/TvSeoLayout"
 import { photoSet } from "../lib/photos"
@@ -94,7 +93,7 @@ export default function CableConcealmentPage() {
               Call (615) 669-0251
             </a>
           </div>
-          <p className="mt-5 text-2xl font-black text-[#E50914]">From $60 <span className="text-base font-semibold text-black/50">per TV (add-on)</span></p>
+          <p className="mt-5 text-2xl font-black text-[#E50914]">From $60 <span className="text-base font-semibold text-muted">per TV (add-on)</span></p>
           <PriceDisclaimer className="mt-5 max-w-2xl" />
         </div>
       </section>
@@ -134,7 +133,7 @@ export default function CableConcealmentPage() {
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-black/40 uppercase tracking-wider mb-4">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider mb-4">
                 <span className="w-2 h-2 rounded-full bg-black/30" /> For Hard Surfaces & Rentals
               </div>
               <h3 className="text-xl font-extrabold text-black">Surface Raceway</h3>
@@ -199,7 +198,6 @@ export default function CableConcealmentPage() {
         photos={photoSet("hiddenCablesDrywall", "cablesInWall", "hisenseRoku")}
       />
 
-      <StickyActionBar />
     </>
   )
 }

@@ -28,8 +28,8 @@ import {
 
 const BASE =
   "block w-full min-h-[48px] rounded-xl border bg-white px-4 py-3 text-base text-black " +
-  "placeholder:text-black/35 transition-colors focus:outline-none focus:ring-4 " +
-  "disabled:bg-gray-50 disabled:text-black/40"
+  "placeholder:text-muted transition-colors focus:outline-none focus:ring-4 " +
+  "disabled:bg-gray-50 disabled:text-muted"
 const OK = "border-black/20 focus:border-[#E50914] focus:ring-[#E50914]/15"
 const BAD = "border-red-500 bg-red-50/40 focus:border-red-500 focus:ring-red-500/15"
 
@@ -52,11 +52,11 @@ export function FieldFrame({ id, label, required, optional, hint, error, childre
             <span className="sr-only"> (required)</span>
           </>
         )}
-        {optional && <span className="font-normal text-black/45"> (optional)</span>}
+        {optional && <span className="font-normal text-muted"> (optional)</span>}
       </label>
       {children}
       {hint && !error && (
-        <p id={`${id}-hint`} className="mt-1.5 text-[13px] leading-snug text-black/55">{hint}</p>
+        <p id={`${id}-hint`} className="mt-1.5 text-[13px] leading-snug text-muted">{hint}</p>
       )}
       {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
     </div>
@@ -197,7 +197,7 @@ export function TextAreaField({
         className={`${inputClass(error)} resize-y min-h-[96px] leading-relaxed`}
       />
       {maxLength && (
-        <p className="mt-1 text-right text-[12px] text-black/40" aria-hidden="true">
+        <p className="mt-1 text-right text-[12px] text-muted" aria-hidden="true">
           {String(value || "").length}/{maxLength}
         </p>
       )}
@@ -225,7 +225,7 @@ export function SelectField({
           aria-required={required || undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(id, hint, error)}
-          className={`${inputClass(error)} appearance-none pr-11 ${value ? "" : "text-black/45"}`}
+          className={`${inputClass(error)} appearance-none pr-11 ${value ? "" : "text-muted"}`}
         >
           {placeholder && <option value="">{placeholder}</option>}
           {options.map(o => {
@@ -234,7 +234,7 @@ export function SelectField({
           })}
         </select>
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"
-          className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-black/45">
+          className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted">
           <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
         </svg>
       </div>
@@ -270,7 +270,7 @@ export function ChoiceGroup({
           </>
         )}
       </legend>
-      {hint && !error && <p id={`${id}-hint`} className="-mt-1 mb-2 text-[13px] text-black/55">{hint}</p>}
+      {hint && !error && <p id={`${id}-hint`} className="-mt-1 mb-2 text-[13px] text-muted">{hint}</p>}
 
       <div className={`grid gap-2.5 ${cols}`}>
         {options.map(o => {
@@ -303,7 +303,7 @@ export function ChoiceGroup({
               {opt.emoji && <span aria-hidden="true" className="text-xl leading-none">{opt.emoji}</span>}
               <span className="min-w-0 flex-1">
                 <span className={`block font-semibold leading-snug ${size === "sm" ? "text-sm" : "text-[15px]"}`}>{opt.label}</span>
-                {opt.desc && <span className="mt-0.5 block text-[13px] leading-snug text-black/55">{opt.desc}</span>}
+                {opt.desc && <span className="mt-0.5 block text-[13px] leading-snug text-muted">{opt.desc}</span>}
               </span>
               <span
                 aria-hidden="true"

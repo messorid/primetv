@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Blog posts are MDX outside src/; scan them for the classes they use. */
+@source "../../content/blog";
 
 :root {
   --background: #ffffff;
@@ -12,7 +14,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
-
+/* Brand palette, chosen for contrast (WCAG 2.2 AA):
+   brand        #E50914 — buttons and accents on white (4.8:1 with white text)
+   brand-dark   #B80711 — hover/pressed, and small red text (6.8:1 on white)
+   brand-bright #FF4D57 — red text on dark backgrounds (6:1 on #0B0B0C);
+                          #E50914 there is only 4.1:1
+   ink          #0B0B0C — headings and dark bands
+   body         #3F3F46 — paragraph text (10:1 on white)
+   muted        #52525B — secondary text (7.8:1); nothing lighter for text */
+@theme {
+  --color-brand: #E50914;
+  --color-brand-dark: #B80711;
+  --color-brand-bright: #FF4D57;
+  --color-ink: #0B0B0C;
+  --color-body: #3F3F46;
+  --color-muted: #52525B;
+  --color-soft: #F5F5F6;
+}
 
 body {
   background: var(--background);
@@ -26,6 +44,8 @@ body {
     background-color: white;
     color: black;
     font-family: sans-serif;
+    /* Anchored sections land below the sticky header, not under it. */
+    scroll-padding-top: 5.5rem;
   }
 
   body {
@@ -38,7 +58,20 @@ body {
     background-color: white !important;
   }
 
-  /* h1, h2, h3, h4, h5, h6, p, label {
-    color: black !important;
-  } */
+  /* A visible focus ring everywhere a component has not drawn its own. */
+  :focus-visible {
+    outline: 3px solid #E50914;
+    outline-offset: 2px;
+  }
+
+  /* Respect "reduce motion": no smooth scrolling, no sliding or bouncing.
+     Fades of a second or less are kept, as they move nothing on screen. */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

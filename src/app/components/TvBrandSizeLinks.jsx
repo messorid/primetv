@@ -26,7 +26,7 @@ export default function TvBrandSizeLinks({ city = "Nashville" }) {
 
         <div className="grid sm:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-black/35 mb-3">By brand</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted mb-3">By brand</h3>
             <div className="flex flex-wrap gap-2">
               {[...BRANDS.map(b => ({ label: b.name, href: b.path })), ...EXTRA].map(l => (
                 <Link
@@ -41,7 +41,7 @@ export default function TvBrandSizeLinks({ city = "Nashville" }) {
           </div>
 
           <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-black/35 mb-3">By size</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted mb-3">By size</h3>
             <div className="flex flex-wrap gap-2">
               {SIZES.map(s => (
                 <Link

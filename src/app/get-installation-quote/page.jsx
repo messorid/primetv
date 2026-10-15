@@ -1,5 +1,4 @@
 import InstallationQuoteForm from "../components/InstallationQuoteForm"
-import StickyActionBar from "../components/StickyActionBar"
 import Link from "next/link"
 
 export const metadata = {
@@ -22,7 +21,7 @@ export default function GetInstallationQuotePage() {
               Free Quote · No Obligation
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-black mb-3">Request an Installation Quote</h1>
-            <p className="text-black/55 max-w-md mx-auto text-sm">
+            <p className="text-muted max-w-md mx-auto text-sm">
               Tell us about your project and we&rsquo;ll get back to you with pricing and availability.
             </p>
           </div>
@@ -31,7 +30,7 @@ export default function GetInstallationQuotePage() {
             <InstallationQuoteForm />
           </div>
 
-          <div className="text-center mt-6 text-sm text-black/50">
+          <div className="text-center mt-6 text-sm text-muted">
             Looking to mount a TV?{" "}
             <Link href="/book" className="font-semibold text-[#E50914] hover:underline underline-offset-2">
               Book TV mounting here →
@@ -40,7 +39,6 @@ export default function GetInstallationQuotePage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

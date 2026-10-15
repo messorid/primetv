@@ -90,7 +90,6 @@ export default function Navbar() {
               <div className="flex-1 flex items-center justify-center gap-3 text-white text-xs sm:text-sm font-medium">
                 <span className="hidden sm:flex items-center gap-1.5">
                   <span className="relative flex size-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex size-2 rounded-full bg-white" />
                   </span>
                   Same-Day & Next-Day Availability in Nashville
@@ -135,7 +134,7 @@ export default function Navbar() {
               </svg>
             </div>
             <span className="text-lg font-extrabold text-white tracking-tight">
-              PrimeTv<span className="text-[#E50914]">Nashville</span>
+              PrimeTv<span className="text-brand-bright">Nashville</span>
             </span>
           </Link>
 
@@ -148,7 +147,7 @@ export default function Navbar() {
                     onClick={() => { setDropdownOpen((v) => !v); setInstallationsOpen(false) }}
                     className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname.startsWith("/services")
-                        ? "text-[#E50914]"
+                        ? "text-brand-bright"
                         : "text-white/80 hover:text-white hover:bg-white/5"
                     }`}
                   >
@@ -168,7 +167,7 @@ export default function Navbar() {
                           <Link key={s.href} href={s.href}
                             className={`flex flex-col px-4 py-3 hover:bg-white/5 transition-colors ${i < services.length - 1 ? "border-b border-white/5" : ""}`}>
                             <span className="text-sm font-semibold text-white">{s.label}</span>
-                            <span className="text-xs text-white/50 mt-0.5">{s.desc}</span>
+                            <span className="text-xs text-white/70 mt-0.5">{s.desc}</span>
                           </Link>
                         ))}
                       </motion.div>
@@ -181,7 +180,7 @@ export default function Navbar() {
                     onClick={() => { setInstallationsOpen((v) => !v); setDropdownOpen(false) }}
                     className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname.startsWith("/home-installation") || pathname.startsWith("/furniture") || pathname.startsWith("/picture") || pathname.startsWith("/wall-installation") || pathname.startsWith("/gazebo")
-                        ? "text-[#E50914]"
+                        ? "text-brand-bright"
                         : "text-white/80 hover:text-white hover:bg-white/5"
                     }`}
                   >
@@ -201,7 +200,7 @@ export default function Navbar() {
                           <Link key={s.href} href={s.href}
                             className={`flex flex-col px-4 py-3 hover:bg-white/5 transition-colors ${i < installations.length - 1 ? "border-b border-white/5" : ""}`}>
                             <span className="text-sm font-semibold text-white">{s.label}</span>
-                            <span className="text-xs text-white/50 mt-0.5">{s.desc}</span>
+                            <span className="text-xs text-white/70 mt-0.5">{s.desc}</span>
                           </Link>
                         ))}
                       </motion.div>
@@ -214,7 +213,7 @@ export default function Navbar() {
                   href={link.href}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     pathname === link.href
-                      ? "text-[#E50914]"
+                      ? "text-brand-bright"
                       : "text-white/80 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -265,7 +264,7 @@ export default function Navbar() {
                 {navLinks.map((link) =>
                   link.hasDropdown === "services" ? (
                     <div key={link.href}>
-                      <p className="px-3 py-2 text-xs font-bold text-white/30 uppercase tracking-widest mt-3 mb-1">
+                      <p className="px-3 py-2 text-xs font-bold text-white/65 uppercase tracking-widest mt-3 mb-1">
                         TV Services
                       </p>
                       {services.map((s) => (
@@ -278,7 +277,7 @@ export default function Navbar() {
                     </div>
                   ) : link.hasDropdown === "installations" ? (
                     <div key={link.href}>
-                      <p className="px-3 py-2 text-xs font-bold text-white/30 uppercase tracking-widest mt-3 mb-1">
+                      <p className="px-3 py-2 text-xs font-bold text-white/65 uppercase tracking-widest mt-3 mb-1">
                         Home Installations
                       </p>
                       {installations.map((s) => (
@@ -293,7 +292,7 @@ export default function Navbar() {
                     <Link key={link.href} href={link.href}
                       className={`block px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                         pathname === link.href
-                          ? "text-[#E50914] bg-red-500/10"
+                          ? "text-brand-bright bg-red-500/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
                       }`}>
                       {link.label}

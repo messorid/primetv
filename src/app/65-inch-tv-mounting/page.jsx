@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import PriceDisclaimer from "../components/PriceDisclaimer"
 import {
   SeoBreadcrumb, SeoHero, Eyebrow, FaqAccordion, CityLinkBand,
@@ -36,7 +35,7 @@ export const metadata = {
   alternates: { canonical: URL },
 }
 
-export const viewport = { width: "device-width", initialScale: 1, maximumScale: 1 }
+export const viewport = { width: "device-width", initialScale: 1 }
 
 const FAQS = [
   {
@@ -194,7 +193,7 @@ export default function Size65Page() {
 
           <SizeModelTable rows={rows} />
 
-          <p className="mt-4 text-xs text-black/45 leading-relaxed max-w-2xl">
+          <p className="mt-4 text-xs text-muted leading-relaxed max-w-2xl">
             Samsung The Frame is quoted individually rather than at the rates above — see the{" "}
             <Link href="/samsung-frame-tv-installation-nashville" className="text-[#E50914] font-semibold hover:underline">
               Frame TV installation page
@@ -243,7 +242,6 @@ export default function Size65Page() {
       />
 
       <AffiliationFootnote />
-      <StickyActionBar />
     </>
   )
 }

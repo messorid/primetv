@@ -1,4 +1,9 @@
+// Specialty TV services and the brand and size guides, as plain links. The
+// city links that used to sit here now live in the service area section,
+// next to the ZIP check, so each area is linked once on the page.
 import Link from "next/link"
+import { BRANDS, SIZES } from "../lib/tvModels"
+import { Section, SectionHeader } from "./ui/Section"
 
 const SERVICES = [
   {
@@ -27,78 +32,49 @@ const SERVICES = [
   },
 ]
 
-const CITIES = [
-  { href: "/tv-mounting-brentwood",     label: "Brentwood" },
-  { href: "/tv-mounting-franklin",      label: "Franklin" },
-  { href: "/tv-mounting-murfreesboro",  label: "Murfreesboro" },
-  { href: "/tv-mounting-hendersonville",label: "Hendersonville" },
-  { href: "/tv-mounting-mount-juliet",  label: "Mount Juliet" },
-  { href: "/tv-mounting-smyrna",        label: "Smyrna" },
-  { href: "/tv-mounting-gallatin",      label: "Gallatin" },
-  { href: "/tv-mounting-nolensville",   label: "Nolensville" },
-  { href: "/tv-mounting-spring-hill",   label: "Spring Hill" },
-  { href: "/",     label: "Nashville" },
+const GUIDES = [
+  ...BRANDS.map(b => ({ label: `${b.name} TVs`, href: b.path })),
+  { label: "OLED TVs", href: "/oled-tv-mounting" },
+  ...SIZES.map(z => ({ label: `${z.inches}-inch TVs`, href: z.path })),
 ]
 
 export default function InternalLinksHub() {
   return (
-    <section className="w-full bg-white py-16 border-t border-black/[0.06]">
-      <div className="max-w-6xl mx-auto px-5 md:px-6">
+    <Section id="specialty" labelledBy="specialty-title">
+      <SectionHeader id="specialty-title" eyebrow="Specialty installs" title="Got a special setup?"
+        sub="Frame TVs, fireplaces, hidden cables and soundbars each have their own page with the details." />
 
-        {/* header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-black">
-              Explore Our Services & Areas
-            </h2>
-            <p className="mt-1 text-black/55 text-sm">
-              Specialized TV installation services and local coverage across Nashville metro.
-            </p>
-          </div>
-          <Link
-            href="/services"
-            className="self-start sm:self-auto text-sm font-semibold text-[#E50914] hover:underline underline-offset-2 whitespace-nowrap"
-          >
-            View all services →
-          </Link>
-        </div>
-
-        {/* services grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {SERVICES.map(s => (
-            <Link
-              key={s.href}
-              href={s.href}
-              className="group rounded-2xl border border-black/10 bg-gray-50 p-5 hover:border-[#E50914]/40 hover:bg-red-50/30 hover:shadow-md transition-all"
-            >
-              <span className="text-2xl">{s.icon}</span>
-              <h3 className="mt-2 font-bold text-black group-hover:text-[#E50914] transition-colors">
-                {s.title}
-              </h3>
-              <p className="mt-1 text-xs text-black/55 leading-relaxed">{s.desc}</p>
+      <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {SERVICES.map(sv => (
+          <li key={sv.href}>
+            <Link href={sv.href} className="group flex h-full items-start gap-4 rounded-2xl border border-zinc-200 bg-white p-5 transition-colors hover:border-ink lg:flex-col lg:gap-0">
+              <span aria-hidden="true" className="flex size-12 flex-none items-center justify-center rounded-xl bg-soft text-2xl">{sv.icon}</span>
+              <span className="min-w-0 lg:mt-3">
+                <span className="block text-lg font-bold text-ink group-hover:text-brand-dark">{sv.title}</span>
+                <span className="mt-1 block text-base text-body">{sv.desc}</span>
+              </span>
             </Link>
-          ))}
-        </div>
+          </li>
+        ))}
+      </ul>
 
-        {/* divider */}
-        <div className="border-t border-black/[0.06] pt-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-black/40 mb-4">
-            Service Areas Near Nashville
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {CITIES.map(c => (
-              <Link
-                key={c.href}
-                href={c.href}
-                className="rounded-full border border-black/10 bg-gray-50 px-4 py-2 text-sm font-semibold text-black/70 hover:border-[#E50914]/50 hover:text-[#E50914] transition-all"
-              >
-                TV Mounting {c.label}
+      <nav aria-label="Mounting guides by TV brand and size" className="mt-8">
+        <h3 className="text-base font-bold text-ink">Mounting guides by brand and size</h3>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {GUIDES.map(g => (
+            <li key={g.href}>
+              <Link href={g.href} className="inline-flex min-h-[44px] items-center rounded-full border-2 border-zinc-300 px-4 text-base font-semibold text-ink hover:border-ink">
+                {g.label}
               </Link>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </section>
+            </li>
+          ))}
+          <li>
+            <Link href="/services" className="inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
+              All services
+            </Link>
+          </li>
+        </ul>
+      </nav>
+    </Section>
   )
 }

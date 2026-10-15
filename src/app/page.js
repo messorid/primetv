@@ -1,16 +1,14 @@
-﻿import FaqsSection from "./components/FaqsSection";
-import HeroSection from "./components/HeroSection";
-import PricingSection from "./components/PricingSection";
+﻿import HeroSection from "./components/HeroSection";
 import ServicesSection from "./components/ServicesSection";
+import PricingSection from "./components/PricingSection";
 import BookingSteps from "./components/BookingSteps";
-import StickyActionBar from "./components/StickyActionBar";
-import CoverageMap from "./components/CoverageMap";
-import WhyChooseSection from "./components/WhyChooseSection";
 import GallerySection from "./components/GallerySection";
-import QuickQuoteForm from "./components/QuickQuoteForm";
-import InternalLinksHub from "./components/InternalLinksHub";
+import WhyChooseSection from "./components/WhyChooseSection";
 import MoreThanTVSection from "./components/MoreThanTVSection";
-import CrossSellSection from "./components/CrossSellSection";
+import CoverageMap from "./components/CoverageMap";
+import InternalLinksHub from "./components/InternalLinksHub";
+import FaqsSection from "./components/FaqsSection";
+import QuickQuoteForm from "./components/QuickQuoteForm";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
 export const metadata = {
@@ -56,11 +54,11 @@ export const metadata = {
 };
 
 // 📱 OPTIMIZACIÓN DE VIEWPORT (Next.js App Router Standard)
+// No maximumScale: pinch-to-zoom must stay available (WCAG 1.4.4).
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#E50914", // Color sugerido para la barra del navegador en móviles
+  themeColor: "#E50914",
 };
 
 export default function HomePage() {
@@ -103,24 +101,22 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Contenedor principal semántico */}
-      <main className="flex min-h-screen flex-col w-full overflow-hidden bg-white">
+      {/* The order follows the visitor's questions: what and how much,
+          how it works, proof, what else, where, doubts, then the quote. The
+          site's <main> wraps this, so this is a plain container. */}
+      <div className="flex w-full flex-col overflow-hidden bg-white">
         <HeroSection />
         <ServicesSection />
-        <WhyChooseSection />
-        <GallerySection />
         <PricingSection />
         <BookingSteps />
-        <CrossSellSection />
+        <GallerySection />
+        <WhyChooseSection />
         <MoreThanTVSection />
         <CoverageMap />
         <InternalLinksHub />
-        <QuickQuoteForm />
         <FaqsSection />
-      </main>
-
-      {/* Interfaz Global fuera del tag <main> por semántica HTML5 */}
-      <StickyActionBar />
+        <QuickQuoteForm />
+      </div>
     </>
   );
 }

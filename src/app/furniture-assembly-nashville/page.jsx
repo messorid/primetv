@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 
 export const metadata = {
   title: "Furniture Assembly Nashville TN | PrimeTvNashville",
@@ -201,7 +200,6 @@ export default function FurnitureAssemblyPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

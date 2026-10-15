@@ -114,7 +114,7 @@ export default function CityFaqSection({ city }) {
         <h2 className="text-2xl md:text-3xl font-extrabold text-black">
           Common Questions About Our Service in This Area
         </h2>
-        <p className="mt-1 text-black/55 text-sm">Quick answers for local homeowners and renters.</p>
+        <p className="mt-1 text-muted text-sm">Quick answers for local homeowners and renters.</p>
 
         <div className="mt-7 grid gap-3">
           {faqs.map((faq, i) => (

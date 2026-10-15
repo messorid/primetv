@@ -161,14 +161,31 @@ export default function QuickQuoteForm({ onSubmitted }) {
 
   const tabClass = active =>
     `min-h-[56px] px-3 text-[15px] font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-white/60 ${
-      active ? "bg-[#E50914] text-white" : "bg-white text-black/55 hover:bg-black/[0.03] hover:text-black"
+      active ? "bg-[#E50914] text-white" : "bg-white text-muted hover:bg-black/[0.03] hover:text-black"
     }`
 
   return (
-    <section id="quick-quote" className="relative w-full bg-gray-50 py-14 text-black sm:py-16">
-      <div aria-hidden="true" className="absolute left-1/2 top-0 h-[350px] w-[700px] max-w-full -translate-x-1/2 bg-red-500/10 blur-3xl" />
+    <section id="quick-quote" aria-labelledby="quick-quote-title" className="w-full bg-soft py-14 text-black sm:py-20">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,34rem)] lg:gap-14">
+        {/* What happens when you send it, beside the form on wide screens. */}
+        <div className="lg:pt-6">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-dark">Free quote</p>
+          <h2 id="quick-quote-title" className="mt-2 text-[1.85rem] leading-tight sm:text-4xl font-extrabold tracking-tight text-ink">
+            Get your price in a minute
+          </h2>
+          <p className="mt-3 text-lg leading-relaxed text-body">
+            Answer a few quick questions and we reply with your price and the times we have available.
+            No payment is needed to ask.
+          </p>
+          <p className="mt-5 text-base text-body">
+            Rather talk to someone?{" "}
+            <a href="tel:+16156690251" className="font-bold text-ink underline decoration-brand decoration-2 underline-offset-4">Call (615) 669-0251</a>
+            {" "}or{" "}
+            <a href="sms:+16156690251" className="font-bold text-ink underline decoration-brand decoration-2 underline-offset-4">text us</a>.
+          </p>
+        </div>
 
-      <div className="relative mx-auto max-w-xl px-4 sm:px-5">
+        <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -278,7 +295,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
                   before any work begins.
                 </p>
               </div>
-              <p className="mt-3 text-[13px] leading-relaxed text-black/55">
+              <p className="mt-3 text-[13px] leading-relaxed text-muted">
                 Drywall has no extra charge. Concrete, tile, stone or metal starts at a $25 surcharge.
                 Cable concealment from $60 per TV. Fireplace handling from $25 extra.
                 Samsung Frame TV and mantel mounts are quoted separately.
@@ -350,6 +367,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
             </form>
           )}
         </motion.div>
+        </div>
       </div>
     </section>
   )

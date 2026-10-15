@@ -38,7 +38,7 @@ export function PhotoStrip({ heading, intro, photos, priority = false }) {
           ))}
         </div>
 
-        <p className="mt-4 text-[11px] text-black/40">
+        <p className="mt-4 text-[11px] text-muted">
           Photos of our own installations in Nashville and Middle Tennessee.
         </p>
       </div>
@@ -48,7 +48,7 @@ export function PhotoStrip({ heading, intro, photos, priority = false }) {
 
 export function SeoBreadcrumb({ trail }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-black/40">
+    <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-muted">
       <Link href="/" className="hover:text-[#E50914] transition">Home</Link>
       {trail.map((t, i) => (
         <span key={t.label} className="flex items-center gap-1.5">
@@ -95,7 +95,7 @@ export function SeoHero({ eyebrow, title, accent, lead, body, facts,
           <div className="mt-10 grid sm:grid-cols-3 gap-4">
             {facts.map(f => (
               <div key={f.label} className="rounded-2xl border border-black/10 bg-gray-50 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-black/35">{f.label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted">{f.label}</p>
                 <p className="mt-1 text-sm font-extrabold text-black">{f.value}</p>
               </div>
             ))}
@@ -173,11 +173,11 @@ export function RelatedLinks({ heading, intro, links }) {
               href={l.href}
               className="group rounded-2xl border border-black/10 bg-white p-5 hover:border-[#E50914]/30 hover:shadow-md transition-all"
             >
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">{l.kicker}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{l.kicker}</span>
               <h3 className="mt-1 text-sm font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
                 {l.title}
               </h3>
-              {l.desc && <p className="mt-2 text-xs text-black/55 leading-relaxed">{l.desc}</p>}
+              {l.desc && <p className="mt-2 text-xs text-muted leading-relaxed">{l.desc}</p>}
               <span className="mt-3 block text-xs font-semibold text-[#E50914]">Read more →</span>
             </Link>
           ))}
@@ -221,7 +221,7 @@ export function AffiliationFootnote({ text = AFFILIATION_NOTE }) {
   return (
     <section className="w-full bg-white py-8 border-t border-black/[0.06]">
       <div className="max-w-5xl mx-auto px-5 md:px-6">
-        <p className="text-[11px] leading-relaxed text-black/40">{text}</p>
+        <p className="text-[11px] leading-relaxed text-muted">{text}</p>
       </div>
     </section>
   )
@@ -237,23 +237,23 @@ export function SizeModelTable({ rows }) {
           <caption className="sr-only">Popular TV models we mount at this size</caption>
           <thead>
             <tr className="bg-gray-50 text-left">
-              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black/40">Brand</th>
-              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black/40">Model</th>
-              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black/40">Panel</th>
-              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black/40">Model code</th>
+              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted">Brand</th>
+              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted">Model</th>
+              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted">Panel</th>
+              <th scope="col" className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted">Model code</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-black/[0.06]">
             {rows.map(r => (
               <tr key={r.id} className="hover:bg-gray-50/70 transition">
-                <td className="px-4 py-3 text-black/50 whitespace-nowrap">{r.brand}</td>
+                <td className="px-4 py-3 text-muted whitespace-nowrap">{r.brand}</td>
                 <td className="px-4 py-3 font-semibold text-black">
                   {r.href
                     ? <Link href={r.href} className="hover:text-[#E50914] transition">{r.model}</Link>
                     : r.model}
                 </td>
-                <td className="px-4 py-3 text-black/55 whitespace-nowrap">{r.panel}</td>
-                <td className="px-4 py-3 text-black/55 font-mono text-xs whitespace-nowrap">{r.code || "—"}</td>
+                <td className="px-4 py-3 text-muted whitespace-nowrap">{r.panel}</td>
+                <td className="px-4 py-3 text-muted font-mono text-xs whitespace-nowrap">{r.code || "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -284,19 +284,19 @@ export function SeriesCard({ s, code, guideHref, sizesLabel }) {
     <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <h3 className="font-extrabold text-black leading-snug">{s.name}</h3>
-        <span className="shrink-0 rounded-full border border-black/10 bg-gray-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black/50">
+        <span className="shrink-0 rounded-full border border-black/10 bg-gray-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
           {s.panel}
         </span>
       </div>
 
       <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">
         <div>
-          <dt className="inline text-black/40 font-semibold">Sizes: </dt>
+          <dt className="inline text-muted font-semibold">Sizes: </dt>
           <dd className="inline text-black/70 font-medium">{sizesLabel}</dd>
         </div>
         {code && (
           <div>
-            <dt className="inline text-black/40 font-semibold">Model code: </dt>
+            <dt className="inline text-muted font-semibold">Model code: </dt>
             <dd className="inline text-black/70 font-medium font-mono">{code}</dd>
           </div>
         )}

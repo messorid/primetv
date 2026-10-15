@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import { PLAYSETS } from "../lib/playsets"
 
 export const metadata = {
@@ -265,7 +264,7 @@ export default function PlaygroundInstallationPage() {
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-white p-7 shadow-sm">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-black/40 uppercase tracking-wider mb-4">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider mb-4">
                 <span className="w-2 h-2 rounded-full bg-black/30" /> We&apos;ll point you elsewhere
               </div>
               <ul className="space-y-2.5 text-sm text-black/60">
@@ -282,7 +281,7 @@ export default function PlaygroundInstallationPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-xs text-black/50 leading-relaxed">
+              <p className="mt-5 text-xs text-muted leading-relaxed">
                 Tell us the scope and we&apos;ll be straight with you about whether it is ours. We&apos;d
                 rather send you to the right trade than take a job we shouldn&apos;t.
               </p>
@@ -305,7 +304,7 @@ export default function PlaygroundInstallationPage() {
                 href={`/playset-installation-nashville/${p.slug}`}
                 className="group rounded-2xl border border-black/10 bg-gray-50 p-5 hover:border-[#E50914]/30 hover:bg-white hover:shadow-md transition-all"
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">{p.brand}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{p.brand}</span>
                 <h3 className="mt-1 text-sm font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
                   {p.name}
                 </h3>
@@ -384,7 +383,6 @@ export default function PlaygroundInstallationPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

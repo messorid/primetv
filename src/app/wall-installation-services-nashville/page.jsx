@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 
 export const metadata = {
   title: "Wall Installation Services Nashville TN | PrimeTvNashville",
@@ -214,7 +213,6 @@ export default function WallInstallationPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

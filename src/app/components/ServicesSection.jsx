@@ -1,9 +1,9 @@
-"use client"
-
+// The services, as a grid. They used to sit in a sideways slider, which hid
+// four of the six cards off-screen and could not be reached by keyboard; a
+// grid shows every price at once. On a phone each card is a compact row.
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { Section, SectionHeader } from "./ui/Section"
 
 const SERVICES = [
   {
@@ -79,264 +79,62 @@ const SERVICES = [
   },
 ]
 
-export default function ServicesSlider() {
-  const scrollerRef = useRef(null)
-  const [active, setActive] = useState(0)
-
-  useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-
-    const onScroll = () => {
-      const { scrollLeft, clientWidth } = el
-      const idx = Math.round(scrollLeft / clientWidth)
-      setActive(idx)
-    }
-
-    el.addEventListener("scroll", onScroll, { passive: true })
-    return () => el.removeEventListener("scroll", onScroll)
-  }, [])
-
-  const go = (dir) => {
-    const el = scrollerRef.current
-    if (!el) return
-
-    const width = el.clientWidth
-    const next = Math.max(0, Math.min(SERVICES.length - 1, active + dir))
-
-    el.scrollTo({
-      left: next * width,
-      behavior: "smooth"
-    })
-
-    setActive(next)
-  }
-
+export default function ServicesSection() {
   return (
-    <section id="services" className="relative w-full bg-white text-black">
+    <Section id="services" labelledBy="services-title">
+      <SectionHeader
+        id="services-title"
+        eyebrow="Services & prices"
+        title="Choose your TV installation"
+        sub="Starting prices per TV. Your final price depends on the job, the wall type and the mount — confirmed by our team before any work begins."
+      />
 
-      <div className="max-w-6xl mx-auto px-5 md:px-6 py-14 md:py-20">
+      <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        {SERVICES.map(s => <ServiceCard key={s.slug} {...s} />)}
+      </ul>
 
-        {/* title */}
-        <div className="flex items-end justify-between gap-4">
-
-          <div>
-            <h2 className="text-3xl md:text-4xl font-extrabold">
-              Our Services
-            </h2>
-
-            <p className="mt-2 text-black/70">
-              Choose a service and book in minutes
-            </p>
-            <p className="mt-1.5 text-xs text-black/45 max-w-md">
-              Starting prices. Final cost depends on the difficulty of the job, the wall type and
-              the mount installed — mantel mounts are priced separately. Confirmed by our sales team.
-            </p>
-          </div>
-
-          {/* arrows */}
-          <div className="hidden md:flex items-center gap-2">
-
-            <button
-              onClick={() => go(-1)}
-              className="h-10 w-10 grid place-content-center rounded-full border border-black/15 hover:bg-black/5 transition"
-            >
-              ←
-            </button>
-
-            <button
-              onClick={() => go(1)}
-              className="h-10 w-10 grid place-content-center rounded-full bg-[#E50914] text-white hover:opacity-90 transition"
-            >
-              →
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* swipe hint */}
-        <div className="mt-3 md:hidden flex items-center gap-2 text-sm text-black/60">
-          <span>Swipe to explore services</span>
-        </div>
-
-        {/* slider */}
-        <div
-          ref={scrollerRef}
-          className="mt-8 snap-x snap-mandatory overflow-x-auto flex gap-3 no-scrollbar"
-        >
-
-          {SERVICES.map((s) => (
-            <article
-              key={s.slug}
-              className="snap-start shrink-0 w-[85%] sm:w-[60%] md:w-[48%] lg:w-[32%]"
-            >
-              <ServiceCard {...s} />
-            </article>
-          ))}
-
-        </div>
-
-        {/* dots */}
-        <div className="mt-6 flex justify-center gap-2 md:hidden">
-
-          {SERVICES.map((_, i) => (
-            <span
-              key={i}
-              className={`h-2 w-2 rounded-full transition ${
-                i === active
-                  ? "bg-[#E50914]"
-                  : "bg-black/20"
-              }`}
-            />
-          ))}
-
-        </div>
-
-        {/* bottom CTA */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-
-          <Link
-            href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-7 py-4 font-semibold text-white transition hover:shadow-lg hover:shadow-red-500/30"
-          >
-            Book installation
-          </Link>
-
-          <Link
-            href="#quote"
-            className="inline-flex items-center justify-center rounded-full border border-black/15 px-7 py-4 font-semibold text-black hover:bg-black/5 transition"
-          >
-            Get quick quote
-          </Link>
-
-        </div>
-
-        {/* note */}
-        <p className="mt-4 text-xs text-black/60">
-          Prices do not include the bracket mount. We do not sell mounts but we help you find the correct model
-        </p>
-
-      </div>
-
-    </section>
+      <p className="mt-6 text-sm text-muted">
+        Prices do not include the bracket. We don&apos;t sell mounts, but we help you choose the right one for your TV and wall.
+        Pull-down mantel mounts and Samsung Frame TVs are quoted separately.
+      </p>
+    </Section>
   )
 }
 
-
-
-function ServiceCard({
-  title,
-  desc,
-  img,
-  priceLabel,
-  time,
-  notes = [],
-  slug,
-  highlight = false,
-  addon = false,
-  promo = false,
-  ctaLabel = "Learn more",
-  href = `/services/${slug}`,
-}) {
-
+function ServiceCard({ slug, title, desc, img, priceLabel, time, notes = [], promo, addon, highlight }) {
+  const tag = promo ? "Promo" : addon ? "Add-on" : highlight ? "Most booked" : null
+  const cta = promo ? "Book this promo" : addon ? "Add to a booking" : "Book this service"
   return (
-
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.25 }}
-      className={`group relative h-full rounded-2xl border ${
-        highlight
-          ? "border-[#E50914]"
-          : "border-black/10"
-      } bg-white shadow-sm hover:shadow-xl transition overflow-hidden`}
-    >
-
-      <div className="relative aspect-[4/3]">
-
-        <Image
-          src={img}
-          alt={title}
-          fill
-          sizes="(max-width:768px) 88vw, (max-width:1024px) 60vw, 33vw"
-          className="object-cover transition duration-500 group-hover:scale-105"
-        />
-
-        {/* badges */}
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-
-          <span className="rounded-full bg-[#E50914] text-white text-xs font-semibold px-3 py-1 shadow">
-            {priceLabel}
-          </span>
-
-          {addon && (
-            <span className="rounded-full bg-black/80 text-white text-[10px] font-semibold px-2.5 py-1">
-              Add on
-            </span>
+    <li className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${highlight ? "border-brand ring-1 ring-brand" : "border-zinc-200"}`}>
+      <div className="flex gap-4 p-4 sm:block sm:p-0">
+        {/* Photo: a thumbnail on phones, the card's top on wider screens. */}
+        <div className="relative size-24 flex-none overflow-hidden rounded-xl bg-zinc-100 sm:aspect-[16/10] sm:size-auto sm:w-full sm:rounded-none">
+          <Image src={img} alt="" fill sizes="(max-width:640px) 96px, (max-width:1024px) 50vw, 33vw" className="object-cover" />
+          {tag && (
+            <span className="absolute left-2 top-2 hidden rounded-full bg-ink px-2.5 py-1 text-xs font-bold text-white sm:inline-block">{tag}</span>
           )}
-
-          {promo && (
-            <span className="rounded-full bg-black/80 text-white text-[10px] font-semibold px-2.5 py-1">
-              Promo
-            </span>
-          )}
-
-          {highlight && (
-            <span className="rounded-full bg-black/80 text-white text-[10px] font-semibold px-2.5 py-1">
-              Most selected
-            </span>
-          )}
-
         </div>
-
+        <div className="min-w-0 sm:p-5 sm:pb-0">
+          {tag && <p className="text-xs font-bold uppercase tracking-wide text-brand-dark sm:hidden">{tag}</p>}
+          <h3 className="text-lg font-extrabold leading-snug text-ink">{title}</h3>
+          <p className="mt-1 text-xl font-black text-brand-dark">{priceLabel}</p>
+          <p className="mt-1 text-sm text-body">{desc}</p>
+        </div>
       </div>
-
-      <div className="p-5">
-
-        <h3 className="text-lg font-bold">
-          {title}
-        </h3>
-
-        <p className="mt-1 text-sm text-black/70">
-          {desc}
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-black/60">
-
-          <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-black/60"/>
-            {time}
-          </span>
-
-          {notes.map((n, i) => (
-            <span key={i} className="inline-flex items-center gap-1">
-              • {n}
-            </span>
-          ))}
-
-        </div>
-
-        <div className="mt-4 flex items-center gap-2">
-
-          <Link
-            href={href}
-            className="inline-flex items-center justify-center rounded-full border border-black/15 px-4 py-2 text-sm font-semibold hover:bg-black/5 transition"
-          >
-            {ctaLabel}
-          </Link>
-
-          <Link
-            href={`/book?service=${encodeURIComponent(slug)}`}
-            className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
-          >
-            Book
-          </Link>
-
-        </div>
-
+      <div className="mt-auto px-4 pb-4 sm:px-5 sm:pb-5">
+        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted sm:mt-3">
+          {time && <li>⏱ {time}</li>}
+          {notes.map(n => <li key={n} className="hidden sm:list-item">{n}</li>)}
+        </ul>
+        <Link
+          href={`/book?service=${encodeURIComponent(slug)}`}
+          className={`flex min-h-[48px] items-center justify-center rounded-full px-5 text-base font-bold transition-colors ${
+            promo || highlight ? "bg-brand text-white hover:bg-brand-dark" : "border-2 border-zinc-300 text-ink hover:border-ink"
+          }`}
+        >
+          {cta}<span className="sr-only">: {title}</span>
+        </Link>
       </div>
-
-    </motion.div>
-
+    </li>
   )
 }

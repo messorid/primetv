@@ -1,5 +1,4 @@
 import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import { GAZEBOS, GAZEBO_BRANDS, gazeboTime, gazeboRoofLabel } from "../lib/gazebos"
 
 export const metadata = {
@@ -128,7 +127,7 @@ export default function GazeboInstallationPage() {
 
           {/* Brands row */}
           <div className="mt-10 flex flex-wrap gap-2">
-            <p className="text-xs font-semibold text-black/40 mr-1 self-center">Brands we assemble:</p>
+            <p className="text-xs font-semibold text-muted mr-1 self-center">Brands we assemble:</p>
             {BRANDS.map((b) => (
               <span key={b} className="text-xs font-medium border border-black/10 rounded-full px-3 py-1 text-black/60">
                 {b}
@@ -154,13 +153,13 @@ export default function GazeboInstallationPage() {
                 href={`/gazebo-installation-nashville/${g.slug}`}
                 className="group flex flex-col rounded-2xl border border-black/10 bg-white p-5 shadow-sm hover:border-[#E50914]/30 hover:shadow-lg transition-all"
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted">
                   {g.brand} · {g.size}
                 </span>
                 <h3 className="mt-1 text-base font-extrabold text-black group-hover:text-[#E50914] transition-colors leading-snug">
                   {g.name}
                 </h3>
-                <p className="mt-2 text-xs text-black/50">
+                <p className="mt-2 text-xs text-muted">
                   {gazeboRoofLabel(g.roof)} · approx. {gazeboTime(g.tier).split(",")[0]}
                 </p>
                 <span className="mt-4 text-sm font-semibold text-[#E50914] flex items-center gap-1 group-hover:gap-2 transition-all">
@@ -268,7 +267,6 @@ export default function GazeboInstallationPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

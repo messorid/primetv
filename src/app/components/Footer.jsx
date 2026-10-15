@@ -48,6 +48,7 @@ const legalLinks = [
   { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Cookies Policy", href: "/cookies-policy" },
+  { label: "Accessibility", href: "/accessibility" },
 ]
 
 export default function Footer() {
@@ -59,7 +60,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-5">
           <div>
             <p className="text-lg font-black text-white">Ready to mount your TV?</p>
-            <p className="text-sm text-white/50 mt-0.5">Same-day availability across Greater Nashville.</p>
+            <p className="text-sm text-white/70 mt-0.5">Same-day availability across Greater Nashville.</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
@@ -93,26 +94,26 @@ export default function Footer() {
               </svg>
             </div>
             <span className="text-base font-extrabold text-white tracking-tight">
-              PrimeTv<span className="text-[#E50914]">Nashville</span>
+              PrimeTv<span className="text-brand-bright">Nashville</span>
             </span>
           </Link>
 
-          <p className="mt-4 text-sm text-white/45 leading-relaxed max-w-xs">
+          <p className="mt-4 text-sm text-white/70 leading-relaxed max-w-xs">
             Professional TV mounting and home theater installation across Nashville and all surrounding cities in Tennessee.
           </p>
 
           {/* Contact info */}
           <div className="mt-6 space-y-2.5">
             <a href="tel:+16156690251" className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition">
-              <Phone size={13} className="text-[#E50914] shrink-0" />
+              <Phone size={13} className="text-brand-bright shrink-0" />
               (615) 669-0251
             </a>
             <a href="mailto:info@primetvnashville.com" className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition">
-              <Mail size={13} className="text-[#E50914] shrink-0" />
+              <Mail size={13} className="text-brand-bright shrink-0" />
               info@primetvnashville.com
             </a>
             <span className="flex items-center gap-2.5 text-sm text-white/60">
-              <MapPin size={13} className="text-[#E50914] shrink-0" />
+              <MapPin size={13} className="text-brand-bright shrink-0" />
               Nashville, Tennessee
             </span>
           </div>
@@ -124,7 +125,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"
-              className="flex items-center justify-center size-9 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/5 transition"
+              className="flex items-center justify-center size-9 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/25 hover:bg-white/5 transition"
             >
               <Facebook size={15} />
             </a>
@@ -133,7 +134,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="flex items-center justify-center size-9 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/5 transition"
+              className="flex items-center justify-center size-9 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/25 hover:bg-white/5 transition"
             >
               <Instagram size={15} />
             </a>
@@ -142,11 +143,11 @@ export default function Footer() {
 
         {/* COL 2 — Services */}
         <div>
-          <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">Services</h3>
+          <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">Services</h3>
           <ul className="space-y-2.5">
             {serviceLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                <Link href={l.href} className="text-sm text-white/75 hover:text-white transition flex items-center gap-2 group">
                   <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
                   {l.label}
                 </Link>
@@ -154,11 +155,11 @@ export default function Footer() {
             ))}
           </ul>
 
-          <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mt-8 mb-4">Company</h3>
+          <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mt-8 mb-4">Company</h3>
           <ul className="space-y-2.5">
             {quickLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                <Link href={l.href} className="text-sm text-white/75 hover:text-white transition flex items-center gap-2 group">
                   <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
                   {l.label}
                 </Link>
@@ -169,26 +170,26 @@ export default function Footer() {
 
         {/* COL 3 — Areas */}
         <div>
-          <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">Areas We Serve</h3>
+          <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">Areas We Serve</h3>
           <ul className="space-y-2.5">
             {areaLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                <Link href={l.href} className="text-sm text-white/75 hover:text-white transition flex items-center gap-2 group">
                   <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
                   {l.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <Link href="/services" className="mt-4 inline-flex items-center text-xs text-[#E50914] hover:text-red-400 transition font-semibold gap-1">
+          <Link href="/services" className="mt-4 inline-flex items-center text-xs text-brand-bright hover:text-red-400 transition font-semibold gap-1">
             View all areas →
           </Link>
         </div>
 
         {/* COL 4 — Hours + Trust */}
         <div>
-          <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">Business Hours</h3>
-          <div className="space-y-1.5 text-sm text-white/55">
+          <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">Business Hours</h3>
+          <div className="space-y-1.5 text-sm text-white/75">
             <div className="flex justify-between gap-4">
               <span>Mon – Fri</span>
               <span className="text-white/80 font-medium">8 AM – 6 PM</span>
@@ -199,7 +200,7 @@ export default function Footer() {
             </div>
             <div className="flex justify-between gap-4">
               <span>Sunday</span>
-              <span className="text-white/40">Closed</span>
+              <span className="text-white/65">Closed</span>
             </div>
           </div>
 
@@ -211,16 +212,16 @@ export default function Footer() {
               </span>
               <div>
                 <p className="text-xs font-bold text-white">4.8 / 5 Stars</p>
-                <p className="text-[10px] text-white/40">Google Reviews</p>
+                <p className="text-xs text-white/70">Google Reviews</p>
               </div>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.03] px-3.5 py-2.5">
               <span className="flex items-center justify-center size-7 rounded-lg bg-[#E50914]/15 shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5 text-[#E50914]"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5 text-brand-bright"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </span>
               <div>
                 <p className="text-xs font-bold text-white">Licensed & Insured</p>
-                <p className="text-[10px] text-white/40">Fully certified technicians</p>
+                <p className="text-xs text-white/70">Professional technicians</p>
               </div>
             </div>
           </div>
@@ -234,11 +235,11 @@ export default function Footer() {
       <div className="border-t border-white/5">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">TV Brands</h3>
+            <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">TV Brands</h3>
             <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
               {brandLinks.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                  <Link href={l.href} className="text-sm text-white/75 hover:text-white transition flex items-center gap-2 group">
                     <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
                     {l.label}
                   </Link>
@@ -248,11 +249,11 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">TV Sizes</h3>
+            <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">TV Sizes</h3>
             <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
               {sizeLinks.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/55 hover:text-white transition flex items-center gap-2 group">
+                  <Link href={l.href} className="text-sm text-white/75 hover:text-white transition flex items-center gap-2 group">
                     <span className="size-1 rounded-full bg-[#E50914] shrink-0 opacity-0 group-hover:opacity-100 transition" />
                     {l.label}
                   </Link>
@@ -265,12 +266,12 @@ export default function Footer() {
 
       {/* ── BOTTOM BAR ── */}
       <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/30">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/65">
           <p>© {new Date().getFullYear()} PrimeTvNashville. All rights reserved.</p>
 
           <div className="flex items-center gap-4">
             {legalLinks.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-white/60 transition">
+              <Link key={l.href} href={l.href} className="hover:text-white transition">
                 {l.label}
               </Link>
             ))}
@@ -282,7 +283,7 @@ export default function Footer() {
               href="https://www.boostori.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#E50914] hover:text-red-400 font-medium transition"
+              className="text-brand-bright hover:text-red-400 font-medium transition"
             >
               Boostori
             </a>

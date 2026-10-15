@@ -51,7 +51,7 @@ export function MiniCalendar({ selectedDate, minDate, onChange }) {
 
       <div className="grid grid-cols-7 mb-1">
         {DOW_HDR.map(d => (
-          <div key={d} className="text-center text-[10px] font-semibold text-black/35 py-1">{d}</div>
+          <div key={d} className="text-center text-[10px] font-semibold text-muted py-1">{d}</div>
         ))}
       </div>
 

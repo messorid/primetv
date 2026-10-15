@@ -1,126 +1,55 @@
+// Everything else we install, in one section. This replaces two that said the
+// same thing twice ("Need anything else installed?" and "More than TV
+// mounting"), and adds ceiling fans, which now have their own page.
 import Link from "next/link"
+import { Section, SectionHeader, ButtonLink } from "./ui/Section"
 
-const NEW_SERVICES = [
-  {
-    emoji: "🪑",
-    title: "Furniture Assembly",
-    desc: "Professional assembly for beds, dressers, desks, TV stands, IKEA and office furniture.",
-    tags: ["Beds & Dressers", "IKEA Furniture", "Desks & Offices", "TV Stands"],
-    href: "/furniture-assembly-nashville",
-    cta: "Explore Furniture Assembly",
-  },
-  {
-    emoji: "🪞",
-    title: "Picture & Mirror Hanging",
-    desc: "Secure, perfectly leveled installation for mirrors, artwork, gallery walls and heavy wall décor.",
-    tags: ["Mirrors", "Artwork & Pictures", "Gallery Walls", "Heavy Mirrors"],
-    href: "/picture-mirror-hanging-nashville",
-    cta: "Explore Wall Hanging Services",
-  },
-  {
-    emoji: "📐",
-    title: "Shelves & Wall Installation",
-    desc: "Floating shelves, curtain rods, blinds, whiteboards and wall-mounted cabinets installed correctly.",
-    tags: ["Floating Shelves", "Curtain Rods", "Blinds", "Whiteboards"],
-    href: "/wall-installation-services-nashville",
-    cta: "Explore Wall Installations",
-  },
-  {
-    emoji: "⛺",
-    title: "Gazebo & Pergola Assembly",
-    desc: "Expert assembly of Yardistry, Backyard Discovery, Purple Leaf and similar outdoor structures.",
-    tags: ["Gazebo Assembly", "Pergola Assembly", "Outdoor Furniture", "Backyard Structures"],
-    href: "/gazebo-installation-nashville",
-    cta: "Explore Gazebo Assembly",
-  },
-  {
-    emoji: "🛝",
-    title: "Playground & Playset Installation",
-    desc: "Backyard play areas, play structures, swing sets and trampolines assembled, anchored and safety-checked.",
-    tags: ["Play Structures", "Swing Sets", "Trampolines", "Wooden Playsets"],
-    href: "/playground-installation-nashville",
-    cta: "Explore Playground Installation",
-  },
+const SERVICES = [
+  { emoji: "🪑", title: "Furniture assembly", desc: "Beds, dressers, desks, TV stands, IKEA and office furniture.", href: "/furniture-assembly-nashville" },
+  { emoji: "🪞", title: "Picture & mirror hanging", desc: "Mirrors, artwork, gallery walls and heavy wall décor — level and secure.", href: "/picture-mirror-hanging-nashville" },
+  { emoji: "📐", title: "Shelves, rods & blinds", desc: "Floating shelves, curtain rods, blinds, whiteboards and wall cabinets.", href: "/wall-installation-services-nashville" },
+  { emoji: "🌀", title: "Ceiling fan installation", desc: "New fans and replacements on fan-rated boxes, hung level and wobble-free.", href: "/ceiling-fan-installation-nashville" },
+  { emoji: "⛺", title: "Gazebo & pergola assembly", desc: "Yardistry, Backyard Discovery, Purple Leaf and similar kits.", href: "/gazebo-installation-nashville" },
+  { emoji: "🛝", title: "Playset installation", desc: "Swing sets, play structures and trampolines, anchored and safety-checked.", href: "/playground-installation-nashville" },
 ]
 
 export default function MoreThanTVSection() {
   return (
-    <section className="w-full bg-white py-20 md:py-28" id="installation-services">
-      <div className="max-w-6xl mx-auto px-5 md:px-6">
+    <Section id="more-services" tone="soft" labelledBy="more-title">
+      <SectionHeader id="more-title" eyebrow="Home installation"
+        title="More than TV mounting"
+        sub="Add other jobs to the same visit — no second trip needed." />
 
-        {/* Header */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-black/60 mb-5">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#E50914]" />
-            Additional Services
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-black leading-tight">
-            More Than TV Mounting
-          </h2>
-          <p className="mt-4 text-base md:text-lg text-black/60 max-w-2xl mx-auto">
-            Professional installation and assembly services for your home or business.
-          </p>
-        </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-          {NEW_SERVICES.map((s) => (
-            <Link
-              key={s.href}
-              href={s.href}
-              className="group flex flex-col border border-black/10 rounded-2xl p-6 hover:border-[#E50914]/30 hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 bg-white"
-            >
-              <span className="text-3xl mb-4 block">{s.emoji}</span>
-              <h3 className="text-base font-bold text-black mb-2 group-hover:text-[#E50914] transition-colors">
-                {s.title}
-              </h3>
-              <p className="text-sm text-black/60 mb-4 leading-relaxed flex-1">{s.desc}</p>
-              <div className="flex flex-wrap gap-1.5 mb-5">
-                {s.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[11px] font-medium bg-black/5 text-black/60 px-2 py-0.5 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <span className="text-sm font-semibold text-[#E50914] flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
-                {s.cta} →
+      <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {SERVICES.map(s => (
+          <li key={s.title}>
+            <Link href={s.href}
+              className="group flex h-full items-start gap-4 rounded-2xl border border-zinc-200 bg-white p-5 transition-colors hover:border-ink">
+              <span aria-hidden="true" className="flex size-12 flex-none items-center justify-center rounded-xl bg-soft text-2xl">{s.emoji}</span>
+              <span className="min-w-0">
+                <span className="block text-lg font-bold text-ink group-hover:text-brand-dark">{s.title}</span>
+                <span className="mt-1 block text-base text-body">{s.desc}</span>
               </span>
             </Link>
-          ))}
-        </div>
+          </li>
+        ))}
+      </ul>
 
-        {/* See all */}
-        <div className="text-center mb-14">
-          <Link
-            href="/home-installation-services-nashville"
-            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-6 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-white transition-all"
-          >
-            View All Installation Services →
-          </Link>
-        </div>
-
-        {/* Commercial teaser */}
-        <div className="rounded-2xl bg-black text-white p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="flex-1">
-            <p className="text-[10px] font-bold tracking-widest text-white/40 uppercase mb-2">For Businesses</p>
-            <h3 className="text-xl md:text-2xl font-extrabold mb-2">Commercial Installation Services</h3>
-            <p className="text-white/60 text-sm leading-relaxed max-w-xl">
-              Office furniture assembly, commercial TV mounting, display installation, conference room whiteboards,
-              artwork and shelving. We serve businesses throughout Nashville and Middle Tennessee.
-            </p>
-          </div>
-          <Link
-            href="/home-installation-services-nashville#commercial"
-            className="shrink-0 inline-flex items-center gap-2 rounded-full bg-[#E50914] px-6 py-3 text-sm font-bold text-white hover:bg-red-700 transition shadow-lg shadow-red-500/30"
-          >
-            Request a Commercial Quote
-          </Link>
-        </div>
-
+      <div className="mt-6">
+        <ButtonLink href="/home-installation-services-nashville" variant="secondary">See all home installation services</ButtonLink>
       </div>
-    </section>
+
+      <div className="mt-10 flex flex-col items-start gap-5 rounded-3xl bg-ink p-7 text-white md:flex-row md:items-center md:p-9">
+        <div className="flex-1">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-bright">For businesses</p>
+          <h3 className="mt-2 text-2xl font-extrabold">Commercial installation</h3>
+          <p className="mt-2 max-w-xl text-base text-white/80">
+            Commercial TV mounting, displays, office furniture, conference-room whiteboards, artwork and shelving
+            for businesses across Nashville and Middle Tennessee.
+          </p>
+        </div>
+        <ButtonLink href="/home-installation-services-nashville#commercial">Request a commercial quote</ButtonLink>
+      </div>
+    </Section>
   )
 }

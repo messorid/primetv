@@ -1,6 +1,7 @@
-"use client"
-
-import { motion } from "framer-motion"
+// Why choose us: six points, each something a customer can hold us to.
+// Dark band so the page has a change of pace halfway down; every text colour
+// on it is at least 7:1.
+import { Section, SectionHeader } from "./ui/Section"
 
 const BENEFITS = [
   {
@@ -37,82 +38,31 @@ const BENEFITS = [
 
 export default function WhyChooseSection() {
   return (
-    <section
-      id="why-choose"
-      className="relative w-full bg-black text-white overflow-hidden"
-    >
-
-      {/* background glow */}
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 top-0 w-[900px] h-[400px] bg-red-600/20 blur-3xl"
-      />
-
-      <div className="relative max-w-6xl mx-auto px-5 md:px-6 py-16 md:py-20">
-
-        {/* header */}
-        <header className="max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-extrabold">
-            Why choose PrimeTv Nashville
-          </h2>
-
-          <p className="mt-2 text-white/70">
-            Trusted TV mounting with clear pricing and careful workmanship
-          </p>
-        </header>
-
-        {/* benefits grid */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-          {BENEFITS.map((b, i) => (
-
-            <motion.article
-              key={b.title}
-              initial={{ y: 30, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 hover:bg-white/10 transition"
-            >
-
-              <div className="flex items-start gap-4">
-
-                {/* icon */}
-                <div className="grid h-12 w-12 place-content-center rounded-xl bg-[#E50914] text-white shadow-lg group-hover:scale-110 transition">
-                  <b.icon />
-                </div>
-
-                <div>
-
-                  <h3 className="text-lg font-bold">
-                    {b.title}
-                  </h3>
-
-                  <p className="mt-1 text-sm text-white/70">
-                    {b.desc}
-                  </p>
-
-                </div>
-
+    <Section id="why-choose" tone="dark" labelledBy="why-title">
+      <SectionHeader id="why-title" tone="dark" eyebrow="Why PrimeTvNashville"
+        title="Careful work, clear prices"
+        sub="Trusted TV mounting with upfront pricing and workmanship we stand behind." />
+      <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {BENEFITS.map(b => {
+          const Icon = b.icon
+          return (
+            <li key={b.title} className="flex gap-4 rounded-2xl border border-white/15 bg-white/[0.04] p-5">
+              <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-xl bg-brand text-white">
+                <Icon />
+              </span>
+              <div>
+                <h3 className="text-lg font-bold text-white">{b.title}</h3>
+                <p className="mt-1 text-base text-white/80">{b.desc}</p>
               </div>
-
-              {/* glow border */}
-              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-[#E50914]/40 transition" />
-
-            </motion.article>
-
-          ))}
-
-        </div>
-
-      </div>
-
-    </section>
+            </li>
+          )
+        })}
+      </ul>
+    </Section>
   )
 }
 
-
-/* Icons */
+/* ICONS */
 
 function LicenseIcon() {
   return (

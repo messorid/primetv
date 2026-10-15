@@ -1,5 +1,4 @@
 ﻿import Link from "next/link"
-import StickyActionBar from "../components/StickyActionBar"
 import FaqsSection from "../components/FaqsSection"
 
 export const metadata = {
@@ -187,7 +186,7 @@ export default function SamsungFrameInstallPage() {
               <div key={p.service} className="rounded-2xl border border-black/10 bg-gray-50 p-5">
                 <p className="text-sm font-semibold text-black/70">{p.service}</p>
                 <p className="mt-1 text-xl font-black text-[#E50914]">{p.price}</p>
-                <p className="mt-1 text-xs text-black/45">{p.note}</p>
+                <p className="mt-1 text-xs text-muted">{p.note}</p>
               </div>
             ))}
           </div>
@@ -280,7 +279,6 @@ export default function SamsungFrameInstallPage() {
         </div>
       </section>
 
-      <StickyActionBar />
     </>
   )
 }

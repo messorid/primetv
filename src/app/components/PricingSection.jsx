@@ -1,311 +1,138 @@
-"use client"
-
+// Pricing: the two base prices, the add-ons as a plain table, the current
+// promotions, and the fine print folded into "Good to know" so it is there for
+// anyone who wants it without pushing the prices off the screen.
 import Link from "next/link"
-import { motion } from "framer-motion"
 import PriceDisclaimer from "./PriceDisclaimer"
+import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
+
+const BASE = [
+  {
+    title: "TV up to 55 inches",
+    price: "$110",
+    unit: "per TV",
+    features: ["Level, secure mount on studs", "Safety check and cleanup", "Drywall at no extra cost"],
+    href: "/book?service=tv-up-to-55",
+    cta: "Book a TV up to 55 in",
+  },
+  {
+    title: "TV over 55 inches",
+    price: "$140",
+    unit: "per TV",
+    features: ["Two-person handling for large screens", "Level, secure mount on studs", "Drywall at no extra cost"],
+    href: "/book?service=tv-over-55",
+    cta: "Book a TV over 55 in",
+    highlight: true,
+  },
+]
+
+const ADDONS = [
+  ["Cable concealment", "From $60 per TV"],
+  ["Over a fireplace", "From $25 extra"],
+  ["Brick, stone, tile, concrete or metal wall", "From $25 extra"],
+  ["Drywall", "No extra charge"],
+]
+
+const PROMOS = [
+  { title: "2 TVs up to 55 inches", price: "$199", note: "Same visit, same address" },
+  { title: "2 TVs over 55 inches", price: "$260", note: "Same visit, same address" },
+]
+
+const FINE_PRINT = [
+  "All prices are starting prices — the final cost depends on the difficulty of the job, the wall type and the mount being installed.",
+  "Pull-down mantel mounts (MantelMount and similar) are priced separately — ask us for a quote.",
+  "Samsung Frame TV installations are quoted individually and are not covered by the rates above.",
+  "Your exact price is confirmed by one of our sales representatives before any work begins.",
+  "Prices do not include the bracket. We don't sell mounts, but we help you choose and find the right one.",
+  "Every job includes level calibration, secure anchoring and basic cleanup.",
+  "Same-day and next-day appointments when available.",
+]
 
 export default function PricingSection() {
   return (
-    <section id="pricing" className="w-full bg-white text-black">
+    <Section id="pricing" tone="soft" labelledBy="pricing-title">
+      <SectionHeader
+        id="pricing-title"
+        eyebrow="Pricing"
+        title="Simple, upfront pricing"
+        sub="Starting rates for professional TV mounting. Pick your size and book in minutes."
+      />
 
-      <div className="max-w-6xl mx-auto px-5 md:px-6 py-14 md:py-20">
-
-        {/* header */}
-        <header className="max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-extrabold">
-            Transparent pricing
-          </h2>
-
-          <p className="mt-2 text-black/70">
-            Estimated rates for professional TV mounting.
-            Choose your option and book in minutes.
-          </p>
-        </header>
-
-        <PriceDisclaimer className="mt-5 max-w-3xl" />
-
-        {/* base pricing */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <PriceCard
-            title="TV up to 55 inches"
-            price="From $110 per TV"
-            features={[
-              "Level and secure mount on studs",
-              "Safety check and cleanup",
-              "Drywall included no extra"
-            ]}
-            ctaLabel="Book up to 55 in"
-            href="/book?service=tv-up-to-55"
-          />
-
-          <PriceCard
-            title="TV over 55 inches"
-            price="From $140 per TV"
-            features={[
-              "Two person handling for large panels",
-              "Level and secure mount on studs",
-              "Drywall included no extra"
-            ]}
-            highlight
-            ctaLabel="Book over 55 in"
-            href="/book?service=tv-over-55"
-          />
-
-        </div>
-
-
-        {/* addons */}
-        <div className="mt-14">
-
-          <h3 className="text-xl font-bold">
-            Popular add ons
-          </h3>
-
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-            <Addon
-              label="Cable concealment"
-              value="From $60 per TV"
-            />
-
-            <Addon
-              label="Over fireplace handling"
-              value="From $25 extra"
-            />
-
-            <Addon
-              label="Wall type surcharge"
-              value="From $25 for concrete tile stone or metal"
-            />
-
-          </div>
-
-          <p className="mt-3 text-sm text-black/60">
-            Drywall has no extra charge. For concrete, tile, stone or metal walls the surcharge starts at $25.
-          </p>
-
-        </div>
-
-
-        {/* promotions */}
-        <div className="mt-14">
-
-          <h3 className="text-xl font-bold">
-            Current promotions
-          </h3>
-
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <PromoCard
-              title="2 TVs up to 55 inches"
-              price="From $199"
-              note="Same visit same address"
-              href="/book"
-            />
-
-            <PromoCard
-              title="2 TVs over 55 inches"
-              price="From $260"
-              note="Same visit same address"
-              href="/book"
-            />
-
-          </div>
-
-        </div>
-
-
-        {/* notes */}
-        <div className="mt-14 rounded-2xl border border-black/10 bg-white p-5">
-
-          <ul className="text-sm text-black/80 list-disc pl-5 space-y-2">
-
-            <li>All prices shown are starting prices — the final cost depends on the difficulty of the job, the wall type and the mount being installed</li>
-
-            <li>Pull-down mantel mounts (MantelMount and similar) are priced separately — ask us for a quote</li>
-
-            <li>Samsung Frame TV installations are quoted individually and are not covered by the rates above</li>
-
-            <li>Your exact price is confirmed by one of our sales representatives before any work begins</li>
-
-            <li>Prices do not include the bracket mount</li>
-
-            <li>We do not sell mounts but we help you choose and find the correct one</li>
-
-            <li>All jobs include level calibration secure anchoring and basic cleanup</li>
-
-            <li>Same day and next day options when available</li>
-
-          </ul>
-
-        </div>
-
-
-        {/* bottom CTA */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
-
-          <Link
-            href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-7 py-4 font-semibold text-white transition hover:shadow-lg hover:shadow-red-500/30"
-          >
-            Book installation
-          </Link>
-
-          <Link
-            href="#quick-quote"
-            className="inline-flex items-center justify-center rounded-full border border-black/15 px-7 py-4 font-semibold text-black hover:bg-black/5 transition"
-          >
-            Get a quick quote
-          </Link>
-
-        </div>
-
-      </div>
-
-    </section>
-  )
-}
-
-
-/* PRICE CARD */
-
-function PriceCard({
-  title,
-  price,
-  features = [],
-  highlight = false,
-  ctaLabel,
-  href
-}) {
-
-  return (
-
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.25 }}
-      className={`relative rounded-2xl border ${
-        highlight
-          ? "border-[#E50914]"
-          : "border-black/10"
-      } bg-white p-6 shadow-sm hover:shadow-xl transition`}
-    >
-
-      {highlight && (
-        <span className="absolute -top-3 left-6 rounded-full bg-[#E50914] px-3 py-1 text-xs font-semibold text-white">
-          Most selected
-        </span>
-      )}
-
-      <h4 className="text-lg font-bold">
-        {title}
-      </h4>
-
-      <div className="mt-1 text-3xl font-extrabold text-[#E50914]">
-        {price}
-      </div>
-
-      <ul className="mt-4 space-y-2 text-sm text-black/70">
-
-        {features.map((f, i) => (
-          <li key={i} className="flex items-start gap-2">
-
-            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#E50914]" />
-
-            <span>{f}</span>
-
-          </li>
+      <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
+        {BASE.map(p => (
+          <article key={p.title}
+            className={`relative flex flex-col rounded-3xl border bg-white p-6 sm:p-8 shadow-sm ${p.highlight ? "border-brand ring-1 ring-brand" : "border-zinc-200"}`}>
+            {p.highlight && (
+              <p className="absolute -top-3.5 left-6 rounded-full bg-brand px-3 py-1 text-sm font-bold text-white">Most booked</p>
+            )}
+            <h3 className="text-xl font-extrabold text-ink">{p.title}</h3>
+            <p className="mt-3 flex items-baseline gap-2">
+              <span className="text-base font-semibold text-muted">From</span>
+              <span className="text-5xl font-black tracking-tight text-ink">{p.price}</span>
+              <span className="text-base font-semibold text-muted">{p.unit}</span>
+            </p>
+            <ul className="mt-6 space-y-3">
+              {p.features.map(f => (
+                <li key={f} className="flex items-start gap-3 text-base text-body"><Check className="mt-0.5 text-emerald-600" />{f}</li>
+              ))}
+            </ul>
+            <ButtonLink href={p.href} variant={p.highlight ? "primary" : "secondary"} className="mt-8 w-full">{p.cta}</ButtonLink>
+          </article>
         ))}
-
-      </ul>
-
-      <div className="mt-6">
-
-        <Link
-          href={href}
-          className="inline-flex items-center justify-center rounded-full bg-[#E50914] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition"
-        >
-          {ctaLabel}
-        </Link>
-
       </div>
 
-    </motion.div>
+      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
+          <h3 className="text-lg font-extrabold text-ink">Add-ons</h3>
+          <dl className="mt-4 divide-y divide-zinc-200">
+            {ADDONS.map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-4 py-3">
+                <dt className="text-base text-body">{k}</dt>
+                <dd className="flex-none text-base font-bold text-ink">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
-  )
-}
-
-
-
-/* ADDON CARD */
-
-function Addon({ label, value }) {
-
-  return (
-
-    <motion.div
-      whileHover={{ y: -4 }}
-      className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm hover:shadow-md transition"
-    >
-
-      <div className="text-sm text-black/60">
-        Add on
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
+          <h3 className="text-lg font-extrabold text-ink">Current promotions</h3>
+          <ul className="mt-4 space-y-3">
+            {PROMOS.map(p => (
+              <li key={p.title} className="flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-4 py-3">
+                <div>
+                  <p className="text-base font-bold text-ink">{p.title}</p>
+                  <p className="text-sm text-body">{p.note}</p>
+                </div>
+                <p className="flex-none text-right">
+                  <span className="block text-xs font-semibold text-muted">From</span>
+                  <span className="text-2xl font-black text-brand-dark">{p.price}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <Link href="/book" className="mt-4 inline-flex min-h-[44px] items-center text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
+            Book a promo
+          </Link>
+        </div>
       </div>
 
-      <div className="mt-1 font-bold">
-        {label}
+      <PriceDisclaimer className="mt-8" />
+
+      <details className="group mt-4 rounded-2xl border border-zinc-200 bg-white">
+        <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-4 px-5 text-base font-bold text-ink [&::-webkit-details-marker]:hidden">
+          Good to know before you book
+          <span aria-hidden="true" className="text-xl text-muted transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <ul className="space-y-2.5 px-5 pb-5 text-base text-body">
+          {FINE_PRINT.map(t => (
+            <li key={t} className="flex gap-3"><span aria-hidden="true" className="mt-2.5 size-1.5 flex-none rounded-full bg-brand" />{t}</li>
+          ))}
+        </ul>
+      </details>
+
+      <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+        <ButtonLink href="/book">Book installation</ButtonLink>
+        <ButtonLink href="#quick-quote" variant="secondary">Get a free quote</ButtonLink>
       </div>
-
-      <div className="text-[#E50914] font-semibold">
-        {value}
-      </div>
-
-    </motion.div>
-
-  )
-}
-
-
-
-/* PROMO CARD */
-
-function PromoCard({ title, price, note, href }) {
-
-  return (
-
-    <motion.div
-      whileHover={{ y: -6 }}
-      className="relative rounded-2xl border border-black/10 bg-gradient-to-br from-white to-black/[0.03] p-6 shadow-sm hover:shadow-xl transition"
-    >
-
-      <span className="absolute right-4 top-4 text-xs font-semibold text-white bg-[#E50914] px-3 py-1 rounded-full">
-        Promo
-      </span>
-
-      <h4 className="text-lg font-bold">
-        {title}
-      </h4>
-
-      <div className="mt-1 text-3xl font-extrabold text-[#E50914]">
-        {price}
-      </div>
-
-      <p className="mt-1 text-sm text-black/60">
-        {note}
-      </p>
-
-      <div className="mt-6">
-
-        <Link
-          href={href}
-          className="inline-flex items-center justify-center rounded-full border border-black/15 px-5 py-2.5 text-sm font-semibold hover:bg-black/5 transition"
-        >
-          Book promo
-        </Link>
-
-      </div>
-
-    </motion.div>
-
+    </Section>
   )
 }

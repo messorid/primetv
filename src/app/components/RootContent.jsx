@@ -15,8 +15,14 @@ export default function RootContent({ children }) {
 
   return (
     <>
+      {/* First thing a keyboard user reaches: jump past the menu. */}
+      <a href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-base focus:font-bold focus:text-white">
+        Skip to main content
+      </a>
       <Navbar />
-      <main className="pb-24 md:pb-24 overflow-x-hidden">{children}</main>
+      {/* Room at the bottom for the quick-actions bar, which shows below lg. */}
+      <main id="main" tabIndex={-1} className="pb-24 lg:pb-0 overflow-x-hidden focus:outline-none">{children}</main>
       <StickyGate />
       <Footer />
     </>

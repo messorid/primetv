@@ -17,7 +17,7 @@ export default function PriceDisclaimer({ variant = "light", className = "" }) {
         isDark ? "border-white/15 bg-white/5" : "border-amber-200 bg-amber-50"
       } ${className}`}
     >
-      <p className={`text-xs leading-relaxed ${isDark ? "text-white/70" : "text-amber-900"}`}>
+      <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-amber-950"}`}>
         <span className="font-bold">Prices start from the amounts shown.</span>{" "}
         Your final price depends on the difficulty of the installation, the wall type, and the
         mount or bracket being installed.{" "}
@@ -33,7 +33,7 @@ export default function PriceDisclaimer({ variant = "light", className = "" }) {
 // Compact inline version for tight spots like forms and small cards.
 export function PriceDisclaimerLine({ className = "" }) {
   return (
-    <p className={`text-[11px] leading-relaxed text-black/50 ${className}`}>
+    <p className={`text-xs leading-relaxed text-muted ${className}`}>
       Starting price. Final cost depends on installation difficulty, wall type and the mount used —
       mantel mounts are priced separately. Confirmed by our sales team.
     </p>
