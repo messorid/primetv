@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
+import AdminSearch from "./AdminSearch"
 
 // Today, Bookings and the report stand alone; the rest sit in small groups so
 // the mobile bar stays at six readable entries instead of nine squeezed ones.
@@ -153,6 +154,8 @@ export default function AdminLayout({ children }) {
         </nav>
 
         <div className="flex-1 md:flex-none" />
+
+        <AdminSearch />
 
         <button
           onClick={logout}
