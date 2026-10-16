@@ -36,7 +36,7 @@ const STATUS_FLOW = ["pending", "confirmed", "completed", "cancelled"]
 // mislabels the mixed package, which contains both sizes.
 const PROMO_PRICES = {
   '2 TVs up to 55"':                  "From $199",
-  '2 TVs up to 70"':                  "From $250",
+  '2 TVs up to 70"':                  "From $260",
   '1 TV up to 55" + 1 TV up to 70"': "From $230",
 }
 

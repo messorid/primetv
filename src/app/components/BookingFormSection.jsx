@@ -44,7 +44,7 @@ const HOME_INSTALL_SERVICES = [
 
 const PROMOS = [
   { label: '2 TVs up to 55"',                    price: "From $199" },
-  { label: '2 TVs up to 70"',                    price: "From $250" },
+  { label: '2 TVs up to 70"',                    price: "From $260" },
   { label: '1 TV up to 55" + 1 TV up to 70"',   price: "From $230" },
 ]
 
