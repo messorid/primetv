@@ -47,8 +47,8 @@ test("an alert is sent as the approved template, to the configured number", asyn
   assert.equal(body.messaging_product, "whatsapp")
   assert.equal(body.to, "584122061611")
   assert.equal(body.type, "template")
-  assert.equal(body.template.name, "primetv_alerta")
-  assert.deepEqual(body.template.language, { code: "es" })
+  assert.equal(body.template.name, "primetv_solicitud_cliente")
+  assert.deepEqual(body.template.language, { code: "en" })
   assert.deepEqual(body.template.components, [{
     type: "body",
     parameters: [

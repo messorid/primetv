@@ -7,14 +7,20 @@
 // So every alert goes through one Utility template with three body variables,
 // created in WhatsApp Manager exactly like this:
 //
-//   name:     primetv_alerta        language: Spanish (es)
-//   body:     Nuevo aviso de PrimeTV Nashville.
+//   name:     primetv_solicitud_cliente     language: English (en)
+//   body:     PrimeTV Nashville: se registró una nueva solicitud de un cliente
+//             en tu sistema de reservas.
 //
-//             Tipo: {{1}}
+//             Tipo de solicitud: {{1}}
 //             Cliente: {{2}}
-//             Detalles: {{3}}
+//             Detalles del servicio: {{3}}
 //
-//             Revísalo en el panel de administración.
+//             Entra al panel de administración para confirmarla o asignarla.
+//
+// The text is Spanish but the template was filed under English, so "en" is
+// what Meta matches on. The first template, primetv_alerta ("Nuevo aviso…"),
+// was moved to Marketing by Meta for being too generic, and marketing messages
+// can be accepted and then never delivered. Keep the wording transactional.
 //
 // Configuration, all in Vercel:
 //   WHATSAPP_TOKEN            a permanent System User access token
@@ -22,8 +28,8 @@
 //   WHATSAPP_NOTIFY_TO        who gets the alerts: country code and number,
 //                             no "+" and no trunk 0 (Venezuela: 58412…, not
 //                             580412…). Several can be separated by commas.
-//   WHATSAPP_TEMPLATE         template name, default primetv_alerta
-//   WHATSAPP_TEMPLATE_LANG    template language code, default es
+//   WHATSAPP_TEMPLATE         template name, default primetv_solicitud_cliente
+//   WHATSAPP_TEMPLATE_LANG    template language code, default en
 //   WHATSAPP_API_VERSION      Graph API version, default v23.0
 //
 // Nothing is sent until the first three are set, and a failure is logged and
@@ -32,8 +38,8 @@
 
 const token         = () => (process.env.WHATSAPP_TOKEN || "").trim()
 const phoneNumberId = () => (process.env.WHATSAPP_PHONE_NUMBER_ID || "").trim()
-const templateName  = () => (process.env.WHATSAPP_TEMPLATE || "").trim() || "primetv_alerta"
-const templateLang  = () => (process.env.WHATSAPP_TEMPLATE_LANG || "").trim() || "es"
+const templateName  = () => (process.env.WHATSAPP_TEMPLATE || "").trim() || "primetv_solicitud_cliente"
+const templateLang  = () => (process.env.WHATSAPP_TEMPLATE_LANG || "").trim() || "en"
 const apiVersion    = () => (process.env.WHATSAPP_API_VERSION || "").trim() || "v23.0"
 
 // Digits only: the API wants "584122061611", and people paste "+58 412-206…".
