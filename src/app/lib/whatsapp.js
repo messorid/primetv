@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// WHATSAPP — a heads-up on the owner's phone for every booking, quote and crew
-// assignment, sent through the WhatsApp Cloud API (Meta).
+// WHATSAPP — a heads-up on the owner's phone for every booking and quote, sent
+// through the WhatsApp Cloud API (Meta).
 //
 // A message the business starts has to use a template Meta has approved; free
 // text is only allowed within 24 hours of the recipient writing to us first.

@@ -103,6 +103,8 @@ export function quoteAlert(lead = {}) {
 }
 
 // A crew assigned from the admin panel. `b` is the stored booking row.
+// Not sent for now: the owner turned assignment alerts off. To bring them back,
+// call notifyWhatsApp(assignmentAlert(...)) from the crew PATCH in api/bookings.
 export function assignmentAlert(b = {}, installerNames = []) {
   const names = installerNames.filter(Boolean)
   return {

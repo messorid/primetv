@@ -12,9 +12,6 @@ import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy
 import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
 import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
 import { portalTokenForEmail, crewPageUrl } from "../../lib/crewPortal.js"
-import { notifyWhatsApp } from "../../lib/whatsapp.js"
-import { assignmentAlert } from "../../lib/whatsappAlerts.js"
-import { runAfterResponse } from "../../lib/afterResponse.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -170,9 +167,6 @@ export async function PATCH(request) {
       if (b && installerEmail) {
         await sendInstallerEmail(b, installerName, installerEmail)
       }
-      if (b && installerId) {
-        runAfterResponse(() => notifyWhatsApp(assignmentAlert(b, [installerName])))
-      }
 
       return Response.json({ ok: true })
     }
@@ -238,7 +232,6 @@ export async function PATCH(request) {
             }
           }
         }
-        runAfterResponse(() => notifyWhatsApp(assignmentAlert(b, shares.map(m => m.installerName))))
       }
 
       return Response.json({ ok: true, crew: shares })
