@@ -59,8 +59,19 @@ export function templateParam(value, max = 300) {
 
 // `alert` is { kind, customer, details } — see whatsappAlerts.js. Resolves to
 // true only when every recipient got it; never throws.
+//
+// Every outcome is logged, including success: a skipped send used to leave no
+// trace at all, so a missing alert could not be told apart from a lost one.
 export async function notifyWhatsApp(alert) {
-  if (!canSendWhatsApp()) return false
+  if (!canSendWhatsApp()) {
+    const missing = [
+      ["WHATSAPP_TOKEN", token()],
+      ["WHATSAPP_PHONE_NUMBER_ID", phoneNumberId()],
+      ["WHATSAPP_NOTIFY_TO", recipients().length],
+    ].filter(([, v]) => !v).map(([name]) => name)
+    console.warn(`WhatsApp alert "${alert?.kind}" not sent: ${missing.join(", ")} not set`)
+    return false
+  }
 
   const url = `https://graph.facebook.com/${apiVersion()}/${phoneNumberId()}/messages`
   const parameters = [alert?.kind, alert?.customer, alert?.details]
@@ -88,6 +99,10 @@ export async function notifyWhatsApp(alert) {
         console.error(`WhatsApp alert to ${to} failed: ${res.status} ${detail}`)
         return false
       }
+      // Accepted is not delivered: Meta can still drop it later, and only
+      // WhatsApp Manager > Insights shows that. The id ties the two together.
+      const sent = await res.json().catch(() => ({}))
+      console.log(`WhatsApp alert "${alert?.kind}" accepted for ${to}: ${sent?.messages?.[0]?.id || "no message id"}`)
       return true
     } catch (err) {
       console.error(`WhatsApp alert to ${to} failed`, err)

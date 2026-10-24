@@ -88,6 +88,25 @@ test("nothing is sent until the token, the number id and a recipient are all set
   assert.equal(calls.length, 0)
 })
 
+test("a skipped alert names the missing variable, never a value", async (t) => {
+  const warn = t.mock.method(console, "warn", () => {})
+  delete process.env.WHATSAPP_PHONE_NUMBER_ID
+  await notifyWhatsApp(ALERT)
+
+  assert.equal(warn.mock.callCount(), 1)
+  const msg = warn.mock.calls[0].arguments[0]
+  assert.match(msg, /WHATSAPP_PHONE_NUMBER_ID not set/)
+  assert.ok(!msg.includes("wa-token"), "the token must never reach the logs")
+})
+
+test("an accepted alert logs Meta's message id", async (t) => {
+  const log = t.mock.method(console, "log", () => {})
+  reply = () => new Response(JSON.stringify({ messages: [{ id: "wamid.ABC123" }] }), { status: 200 })
+  await notifyWhatsApp(ALERT)
+
+  assert.match(log.mock.calls[0].arguments[0], /"Nueva reservación" accepted for 584122061611: wamid\.ABC123/)
+})
+
 test("a refusal from Meta is reported as false, not thrown", async () => {
   reply = () => new Response(JSON.stringify({ error: { code: 132001, message: "Template name does not exist" } }), { status: 400 })
   assert.equal(await notifyWhatsApp(ALERT), false)
