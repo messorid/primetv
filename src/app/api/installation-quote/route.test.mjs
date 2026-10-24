@@ -39,6 +39,12 @@ mock.module("@neondatabase/serverless", {
   },
 })
 
+// after() only works inside a live Next request; the WhatsApp alert it would
+// run is covered in lib/whatsapp.test.mjs.
+mock.module("../../lib/afterResponse.js", {
+  namedExports: { runAfterResponse: () => {} },
+})
+
 const { POST } = await import("./route.js")
 
 const post = body =>

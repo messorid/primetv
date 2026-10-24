@@ -236,7 +236,6 @@ test("a quick quote is filed in the CRM as a Google lead, after the response", a
 
   assert.equal(res.status, 200)
   assert.equal(crmCalls.length, 0, "the customer must not wait for the CRM")
-  assert.equal(deferred.length, 1)
 
   await runDeferred()
   assert.equal(crmCalls.length, 1)
@@ -267,8 +266,9 @@ test("each quote gets its own CRM id, so two real requests are two leads", async
 test("the contact form is not sent to the CRM", async () => {
   reset()
   await post({ ...QUICK, leadSource: "contact_form" })
+  await runDeferred()
 
-  assert.equal(deferred.length, 0)
+  assert.equal(crmCalls.length, 0)
 })
 
 test("a CRM outage never reaches the customer", async () => {
@@ -291,4 +291,35 @@ test("the CRM still gets the lead when the inbox and database are both down", as
 
   assert.equal(res.status, 500)
   assert.equal(crmCalls.length, 1, "the CRM is one more place the lead survives")
+})
+
+/* WhatsApp: the owner hears about every quote form, after the response */
+
+test("every quote form sends the owner a WhatsApp, after the response", async () => {
+  const env = {
+    WHATSAPP_TOKEN: "wa-token",
+    WHATSAPP_PHONE_NUMBER_ID: "123",
+    WHATSAPP_NOTIFY_TO: "584122061611",
+  }
+  Object.assign(process.env, env)
+  try {
+    for (const [leadSource, kind] of [
+      ["quick_quote", "Nueva cotización"],
+      ["contact_form", "Nuevo mensaje de contacto"],
+    ]) {
+      reset()
+      await post({ ...QUICK, leadSource })
+      assert.equal(crmCalls.length, 0, "the customer must not wait for WhatsApp")
+
+      await runDeferred()
+      const wa = crmCalls.filter(c => String(c.url).startsWith("https://graph.facebook.com/"))
+      assert.equal(wa.length, 1, leadSource)
+      assert.equal(wa[0].body.to, "584122061611")
+      const [sentKind, customer] = wa[0].body.template.components[0].parameters.map(p => p.text)
+      assert.equal(sentKind, kind)
+      assert.equal(customer, "Ada Lovelace · 6155550123")
+    }
+  } finally {
+    for (const k of Object.keys(env)) delete process.env[k]
+  }
 })

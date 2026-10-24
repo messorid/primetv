@@ -62,6 +62,12 @@ mock.module("@neondatabase/serverless", {
   },
 })
 
+// after() is replaced by a queue, so a test can run the WhatsApp alert on demand.
+const deferred = []
+mock.module("../../lib/afterResponse.js", {
+  namedExports: { runAfterResponse: task => deferred.push(task) },
+})
+
 const { POST } = await import(
   "./route.js"
 )
@@ -215,4 +221,38 @@ test("the customer confirmation copies the business inbox", async () => {
   const confirmation = sent.find(m => m.to === "good@example.com")
   assert.ok(confirmation, "customer got a confirmation")
   assert.equal(confirmation.bcc, process.env.EMAIL_USER, "a copy lands in the business inbox")
+})
+
+test("the owner gets a WhatsApp about every booking, after the response", async () => {
+  sent.length = 0; inserts = 0; failInsert = false; deferred.length = 0
+  const env = {
+    WHATSAPP_TOKEN: "wa-token",
+    WHATSAPP_PHONE_NUMBER_ID: "123",
+    WHATSAPP_NOTIFY_TO: "584122061611",
+  }
+  const realFetch = globalThis.fetch
+  const calls = []
+  Object.assign(process.env, env)
+  globalThis.fetch = async (url, opts) => {
+    calls.push({ url, body: JSON.parse(opts.body) })
+    return new Response("{}", { status: 200 })
+  }
+  try {
+    const res = await call("good@example.com")
+    assert.equal(res.status, 200)
+    assert.equal(calls.length, 0, "the customer must not wait for WhatsApp")
+
+    await Promise.all(deferred.map(task => task()))
+  } finally {
+    globalThis.fetch = realFetch
+    for (const k of Object.keys(env)) delete process.env[k]
+  }
+
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, "https://graph.facebook.com/v23.0/123/messages")
+  assert.equal(calls[0].body.to, "584122061611")
+  const [kind, customer, details] = calls[0].body.template.components[0].parameters.map(p => p.text)
+  assert.equal(kind, "Nueva reservación")
+  assert.equal(customer, "Test Customer · 615-555-0100")
+  assert.match(details, /1 Main St, Franklin, TN, 37064/)
 })

@@ -8,6 +8,9 @@ import { buildClientEmail, buildICS, safe, formatAddress } from "../../lib/clien
 import {
   buildBusinessBookingEmail, buildDbFailureAlert, buildClientEmailFailureAlert,
 } from "../../lib/bookingEmails.js"
+import { notifyWhatsApp } from "../../lib/whatsapp.js"
+import { bookingAlert } from "../../lib/whatsappAlerts.js"
+import { runAfterResponse } from "../../lib/afterResponse.js"
 
 export async function POST(request) {
   try {
@@ -154,6 +157,9 @@ export async function POST(request) {
       }
     }
 
+    // ── WhatsApp to the owner ──────────────────────────────────────────────────
+    // After the response, so a slow Meta API never holds up the customer.
+    runAfterResponse(() => notifyWhatsApp(bookingAlert(body, { saved: dbSaved })))
 
     // ── Email to business ──────────────────────────────────────────────────────
     const businessMail = buildBusinessBookingEmail(body)

@@ -7,6 +7,8 @@ import { getTransport, mailFrom, notifyTo, canSendMail } from "../../lib/mailer.
 import { quickQuoteEmail, wizardQuoteEmail } from "../../lib/leadEmails.js"
 import { forwardLeadToCrm } from "../../lib/crmForward.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
+import { notifyWhatsApp } from "../../lib/whatsapp.js"
+import { quoteAlert } from "../../lib/whatsappAlerts.js"
 
 export async function POST(request) {
   let body
@@ -31,6 +33,9 @@ export async function POST(request) {
     const externalId = randomUUID()
     runAfterResponse(() => forwardLeadToCrm(lead, externalId))
   }
+
+  // Aviso por WhatsApp al dueno, tambien despues de responder.
+  runAfterResponse(() => notifyWhatsApp(quoteAlert(lead)))
 
   let notified = false
   try {

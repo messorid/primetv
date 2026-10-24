@@ -1,6 +1,9 @@
 import { captureQuoteLead } from "../../lib/quoteLeads.js"
 import { getTransport, mailFrom, notifyTo } from "../../lib/mailer.js"
 import { installationQuoteEmail } from "../../lib/leadEmails.js"
+import { notifyWhatsApp } from "../../lib/whatsapp.js"
+import { quoteAlert } from "../../lib/whatsappAlerts.js"
+import { runAfterResponse } from "../../lib/afterResponse.js"
 
 const SERVICE_LABELS = {
   furniture:     "Furniture Assembly",
@@ -24,7 +27,7 @@ export async function POST(request) {
 
     // El lead se guarda antes del correo, para que quede en el panel aunque
     // el envio falle. Un fallo de base de datos no rompe el formulario.
-    const saved = await captureQuoteLead({
+    const lead = {
       source:        "installation_quote",
       service:       serviceLabel,
       name:          contact.name,
@@ -35,7 +38,11 @@ export async function POST(request) {
       preferredDate: contact.date,
       notes:         (answers && answers.description) || "",
       details:       { serviceKey: service, answers: answers || {} },
-    })
+    }
+    const saved = await captureQuoteLead(lead)
+
+    // Aviso por WhatsApp al dueno, despues de responder.
+    runAfterResponse(() => notifyWhatsApp(quoteAlert(lead)))
 
     const html = installationQuoteEmail({ serviceLabel, answers, contact })
 
