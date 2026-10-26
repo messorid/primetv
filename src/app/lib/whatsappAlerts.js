@@ -1,9 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// WHATSAPP ALERTS — what the owner's phone says for each event.
+// WHATSAPP ALERTS — what the owner's phone says for each event, and what an
+// installer's says when a job is assigned to them.
 //
-// Pure functions that return the template's three variables (see whatsapp.js):
-// what happened, who the customer is, and the few details that tell you at a
-// glance whether it needs you now. The emails still carry everything else.
+// Pure functions that return the templates' variables (see whatsapp.js). For
+// the owner: what happened, who the customer is, and the few details that tell
+// you at a glance whether it needs you now. The emails still carry everything
+// else.
 //
 // Bookings arrive in two shapes, the form's request body and the stored row,
 // so both are mapped onto one job summary.
@@ -17,13 +19,13 @@ const line = (parts, sep = " · ") =>
 
 const tagged = (icon, text) => (text ? `${icon} ${text}` : "")
 
-// "sáb, 25 oct (Morning)". The stored date is an ISO day; anything else is
-// shown as it was typed.
-export function when(date, time) {
+// "sáb, 25 oct (Morning)", or "Sat, Oct 25 (Morning)" in English. The stored
+// date is an ISO day; anything else is shown as it was typed.
+export function when(date, time, locale = "es") {
   let day = String(date ?? "").trim()
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
     const d = new Date(`${day}T12:00:00`)
-    if (!isNaN(d)) day = d.toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" })
+    if (!isNaN(d)) day = d.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" })
   }
   const t = String(time ?? "").trim()
   if (!day) return t
@@ -102,8 +104,38 @@ export function quoteAlert(lead = {}) {
   }
 }
 
-// A crew assigned from the admin panel. `b` is the stored booking row.
-// Not sent for now: the owner turned assignment alerts off. To bring them back,
+// The installer's own heads-up when a job is assigned to them: the four
+// variables of the installer template (see whatsapp.js), in English like the
+// work order email. No prices, since the installer is paid from the split, not
+// from what the customer pays. `crewmates` are the others on the same job.
+export function installerJobAlert(b = {}, crewmates = []) {
+  const tvs = Array.isArray(b.tvs) ? b.tvs : []
+  const cableQty = parseInt(b.cable_concealment) || 0
+  const others = crewmates.filter(Boolean)
+
+  const job = line([
+    b.booking_mode === "homeinstall" &&
+      (HOME_INSTALL_LABELS[b.home_install_service] || b.home_install_service || "Home installation"),
+    b.booking_mode === "bundle" && "Bundle",
+    b.promo && `Package ${b.promo}`,
+    b.custom_quote && b.custom_tv_size &&
+      `Custom job ${inches(b.custom_tv_size)}${b.custom_tv_qty ? ` × ${b.custom_tv_qty}` : ""}`,
+    tvs.length > 0 && `${tvs.length} TV${tvs.length > 1 ? "s" : ""}: ${tvs.map(tv =>
+      `${inches(tv?.size) || "?"}${tv?.model === "frame" ? " Frame" : ""}`).join(", ")}`,
+    b.more_tvs && "3+ TVs",
+    cableQty > 0 && `Cable concealment ×${cableQty}`,
+  ], " + ")
+
+  return [
+    when(b.date, b.time_pref, "en-US"),
+    line([`${b.first_name || ""} ${b.last_name || ""}`, b.phone]),
+    fullAddressOf(b),
+    line([job, others.length && `👷 With ${others.join(", ")}`]),
+  ]
+}
+
+// A crew assigned from the admin panel, for the owner. `b` is the stored
+// booking row. Not sent for now: the owner turned these off. To bring them back,
 // call notifyWhatsApp(assignmentAlert(...)) from the crew PATCH in api/bookings.
 export function assignmentAlert(b = {}, installerNames = []) {
   const names = installerNames.filter(Boolean)

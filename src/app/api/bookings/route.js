@@ -12,6 +12,9 @@ import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy
 import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
 import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
 import { portalTokenForEmail, crewPageUrl } from "../../lib/crewPortal.js"
+import { notifyInstaller } from "../../lib/whatsapp.js"
+import { installerJobAlert } from "../../lib/whatsappAlerts.js"
+import { runAfterResponse } from "../../lib/afterResponse.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -167,6 +170,10 @@ export async function PATCH(request) {
       if (b && installerEmail) {
         await sendInstallerEmail(b, installerName, installerEmail)
       }
+      if (b && installerId) {
+        const [inst] = await sql`SELECT phone FROM installers WHERE id=${installerId}`
+        notifyInstallersOnWhatsApp(b, [{ installerName, installerPhone: inst?.phone }])
+      }
 
       return Response.json({ ok: true })
     }
@@ -188,7 +195,7 @@ export async function PATCH(request) {
       }
 
       const people = await sql`
-        SELECT id, name, email, crew_share FROM installers WHERE id = ANY(${ids}::uuid[])
+        SELECT id, name, email, phone, crew_share FROM installers WHERE id = ANY(${ids}::uuid[])
       `
       if (people.length === 0) {
         return Response.json({ ok: false, error: "No matching installers" }, { status: 400 })
@@ -201,6 +208,7 @@ export async function PATCH(request) {
 
       const shares = normaliseShares(ordered.map(p => ({
         installerId: p.id, installerName: p.name, installerEmail: p.email,
+        installerPhone: p.phone,
         crewShare: p.crew_share == null ? 50 : Number(p.crew_share),
       })))
 
@@ -232,6 +240,7 @@ export async function PATCH(request) {
             }
           }
         }
+        notifyInstallersOnWhatsApp(b, shares)
       }
 
       return Response.json({ ok: true, crew: shares })
@@ -631,6 +640,18 @@ async function sendInstallerEmail(b, installerName, installerEmail, crew = null)
     attachments,
     html:    mail.html,
   })
+}
+
+// ── Installer assignment WhatsApp ─────────────────────────────────────────────
+// Each installer on the job hears about it on the phone saved on their profile,
+// after the response so a slow Meta API never holds up the panel. An installer
+// with no usable phone is logged and skipped; the email still reaches them.
+function notifyInstallersOnWhatsApp(b, members) {
+  runAfterResponse(() => Promise.all(members.map(m => notifyInstaller({
+    installerName: m.installerName,
+    phone: m.installerPhone,
+    params: installerJobAlert(b, members.map(o => o.installerName).filter(n => n !== m.installerName)),
+  }))))
 }
 
 // ── Cancellation email to installer ──────────────────────────────────────────

@@ -1,15 +1,18 @@
-// The owner's WhatsApp alerts: what each one says, and that the sender never
-// sends half-configured, never throws, and never hands Meta a variable it will
-// refuse.
+// The WhatsApp alerts, to the owner and to an assigned installer: what each one
+// says, and that the sender never sends half-configured, never throws, and
+// never hands Meta a variable it will refuse.
 import { test, beforeEach, afterEach } from "node:test"
 import assert from "node:assert/strict"
 
-import { notifyWhatsApp, canSendWhatsApp, recipients, templateParam } from "./whatsapp.js"
-import { bookingAlert, quoteAlert, assignmentAlert, when } from "./whatsappAlerts.js"
+import {
+  notifyWhatsApp, notifyInstaller, canSendWhatsApp, recipients, installerNumber, templateParam,
+} from "./whatsapp.js"
+import { bookingAlert, quoteAlert, assignmentAlert, installerJobAlert, when } from "./whatsappAlerts.js"
 
 const ENV_KEYS = [
   "WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_NOTIFY_TO",
   "WHATSAPP_TEMPLATE", "WHATSAPP_TEMPLATE_LANG", "WHATSAPP_API_VERSION",
+  "WHATSAPP_INSTALLER_TEMPLATE", "WHATSAPP_INSTALLER_TEMPLATE_LANG",
 ]
 const realFetch = globalThis.fetch
 let calls = []
@@ -215,4 +218,81 @@ test("an assignment alert names the crew and the job", () => {
   assert.equal(a.customer, "Ada Lovelace · 615-555-0100")
   assert.match(a.details, /^👷 Juan, Pedro · 📅 dom\.?, 25 oct\.? \(9:00 AM\) · 🛠 Gazebo \/ Pergola Assembly · 📍 1 Main St/)
   assert.ok(!a.details.includes("Precio especial"), "a price only shows on a custom quote")
+})
+
+/* Installers: their own heads-up when a job is assigned to them */
+
+test("installer phones become numbers WhatsApp can reach", () => {
+  assert.equal(installerNumber("(615) 555-0100"), "16155550100", "ten digits are a US number")
+  assert.equal(installerNumber("1-615-555-0100"), "16155550100")
+  assert.equal(installerNumber("+58 412-206-1611"), "584122061611", "a + keeps its country code")
+  assert.equal(installerNumber("0058 4122061611"), "584122061611")
+  assert.equal(installerNumber("555-0100"), null, "too short to route")
+  assert.equal(installerNumber("04122061611"), null, "a local number abroad needs its country code")
+  assert.equal(installerNumber(""), null)
+  assert.equal(installerNumber(null), null)
+})
+
+test("an assigned installer gets the job template on their own phone", async () => {
+  delete process.env.WHATSAPP_NOTIFY_TO   // the owner's number has nothing to do with it
+  const params = ["Sun, Oct 25 (9:00 AM)", "Ada Lovelace · 615-555-0100", "1 Main St, Franklin, TN", '1 TV: 65"']
+
+  assert.equal(await notifyInstaller({ installerName: "Juan", phone: "(615) 555-0199", params }), true)
+
+  assert.equal(calls.length, 1)
+  const { url, body } = calls[0]
+  assert.equal(url, "https://graph.facebook.com/v23.0/1234567890/messages")
+  assert.equal(body.to, "16155550199")
+  assert.equal(body.template.name, "primetv_job_assigned")
+  assert.deepEqual(body.template.language, { code: "en" })
+  assert.deepEqual(body.template.components[0].parameters.map(p => p.text), params)
+})
+
+test("the installer template can be changed without a deploy", async () => {
+  process.env.WHATSAPP_INSTALLER_TEMPLATE = "primetv_trabajo_asignado"
+  process.env.WHATSAPP_INSTALLER_TEMPLATE_LANG = "es"
+  await notifyInstaller({ installerName: "Juan", phone: "6155550199", params: ["a", "b", "c", "d"] })
+
+  assert.equal(calls[0].body.template.name, "primetv_trabajo_asignado")
+  assert.equal(calls[0].body.template.language.code, "es")
+})
+
+test("an installer without a usable phone is skipped and logged", async (t) => {
+  const warn = t.mock.method(console, "warn", () => {})
+
+  assert.equal(await notifyInstaller({ installerName: "Juan", phone: "", params: [] }), false)
+  assert.equal(await notifyInstaller({ installerName: "Pedro", phone: "555-0100", params: [] }), false)
+
+  assert.equal(calls.length, 0)
+  assert.match(warn.mock.calls[0].arguments[0], /job alert for Juan not sent: no phone on file/)
+  assert.match(warn.mock.calls[1].arguments[0], /job alert for Pedro not sent: "555-0100"/)
+})
+
+test("no installer is messaged without the token and the number id", async (t) => {
+  t.mock.method(console, "warn", () => {})
+  delete process.env.WHATSAPP_TOKEN
+
+  assert.equal(await notifyInstaller({ installerName: "Juan", phone: "6155550199", params: [] }), false)
+  assert.equal(calls.length, 0)
+})
+
+test("an installer's job alert is in English, names the crewmates and shows no price", () => {
+  const [date, customer, address, job] = installerJobAlert({
+    first_name: "Ada", last_name: "Lovelace", phone: "615-555-0100",
+    date: "2026-10-25", time_pref: "9:00 AM",
+    tvs: [{ size: "65" }, { size: "55\"", model: "frame" }], cable_concealment: 1,
+    custom_quote: false, custom_price: "999.00", coupon_code: "PRIMETV5",
+    address: { street: "1 Main St", city: "Franklin", state: "TN", zip: "37064" },
+  }, ["Pedro"])
+
+  assert.equal(date, "Sun, Oct 25 (9:00 AM)")
+  assert.equal(customer, "Ada Lovelace · 615-555-0100")
+  assert.equal(address, "1 Main St, Franklin, TN, 37064")
+  assert.equal(job, '2 TVs: 65", 55" Frame + Cable concealment ×1 · 👷 With Pedro')
+  assert.ok(!job.includes("999") && !job.includes("PRIMETV5"), "prices and coupons are for the office")
+})
+
+test("a solo home installation names the service and no crew", () => {
+  const job = installerJobAlert({ booking_mode: "homeinstall", home_install_service: "gazebo" })[3]
+  assert.equal(job, "Gazebo / Pergola Assembly")
 })
