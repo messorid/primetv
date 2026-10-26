@@ -295,7 +295,7 @@ Name: ${form.name || "-"}`.trim()
             </div>
 
             <p className="mt-4 text-xs text-black/60">
-              Drywall has no extra charge. Concrete tile stone or metal has a 25 surcharge. Cable concealment is 60 per TV. Fireplace handling from 25 extra
+              Drywall has no extra charge. Concrete tile stone or metal has a 25 surcharge. Cable concealment is 70 per TV. Fireplace handling from 25 extra
             </p>
           </form>
         </div>

@@ -70,7 +70,7 @@ const SERVICES = [
     title: "Cable concealment",
     desc: "In wall power kit or external raceway",
     img: "/images/tv2.jpeg",
-    priceLabel: "From $60 add on",
+    priceLabel: "From $70 add on",
     time: "30 to 60 min",
     notes: ["Add on per TV"],
     addon: true,

@@ -21,7 +21,7 @@ const FAQS = [
     q: "Can you hide the cables?",
     a: (
       <>
-        Yes. Cable concealment is a $60 add-on per TV. 
+        Yes. Cable concealment is a $70 add-on per TV. 
         We use an in-wall power kit or an external raceway, depending on the wall type.
       </>
     ),

@@ -7,7 +7,7 @@ export default function ExtraServices() {
       },
       {
         title: "Cable Management and Concealment",
-        price: "From $60",
+        price: "From $70",
         note: "Includes in-wall or external solutions."
       },
       {

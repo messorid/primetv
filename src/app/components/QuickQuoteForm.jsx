@@ -297,7 +297,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
               </div>
               <p className="mt-3 text-[13px] leading-relaxed text-muted">
                 Drywall has no extra charge. Concrete, tile, stone or metal starts at a $25 surcharge.
-                Cable concealment from $60 per TV. Fireplace handling from $25 extra.
+                Cable concealment from $70 per TV. Fireplace handling from $25 extra.
                 Samsung Frame TV and mantel mounts are quoted separately.
               </p>
             </form>

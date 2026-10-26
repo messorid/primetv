@@ -521,7 +521,7 @@ export const CITIES = [
 export const PRICES = {
   upTo55:      "From $110 per TV",
   over55:      "From $140 per TV",
-  cables:      "From $60 per TV",
+  cables:      "From $70 per TV",
   fireplace:   "From $25 extra",
   hardWall:    "From $25 for concrete, tile, stone or metal",
   twoUpTo55:   "From $199",

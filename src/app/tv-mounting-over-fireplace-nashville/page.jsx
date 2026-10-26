@@ -41,7 +41,7 @@ const jsonLd = {
 const fireplaceQas = [
   { q: "Is it safe to mount a TV above a fireplace?", a: "Yes, with proper precautions. We check the heat output and clearance of your specific fireplace type — gas, wood or electric — and choose a mounting height that keeps the TV within the manufacturer's temperature guidelines. Many Nashville homes have gas fireplaces where heat rises less aggressively, making above-fireplace mounting very common and safe." },
   { q: "What height should the TV be above the fireplace?", a: "We aim for the center of the screen to sit at or near eye level when seated, typically 42\"–48\" from the floor for most living rooms. On fireplaces this sometimes means a slightly higher placement — we discuss it with you first and never mount at a height that creates neck strain or heat damage risk." },
-  { q: "How do you hide cables on a fireplace wall?", a: "On drywall fireplace surrounds we can route cables in-wall using a power bridge kit — the cleanest option. On brick, stone or tile we use a slim surface raceway painted to match or we route along the sides of the fireplace. Cable concealment starts at $60 per TV as an add-on, depending on the wall and the length of the run." },
+  { q: "How do you hide cables on a fireplace wall?", a: "On drywall fireplace surrounds we can route cables in-wall using a power bridge kit — the cleanest option. On brick, stone or tile we use a slim surface raceway painted to match or we route along the sides of the fireplace. Cable concealment starts at $70 per TV as an add-on, depending on the wall and the length of the run." },
   { q: "Do you mount TVs on brick and stone fireplaces?", a: "Yes. Brick, stone, and tile fireplaces are common in Nashville. Hard surfaces carry a surcharge starting at $25 to cover the masonry bits and specialized anchors required, with the exact amount depending on the material and difficulty. The installation is just as secure and clean." },
   { q: "Do you work on all fireplace types?", a: "Yes — gas, wood-burning, electric and decorative fireplaces. Each type has different heat considerations and we assess all of them before mounting." },
   { q: "Can you hide the TV wires going into the fireplace wall?", a: "Yes. We can run cables through the wall beside or above the fireplace opening using a power bridge kit, or use a surface raceway for walls where in-wall routing isn't possible. We discuss the best option for your specific wall before starting." },
@@ -139,7 +139,7 @@ export default function FireplaceTvMountingPage() {
               { item: "TV 60\" – 70\"", price: "From $150" },
               { item: "Fireplace Surcharge", price: "From +$25" },
               { item: "Hard Wall (brick/stone/tile)", price: "From +$25" },
-              { item: "Cable Concealment", price: "From +$60" },
+              { item: "Cable Concealment", price: "From +$70" },
               { item: "Mantel Mount / Pull-Down", price: "Custom quote" },
               { item: "75\"+ Large TV", price: "Ask" },
             ].map(p => (

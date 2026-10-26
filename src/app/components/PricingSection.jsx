@@ -26,7 +26,7 @@ const BASE = [
 ]
 
 const ADDONS = [
-  ["Cable concealment", "From $60 per TV"],
+  ["Cable concealment", "From $70 per TV"],
   ["Over a fireplace", "From $25 extra"],
   ["Brick, stone, tile, concrete or metal wall", "From $25 extra"],
   ["Drywall", "No extra charge"],

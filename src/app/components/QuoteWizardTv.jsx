@@ -48,7 +48,7 @@ export default function QuoteWizardTv() {
     if (tv.tvSize === '<55') cost += 99
     if (tv.tvSize === '>=55') cost += 120
     if (tv.wallType === 'Brick' || tv.wallType === 'Concrete') cost += 25
-    if (tv.hideCables === 'Yes') cost += 60
+    if (tv.hideCables === 'Yes') cost += 70
     return cost
   }
 
@@ -175,7 +175,7 @@ export default function QuoteWizardTv() {
 
                     <select name="hideCables" value={tv.hideCables} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Hide Cables?</option>
-                      <option value="Yes">Yes (from +$60)</option>
+                      <option value="Yes">Yes (from +$70)</option>
                       <option value="No">No</option>
                     </select>
 
