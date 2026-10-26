@@ -7,6 +7,7 @@ export default function InstallersPage() {
   const [form,       setForm]       = useState({ name: "", email: "", phone: "" })
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState("")
+  const [editingId,  setEditingId]  = useState(null)
 
   useEffect(() => { load() }, [])
 
@@ -72,6 +73,7 @@ export default function InstallersPage() {
                 placeholder="(615) 000-0000"
                 className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
               />
+              <p className="mt-1 text-[11px] text-gray-400">{PHONE_HINT}</p>
             </div>
           </div>
           <div>
@@ -111,6 +113,16 @@ export default function InstallersPage() {
           <ul className="divide-y divide-gray-100">
             {installers.map(inst => (
               <li key={inst.id} className="px-6 py-4">
+                {editingId === inst.id ? (
+                  <InstallerEditForm
+                    installer={inst}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={updated => {
+                      setInstallers(prev => prev.map(i => i.id === updated.id ? updated : i))
+                      setEditingId(null)
+                    }}
+                  />
+                ) : (
                 <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
                   <span className="text-[#E50914] font-bold text-sm">
@@ -122,7 +134,14 @@ export default function InstallersPage() {
                   <p className="text-xs text-gray-500 mt-0.5">
                     {inst.email}{inst.phone ? ` · ${inst.phone}` : ""}
                   </p>
+                  <WhatsAppStatus installer={inst} />
                 </div>
+                <button
+                  onClick={() => setEditingId(inst.id)}
+                  className="text-xs text-gray-500 hover:text-gray-900 transition font-medium"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={() => remove(inst.id)}
                   className="text-xs text-gray-400 hover:text-red-500 transition font-medium"
@@ -130,6 +149,7 @@ export default function InstallersPage() {
                   Remove
                 </button>
                 </div>
+                )}
                 <CrewPageLink installer={inst} />
               </li>
             ))}
@@ -137,6 +157,80 @@ export default function InstallersPage() {
         )}
       </div>
     </div>
+  )
+}
+
+const PHONE_HINT = "US number: 10 digits. Any other country: start with + and its code."
+
+// Whether a job assignment will reach this installer on WhatsApp, worked out by
+// the server from the saved phone (see installerNumber in lib/whatsapp.js).
+function WhatsAppStatus({ installer }) {
+  if (installer.whatsappNumber) {
+    return <p className="text-[11px] text-emerald-600 mt-0.5">✓ WhatsApp job alerts to +{installer.whatsappNumber}</p>
+  }
+  return (
+    <p className="text-[11px] text-amber-600 mt-0.5">
+      ⚠️ No WhatsApp job alerts: {installer.phone ? "this phone can't be reached. " : "no phone saved. "}{PHONE_HINT}
+    </p>
+  )
+}
+
+// Correct a name, email or phone in place. Removing and re-adding the installer
+// would make a new one, splitting their jobs and pay history across two.
+function InstallerEditForm({ installer, onSaved, onCancel }) {
+  const [form,   setForm]   = useState({
+    name: installer.name || "", email: installer.email || "", phone: installer.phone || "",
+  })
+  const [saving, setSaving] = useState(false)
+  const [err,    setErr]    = useState("")
+
+  async function save(e) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.email.trim()) { setErr("Name and email are required"); return }
+    setSaving(true); setErr("")
+    try {
+      const d = await fetch("/api/installers", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: installer.id, ...form }),
+      }).then(r => r.json())
+      if (d.ok) onSaved(d.installer); else setErr(d.error || "Could not save.")
+    } catch { setErr("No connection.") } finally { setSaving(false) }
+  }
+
+  const field = (key, label, props = {}) => (
+    <div>
+      <label className="text-xs font-semibold text-gray-500">{label}</label>
+      <input
+        value={form[key]}
+        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+        className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+        {...props}
+      />
+    </div>
+  )
+
+  return (
+    <form onSubmit={save} className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {field("name", "Full Name *")}
+        <div>
+          {field("phone", "Phone", { placeholder: "(615) 000-0000", inputMode: "tel" })}
+          <p className="mt-1 text-[11px] text-gray-400">{PHONE_HINT}</p>
+        </div>
+      </div>
+      {field("email", "Email *", { type: "email" })}
+      {err && <p role="alert" className="text-xs text-red-500 font-medium">{err}</p>}
+      <div className="flex gap-2">
+        <button type="submit" disabled={saving}
+          className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-2.5 hover:bg-red-700 transition disabled:opacity-50">
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button type="button" onClick={onCancel} disabled={saving}
+          className="rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+          Cancel
+        </button>
+      </div>
+    </form>
   )
 }
 

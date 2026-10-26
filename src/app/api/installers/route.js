@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { installerNumber } from "@/app/lib/whatsapp.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -50,19 +51,41 @@ export async function POST(request) {
       VALUES (${name}, ${email}, ${phone || ""})
       RETURNING *
     `
-    return Response.json({ ok: true, installer: row })
+    return Response.json({ ok: true, installer: toInstaller(row) })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
   }
 }
 
-// Set an installer's default cut.
+// Set an installer's default cut, or correct their contact details.
 export async function PATCH(request) {
   if (!(await isAdminRequest(request))) return unauthorized()
   try {
-    const { id, commissionType, commissionValue, crewShare } = await request.json()
+    const body = await request.json()
+    const { id, commissionType, commissionValue, crewShare } = body
     if (!id) return Response.json({ ok: false, error: "id required" }, { status: 400 })
+
+    // Contact details, from the edit form on the Installers screen, which
+    // always sends all three. Jobs already assigned keep the name and email
+    // they were assigned under; new assignments use these.
+    if (["name", "email", "phone"].some(k => k in body)) {
+      const name  = String(body.name  ?? "").trim()
+      const email = String(body.email ?? "").trim()
+      const phone = String(body.phone ?? "").trim()
+      if (!name || !email) {
+        return Response.json({ ok: false, error: "Name and email are required" }, { status: 400 })
+      }
+      const sql = db()
+      await ensureTable(sql)
+      const [row] = await sql`
+        UPDATE installers SET name = ${name}, email = ${email}, phone = ${phone}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      if (!row) return Response.json({ ok: false, error: "Installer not found" }, { status: 404 })
+      return Response.json({ ok: true, installer: toInstaller(row) })
+    }
 
     const type  = commissionType === "fixed" ? "fixed" : "percent"
     const value = Number(commissionValue)
@@ -128,5 +151,8 @@ function toInstaller(row) {
     commissionType:  row.commission_type || "percent",
     commissionValue: row.commission_value == null ? 65 : Number(row.commission_value),
     crewShare:       row.crew_share == null ? 50 : Number(row.crew_share),
+    // The number the job WhatsApp will go to, or null when the saved phone
+    // can't be reached, so the screen can say so before a job goes silent.
+    whatsappNumber:  installerNumber(row.phone),
   }
 }
