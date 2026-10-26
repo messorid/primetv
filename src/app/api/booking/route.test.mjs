@@ -183,6 +183,16 @@ test("client confirmation keeps its content after the shared-module extraction",
   }
 })
 
+test("hidden cable runs are charged at $70 each in both booking emails", async () => {
+  sent.length = 0; inserts = 0; failInsert = false; cableIsBoolean = false
+  await call("good@example.com", 2)
+
+  const client   = sent.find(m => m.to === "good@example.com")
+  const business = sent.find(m => /^New Booking/.test(m.subject))
+  assert.match(client.html, /Cable Concealment ×2[^<]*\+\$140/)
+  assert.match(business.html, /×2 — \$140/)
+})
+
 // Every message a booking produces lands in the business inbox, and nothing is
 // addressed to the two personal Gmail inboxes that used to receive them.
 // Runs with the stale overrides production still had, so a revert to the old

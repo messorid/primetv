@@ -22,6 +22,10 @@ export const PROMO_PRICES = {
   '1 TV up to 55" + 1 TV up to 70"': "From $230",
 }
 
+// Per hidden cable run. The booking form shows the same figure (CABLE_RUN_PRICE
+// in BookingFormSection.jsx), so change both together.
+export const CABLE_RUN_PRICE = 70
+
 export const HOME_INSTALL_LABELS = {
   furniture:      "Furniture Assembly",
   mirror_picture: "Picture / Mirror Hanging",
@@ -118,7 +122,7 @@ export function buildClientEmail(b, { organizer } = {}) {
     : ""
 
   const cableQty   = parseInt(b.cableConcealment) || 0
-  const cableTotal = cableQty * 60
+  const cableTotal = cableQty * CABLE_RUN_PRICE
 
   const anyFrameTv = tvList.some(tv => tv?.model === "frame")
 

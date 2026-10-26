@@ -48,6 +48,10 @@ const PROMOS = [
   { label: '1 TV up to 55" + 1 TV up to 70"',   price: "From $230" },
 ]
 
+// Per hidden cable run. The booking emails charge the same (CABLE_RUN_PRICE in
+// lib/clientEmail.js), so change both together.
+const CABLE_RUN_PRICE = 70
+
 const REFERRAL_OPTIONS = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Other"]
 // No cards and no checks — the note under the choices says so too.
 const PAYMENT_OPTIONS  = ["Cash", "Zelle", "PayPal", "Venmo", "Other"]
@@ -924,14 +928,14 @@ export default function BookingFormSection() {
 /* ── Sub-components ───────────────────────────────────────────────────────── */
 
 function CableToggle({ count, onChange }) {
-  const total = count * 60
+  const total = count * CABLE_RUN_PRICE
   return (
     <div>
       <div className="flex items-center justify-between gap-3 bg-white rounded-xl border border-black/10 px-4 py-3">
         <div>
           <span className="text-sm font-bold">🔌 Hidden Cable Concealment</span>
           <span className="block text-xs text-muted mt-0.5">
-            In-wall routing or raceway — <strong className="text-black/70">from $60 per run</strong>
+            In-wall routing or raceway — <strong className="text-black/70">from ${CABLE_RUN_PRICE} per run</strong>
           </span>
         </div>
         <div className="flex items-center gap-2 flex-none">

@@ -14,7 +14,7 @@ import {
   esc, escLines, fmtDate, emailDocument, heading, para, sectionTitle, details,
   panel, customerCard, contactActions, appointmentBlock,
 } from "./emailLayout.js"
-import { PROMO_PRICES, HOME_INSTALL_LABELS } from "./clientEmail.js"
+import { PROMO_PRICES, HOME_INSTALL_LABELS, CABLE_RUN_PRICE } from "./clientEmail.js"
 
 function rawAddress(a = {}) {
   return [a.street, a.apt, [a.city, a.state].filter(Boolean).join(", "), a.zip]
@@ -30,7 +30,7 @@ function context(body) {
     body.customQuote && body.customPrice != null && body.customPrice !== "" ? parseFloat(body.customPrice) : null
   return {
     info, tvs, mode, cableQty,
-    cableTotal: cableQty * 60,
+    cableTotal: cableQty * CABLE_RUN_PRICE,
     name: `${info.firstName || ""} ${info.lastName || ""}`.trim(),
     address: rawAddress(body.address),
     isPromo: mode === "promo",
