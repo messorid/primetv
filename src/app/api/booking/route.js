@@ -11,6 +11,9 @@ import {
 import { notifyWhatsApp } from "../../lib/whatsapp.js"
 import { bookingAlert } from "../../lib/whatsappAlerts.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
+import { ensureSmsTables, recordConsent } from "../../lib/sms.js"
+import { toE164 } from "../../lib/smsRules.js"
+import { SMS_CONSENT_TEXT, SMS_CONSENT_VERSION } from "../../lib/smsConfig.js"
 
 export async function POST(request) {
   try {
@@ -154,6 +157,27 @@ export async function POST(request) {
         dbErrMsg = dbErr?.message || String(dbErr)
         console.error(`DB save error (attempt ${attempt}/3)`, dbErr)
         if (attempt < 3) await new Promise(r => setTimeout(r, 400 * attempt))
+      }
+    }
+
+    // ── SMS consent ─────────────────────────────────────────────────────────────
+    // Only when the customer ticked the optional box. Stored with the exact
+    // words shown, their version, the time, IP and browser — the record that
+    // shows the consent was real. Kept apart from the booking so a problem
+    // here can never lose the booking itself.
+    if (info?.smsConsent === true && toE164(info.phone)) {
+      try {
+        const sql = neon(process.env.DATABASE_URL)
+        await ensureSmsTables(sql)
+        await recordConsent(sql, {
+          phone: toE164(info.phone), method: "booking_form",
+          consentText: SMS_CONSENT_TEXT, consentVersion: SMS_CONSENT_VERSION,
+          givenAt: new Date().toISOString(), recordedBy: "website",
+          ip: (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || null,
+          userAgent: (request.headers.get("user-agent") || "").slice(0, 300) || null,
+        })
+      } catch (consentErr) {
+        console.error("SMS consent save failed", consentErr)
       }
     }
 

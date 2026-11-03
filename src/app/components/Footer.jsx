@@ -48,6 +48,7 @@ const legalLinks = [
   { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Cookies Policy", href: "/cookies-policy" },
+  { label: "SMS Terms", href: "/sms-terms" },
   { label: "Accessibility", href: "/accessibility" },
 ]
 

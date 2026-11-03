@@ -184,9 +184,14 @@ export default function TodayPage() {
               </section>
 
               <section aria-labelledby="tomorrow-jobs">
-                <h2 id="tomorrow-jobs" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-gray-500">
-                  Tomorrow · {fmtDay(tomorrow)} <span className="text-gray-400">({view.tomorrows.length})</span>
-                </h2>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="tomorrow-jobs" className="text-sm font-extrabold uppercase tracking-widest text-gray-500">
+                    Tomorrow · {fmtDay(tomorrow)} <span className="text-gray-400">({view.tomorrows.length})</span>
+                  </h2>
+                  <Link href="/admin/reminders" className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-800 hover:border-[#E50914]/50">
+                    📱 Send reminders
+                  </Link>
+                </div>
                 {view.tomorrows.length === 0 ? (
                   <Empty>Nothing booked for tomorrow.</Empty>
                 ) : (

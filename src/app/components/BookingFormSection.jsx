@@ -10,6 +10,7 @@ import {
   CheckboxField, ErrorSummary, StepHeading, PrimaryButton, SecondaryButton, focusField,
 } from "./forms/FormKit"
 import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAGES } from "../lib/formValidation"
+import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -117,7 +118,7 @@ export default function BookingFormSection() {
   const [address, setAddress] = useState({ street: "", apt: "", city: "", state: "TN", zip: "" })
   const [info,    setInfo]    = useState({
     firstName: "", lastName: "", email: "", phone: "",
-    referral: "", payment: "", agreed: false,
+    referral: "", payment: "", agreed: false, smsConsent: false,
   })
 
   const today = new Date().toISOString().split("T")[0]
@@ -866,6 +867,16 @@ export default function BookingFormSection() {
                       Terms &amp; Conditions
                     </a>
                     {" "}including the wall liability notice, and authorize PrimeTvNashville to perform the requested services.
+                  </CheckboxField>
+
+                  {/* Optional and unchecked: texts are never a condition of
+                      booking. The exact words are stored with the consent. */}
+                  <CheckboxField id="bk-sms" checked={info.smsConsent}
+                    onChange={v => setInfo(i => ({ ...i, smsConsent: v }))}>
+                    <span className="font-semibold text-black">Optional: </span>{SMS_CONSENT_TEXT}{" "}
+                    <a href="/sms-terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-black underline underline-offset-1">SMS Terms</a>
+                    {" "}&amp;{" "}
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-semibold text-black underline underline-offset-1">Privacy Policy</a>.
                   </CheckboxField>
                 </div>
 
