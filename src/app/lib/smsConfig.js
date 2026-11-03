@@ -11,6 +11,9 @@ export const SMS_BRAND = "PrimeTV"
 export const SMS_PREFIX = `${SMS_BRAND}:`
 export const SMS_SUFFIX = "Reply STOP to opt out."
 
+// The number to CALL for help. Texts come from a separate Twilio number, which
+// is deliberately not named in the consent or the terms: consent is given to
+// the business, so the sending number can change without asking anyone again.
 export const SMS_PHONE_DISPLAY = "(615) 669-0251"
 export const SMS_TERMS_PATH = "/sms-terms"
 
@@ -26,11 +29,11 @@ export const ARRIVAL_WINDOW_MIN = 30
 // stored with every consent, so a later change to the wording never rewrites
 // what an earlier customer agreed to. Change the version whenever the text
 // changes.
-export const SMS_CONSENT_VERSION = "2026-11-03"
+export const SMS_CONSENT_VERSION = "2026-11-03.2"
 export const SMS_CONSENT_TEXT =
-  `Yes, text me appointment reminders and, after my job, a request for a review from ${SMS_BRAND} ` +
-  `at ${SMS_PHONE_DISPLAY}. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, ` +
-  `HELP for help. Consent is not a condition of booking.`
+  `Yes, ${SMS_BRAND} may text me appointment reminders and, after my job, a request for a review. ` +
+  `Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. ` +
+  `Consent is not a condition of booking.`
 
 // How consent was given, as stored.
 export const CONSENT_METHODS = {

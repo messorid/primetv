@@ -12,6 +12,9 @@ completa la persona que registra.
 
 ---
 
+**Numero de envio (Twilio):** (615) 395-6565. El (615) 669-0251 es solo el numero
+para llamar y pedir ayuda.
+
 ## 1. Marca (Sole Proprietor Brand)
 
 | Campo | Valor |
@@ -50,7 +53,7 @@ PrimeTvNashville ("PrimeTV") is a TV mounting and home installation company in N
 
 ```
 Customers opt in in one of two ways.
-1) Online booking form at https://www.primetvnashville.com/book: an optional, unchecked checkbox, not required to book, that reads: "Optional: Yes, text me appointment reminders and, after my job, a request for a review from PrimeTV at (615) 669-0251. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not a condition of booking. SMS Terms & Privacy Policy." The links go to https://www.primetvnashville.com/sms-terms and https://www.primetvnashville.com/privacy-policy. We store the exact text agreed to, the date and time, IP address and browser.
+1) Online booking form at https://www.primetvnashville.com/book: an optional, unchecked checkbox, not required to book, that reads: "Optional: Yes, PrimeTV may text me appointment reminders and, after my job, a request for a review. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not a condition of booking. SMS Terms & Privacy Policy." The links go to https://www.primetvnashville.com/sms-terms and https://www.primetvnashville.com/privacy-policy. We store the exact text agreed to, the date and time, IP address and browser.
 2) Customers who text our number first: we answer their questions (customer care). Before sending any appointment reminder or review request, our staff asks "Can we text you a reminder the day before your appointment and a review request after the job? Reply YES to agree." and records the customer's YES with its date and time.
 Customers who reply STOP receive no further messages.
 ```

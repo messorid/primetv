@@ -17,7 +17,7 @@ export default function SmsTermsPage() {
         <div className="mt-8 space-y-6 text-lg leading-relaxed text-body">
           <h2 className="pt-2 text-xl font-bold text-ink">What we send</h2>
           <p>
-            {SMS_BRAND} (PrimeTvNashville) texts customers from {SMS_PHONE_DISPLAY} about their own appointments:
+            {SMS_BRAND} (PrimeTvNashville) texts customers about their own appointments:
           </p>
           <ul className="list-disc space-y-2 pl-6">
             <li>a reminder the day before your installation, with the time we&apos;ll arrive;</li>

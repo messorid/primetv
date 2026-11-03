@@ -91,7 +91,7 @@ test("a delivered status is not overwritten by a late 'sent'", () => {
 })
 
 test("the consent checkbox says what, who, how often, cost and how to stop", () => {
-  for (const must of ["reminders", "review", "PrimeTV", "(615) 669-0251", "frequency varies", "Msg & data rates may apply", "STOP", "HELP", "not a condition"]) {
+  for (const must of ["reminders", "review", "PrimeTV", "frequency varies", "Msg & data rates may apply", "STOP", "HELP", "not a condition"]) {
     assert.ok(SMS_CONSENT_TEXT.includes(must), must)
   }
 })
