@@ -26,6 +26,10 @@ completa la persona que registra.
 | Website | `https://www.primetvnashville.com` |
 
 Notas:
+- **La cuenta de Twilio no puede estar en Trial:** las cuentas de prueba no pueden
+  registrar A2P. Hay que hacer "Upgrade" antes.
+- El celular para el código (OTP) debe ser de EE. UU. o Canadá y **no puede ser un
+  número de Twilio** ni de otro proveedor similar. El código se responde en 24 horas.
 - Sole Proprietor no lleva EIN. En enero, con la LLC y el EIN, se crea una
   marca **Standard** y se vuelve a registrar la campaña con el mismo número.
 - El nombre que ven los clientes en los textos está en
@@ -49,6 +53,18 @@ Customers opt in in one of two ways.
 1) Online booking form at https://www.primetvnashville.com/book: an optional, unchecked checkbox, not required to book, that reads: "Optional: Yes, text me appointment reminders and, after my job, a request for a review from PrimeTV at (615) 669-0251. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not a condition of booking. SMS Terms & Privacy Policy." The links go to https://www.primetvnashville.com/sms-terms and https://www.primetvnashville.com/privacy-policy. We store the exact text agreed to, the date and time, IP address and browser.
 2) Customers who text our number first: we answer their questions (customer care). Before sending any appointment reminder or review request, our staff asks "Can we text you a reminder the day before your appointment and a review request after the job? Reply YES to agree." and records the customer's YES with its date and time.
 Customers who reply STOP receive no further messages.
+```
+
+**Privacy policy URL**
+
+```
+https://www.primetvnashville.com/privacy-policy
+```
+
+**Terms and conditions URL**
+
+```
+https://www.primetvnashville.com/sms-terms
 ```
 
 **Sample messages** (pega los tres)
