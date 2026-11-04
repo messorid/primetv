@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { finalizeBody, segments, displayPhone, MAX_SMS_CHARS } from "@/app/lib/smsRules"
-import { SMS_PREFIX, SMS_SUFFIX, CONSENT_METHODS } from "@/app/lib/smsConfig"
+import { SMS_PREFIX, SMS_SUFFIX, CONSENT_METHODS, SMS_CONSENT_ASK } from "@/app/lib/smsConfig"
 
 const SENDER_KEY = "primetv-sms-sender"
 const fmtDay = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })
@@ -277,9 +277,9 @@ function ConsentDialog({ a, sender, onClose, onSaved }) {
   return (
     <Dialog title={`Record SMS consent — ${a.name || "customer"}`} onClose={onClose}>
       <p className="text-sm text-gray-700">
-        Only when the customer replied <strong>YES</strong> by text to being asked if we can text them reminders and a review request.
-        A customer who simply texted us first is not enough.
+        Only when the customer replied <strong>YES</strong> by text to this message. A customer who simply texted us first is not enough.
       </p>
+      <p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">{SMS_CONSENT_ASK}</p>
       <label className="mt-4 block text-sm font-semibold text-gray-800">
         When they replied YES
         <input type="datetime-local" value={at} onChange={e => setAt(e.target.value)} max={nowLocal()}
