@@ -135,7 +135,7 @@ export default function TermsPage() {
           <div>
             <h2 className="text-base font-bold text-black mb-2">8. SMS Terms</h2>
             <p>
-              PrimeTvNashville (&quot;PrimeTV&quot;) sends text messages only to customers who agree to receive them: appointment reminders, a request for a review after the job, and replies to messages you send us. Agreeing is optional and is not a condition of booking. Message frequency varies. Message and data rates may apply. Reply STOP at any time to opt out, or HELP for help. Carriers are not liable for delayed or undelivered messages. See our{" "}
+              PrimeTvNashville (&quot;PrimeTV&quot;) sends text messages only to customers who agree to receive them by ticking the optional box on our booking form: appointment reminders, a request for a review after the job, and replies when you answer our texts. Agreeing is optional and is not a condition of booking. Message frequency varies. Message and data rates may apply. Reply STOP at any time to opt out, or HELP for help. Carriers are not liable for delayed or undelivered messages. See our{" "}
               <a href="/sms-terms" className="text-[#E50914] font-semibold">SMS Terms</a> and{" "}
               <a href="/privacy-policy" className="text-[#E50914] font-semibold">Privacy Policy</a>.
             </p>

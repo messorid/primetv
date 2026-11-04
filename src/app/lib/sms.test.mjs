@@ -4,7 +4,7 @@ import {
   toE164, arrivalWindow, buildReminder, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
 } from "./smsRules.js"
 import { consentState, twilioSignature, validTwilioSignature, sendSms, smsMode, statusRank } from "./sms.js"
-import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT, SMS_CONSENT_ASK } from "./smsConfig.js"
+import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT } from "./smsConfig.js"
 
 test("phones become E.164, and bad ones are refused", () => {
   assert.equal(toE164("(615) 555-0142"), "+16155550142")
@@ -88,12 +88,6 @@ test("without SMS_MODE nothing is sent: dry-run is the default", async () => {
 test("a delivered status is not overwritten by a late 'sent'", () => {
   assert.ok(statusRank("delivered") > statusRank("sent"))
   assert.ok(statusRank("sent") > statusRank("queued"))
-})
-
-test("asking for consent by text is a complete statement", () => {
-  for (const must of ["PrimeTV", "reminders", "review", "frequency varies", "Msg & data rates may apply", "YES", "STOP", "HELP"]) {
-    assert.ok(SMS_CONSENT_ASK.includes(must), must)
-  }
 })
 
 test("the consent checkbox says what, who, how often, cost and how to stop", () => {

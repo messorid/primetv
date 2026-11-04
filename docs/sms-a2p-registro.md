@@ -46,16 +46,22 @@ Notas:
 **Campaign description**
 
 ```
-PrimeTvNashville ("PrimeTV") is a TV mounting and home installation company in Nashville, TN. This number is used for two things with our own customers: (1) customer care — answering texts customers send us about quotes, bookings and their installation; and (2) appointment messages sent one at a time by our staff: a reminder the day before the customer's appointment with the arrival time, and, after the job is completed, a request to leave a review on Google. Every outgoing message is written or reviewed and sent manually by a team member; we send no marketing, promotions or bulk messages.
+PrimeTvNashville ("PrimeTV") is a TV mounting and home installation company in Nashville, TN. We text customers who opted in on our online booking form: a reminder the day before their appointment with the arrival time and, after the job is completed, a request to leave a review on Google. When a customer replies, our team answers their questions about the booking (customer care). Every outgoing message is written or reviewed and sent manually by a team member. We send no marketing, promotions or bulk messages.
 ```
 
-**Message flow / Call to action (how customers opt in)**
+**Primary opt-in method:** website / online form
+
+**Message flow**
 
 ```
-Customers opt in in one of two ways.
-1) Online booking form at https://www.primetvnashville.com/book: an optional, unchecked checkbox, not required to book, that reads: "Optional: Yes, PrimeTV may text me appointment reminders and, after my job, a request for a review. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not a condition of booking. SMS Terms & Privacy Policy." The links go to https://www.primetvnashville.com/sms-terms and https://www.primetvnashville.com/privacy-policy. We store the exact text agreed to, the date and time, IP address and browser.
-2) Customers who text our number first: we answer their questions (customer care). Before sending any appointment reminder or review request, our staff sends this message: "PrimeTV: Hi [First Name], would you like text reminders for your appointment and, after your job, a request for a review? Msg frequency varies. Msg & data rates may apply. Reply YES to agree, STOP to opt out, HELP for help." and records the customer's YES with its date and time.
-Customers who reply STOP receive no further messages.
+Customers find PrimeTvNashville through Google search, our Facebook and Instagram pages, and word of mouth. They go to our website, https://www.primetvnashville.com, where the "Book installation" buttons lead to the online booking form at https://www.primetvnashville.com/book. On that form the customer enters their own name, mobile number and appointment details. On the last step there is an optional, unchecked checkbox, not required to book, that reads: "Optional: Yes, PrimeTV may text me appointment reminders and, after my job, a request for a review. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not a condition of booking. SMS Terms & Privacy Policy." The links go to https://www.primetvnashville.com/sms-terms and https://www.primetvnashville.com/privacy-policy. The same wording is displayed on the /book page below the form. Customers who leave the box unchecked can still book and receive no text messages. We store the exact text agreed to, the date and time, IP address and browser. We never use purchased or third-party lists. Customers who reply STOP receive no further messages.
+```
+
+**Opt-in method proof**
+
+```
+Live public web form: https://www.primetvnashville.com/book
+The SMS opt-in is an optional, unchecked checkbox on the final step of the booking form, directly below the Terms & Conditions checkbox. It is not required to submit the form. The exact checkbox wording is displayed on the same page, below the form, under "Optional text messages".
 ```
 
 **Privacy policy URL**
@@ -64,24 +70,28 @@ Customers who reply STOP receive no further messages.
 https://www.primetvnashville.com/privacy-policy
 ```
 
-**Terms and conditions URL** (Twilio exige una pagina titulada "Terms & Conditions" con seccion de SMS)
+**Terms and conditions URL**
 
 ```
 https://www.primetvnashville.com/terms
 ```
 
-**Sample messages** (pega los tres)
+**Sample messages**
 
 ```
-PrimeTV: Hi Mike, reminder that we'll be at your home tomorrow, Nov 5, between 2-2:30 PM for your TV mounting. Reply here with any questions. Reply STOP to opt out.
-```
-
-```
-PrimeTV: Hi Mike, thanks for choosing us for your TV mounting. If you have a minute, we'd be grateful for a quick Google review: https://g.page/r/CblSDOdhtcueEBI/review Reply STOP to opt out.
+PrimeTV: Hi [First Name], reminder that we'll be at your home tomorrow, [Date], between [Arrival Window] for your [Service]. Reply here with any questions. Reply STOP to opt out.
 ```
 
 ```
-PrimeTV: Hi Sarah, thanks for your message. Your installation is booked for Thursday, Nov 12, between 10-10:30 AM. Reply here with any questions. Reply STOP to opt out.
+PrimeTV: Hi [First Name], thanks for choosing us for your [Service]. If you have a minute, we'd be grateful for a quick Google review: https://g.page/r/CblSDOdhtcueEBI/review Reply STOP to opt out.
+```
+
+```
+PrimeTV: Hi [First Name], thanks for your message. Your installation is booked for [Date], between [Arrival Window]. Reply here with any questions. Reply STOP to opt out.
+```
+
+```
+PrimeTV: Hi [First Name], thanks for your message. We can move your [Service] to [Date], between [Arrival Window]. Please reply to confirm. Reply STOP to opt out.
 ```
 
 **Opt-in / opt-out / help**

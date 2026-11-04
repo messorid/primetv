@@ -22,14 +22,14 @@ export default function SmsTermsPage() {
           <ul className="list-disc space-y-2 pl-6">
             <li>a reminder the day before your installation, with the time we&apos;ll arrive;</li>
             <li>after your job is done, a request to review our work; and</li>
-            <li>replies when you text us with a question.</li>
+            <li>replies when you answer one of our texts.</li>
           </ul>
           <p>Every text is sent by a member of our team. We don&apos;t send advertising or promotions by text.</p>
 
           <h2 className="pt-2 text-xl font-bold text-ink">How you sign up</h2>
           <p>
-            You can tick the optional box when you book on our website, which reads: &ldquo;{SMS_CONSENT_TEXT}&rdquo;
-            You can also agree by replying YES when we ask you by text. Agreeing is never required to book.
+            You sign up by ticking the optional box when you book on our website, which reads: &ldquo;{SMS_CONSENT_TEXT}&rdquo;
+            Agreeing is never required to book.
           </p>
 
           <h2 className="pt-2 text-xl font-bold text-ink">How often</h2>

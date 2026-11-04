@@ -35,13 +35,8 @@ export const SMS_CONSENT_TEXT =
   `Message frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. ` +
   `Consent is not a condition of booking.`
 
-// What staff text to ask for consent. A complete statement, not a bare
-// question: who, what, how often, cost and how to stop, as the registered
-// campaign says. It has to match docs/sms-a2p-registro.md.
-export const SMS_CONSENT_ASK = `${SMS_PREFIX} Hi [First Name], would you like text reminders for your appointment and, after your job, a request for a review? Msg frequency varies. Msg & data rates may apply. Reply YES to agree, STOP to opt out, HELP for help.`
-
-// How consent was given, as stored.
+// How consent was given, as stored. The registered campaign has one way in: the
+// box on the booking form.
 export const CONSENT_METHODS = {
   booking_form: "Checked the SMS box when booking on the website",
-  text_yes: "Replied YES by text when asked",
 }

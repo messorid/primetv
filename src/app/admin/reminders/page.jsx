@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { finalizeBody, segments, displayPhone, MAX_SMS_CHARS } from "@/app/lib/smsRules"
-import { SMS_PREFIX, SMS_SUFFIX, CONSENT_METHODS, SMS_CONSENT_ASK } from "@/app/lib/smsConfig"
+import { SMS_PREFIX, SMS_SUFFIX } from "@/app/lib/smsConfig"
 
 const SENDER_KEY = "primetv-sms-sender"
 const fmtDay = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })
@@ -24,7 +24,6 @@ export default function RemindersPage() {
   const [date, setDate] = useState("")
   const [error, setError] = useState("")
   const [compose, setCompose] = useState(null)   // appointment being texted
-  const [consentFor, setConsentFor] = useState(null)
 
   useEffect(() => {
     try { const s = localStorage.getItem(SENDER_KEY) || ""; setSender(s); setSenderDraft(s) } catch {}
@@ -138,7 +137,7 @@ export default function RemindersPage() {
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 {a.consent && !a.optedOut ? (
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">
-                    ✓ SMS consent · {CONSENT_METHODS[a.consent.method] ? (a.consent.method === "booking_form" ? "booking form" : "replied YES") : a.consent.method} · {fmtWhen(a.consent.givenAt)}
+                    ✓ SMS consent · {a.consent.method === "booking_form" ? "booking form" : a.consent.method} · {fmtWhen(a.consent.givenAt)}
                   </span>
                 ) : a.optedOut ? (
                   <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 font-semibold text-red-800">⛔ Opted out (STOP)</span>
@@ -157,12 +156,7 @@ export default function RemindersPage() {
                   className="rounded-xl bg-[#E50914] px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-700">
                   📱 {last ? "Send reminder again" : "Send reminder"}
                 </button>
-                {!a.consent || a.optedOut ? (
-                  <button type="button" disabled={!sender || !a.phone} onClick={() => setConsentFor(a)}
-                    className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-40">
-                    Record a YES by text
-                  </button>
-                ) : (
+                {a.consent && !a.optedOut && (
                   <button type="button" disabled={!sender} onClick={() => markStop(a)}
                     className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-40">
                     Customer said STOP
@@ -176,7 +170,6 @@ export default function RemindersPage() {
       </ul>
 
       {compose && <ComposeDialog a={compose} sender={sender} onClose={() => setCompose(null)} onSent={() => { setCompose(null); load(date) }} />}
-      {consentFor && <ConsentDialog a={consentFor} sender={sender} onClose={() => setConsentFor(null)} onSaved={() => { setConsentFor(null); load(date) }} />}
     </div>
   )
 }
@@ -251,50 +244,6 @@ function ComposeDialog({ a, sender, onClose, onSent }) {
         <button type="button" onClick={send} disabled={busy || (last && !again) || final.length > MAX_SMS_CHARS}
           className="flex-1 rounded-xl bg-[#E50914] py-3 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-40">
           {busy ? "Sending…" : "Confirm & send"}
-        </button>
-      </div>
-    </Dialog>
-  )
-}
-
-function ConsentDialog({ a, sender, onClose, onSaved }) {
-  const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16) }
-  const [at, setAt] = useState(nowLocal())
-  const [note, setNote] = useState("")
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState("")
-  async function save() {
-    setBusy(true); setErr("")
-    try {
-      const res = await fetch("/api/sms/consent", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: a.id, action: "text_yes", givenAt: new Date(at).toISOString(), note, recordedBy: sender }),
-      })
-      const json = await res.json()
-      if (json.ok) onSaved(); else setErr(json.error || "Not saved.")
-    } catch { setErr("No connection.") } finally { setBusy(false) }
-  }
-  return (
-    <Dialog title={`Record SMS consent — ${a.name || "customer"}`} onClose={onClose}>
-      <p className="text-sm text-gray-700">
-        Only when the customer replied <strong>YES</strong> by text to this message. A customer who simply texted us first is not enough.
-      </p>
-      <p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">{SMS_CONSENT_ASK}</p>
-      <label className="mt-4 block text-sm font-semibold text-gray-800">
-        When they replied YES
-        <input type="datetime-local" value={at} onChange={e => setAt(e.target.value)} max={nowLocal()}
-          className="mt-1.5 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base" />
-      </label>
-      <label className="mt-3 block text-sm font-semibold text-gray-800">
-        What they wrote
-        <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Yes please text me"
-          className="mt-1.5 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base" />
-      </label>
-      {err && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
-      <div className="mt-5 flex gap-2">
-        <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700">Cancel</button>
-        <button type="button" onClick={save} disabled={busy || !note.trim()} className="flex-1 rounded-xl bg-gray-900 py-3 text-sm font-bold text-white disabled:opacity-40">
-          {busy ? "Saving…" : `Save as ${sender}`}
         </button>
       </div>
     </Dialog>

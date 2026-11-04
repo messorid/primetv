@@ -86,7 +86,7 @@ export async function ensureSmsTables(sql) {
 
 // Whether a phone may be texted, and why not if it can't.
 export function consentState(consent, optout) {
-  if (!consent) return { allowed: false, reason: "No SMS consent on record for this number." }
+  if (!consent) return { allowed: false, reason: "No SMS consent: this customer didn't tick the SMS box when booking." }
   if (optout && new Date(optout.opted_out_at) >= new Date(consent.given_at)) {
     return { allowed: false, reason: `Opted out (STOP) on ${new Date(optout.opted_out_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Chicago" })}.` }
   }
