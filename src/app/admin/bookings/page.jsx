@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { MiniCalendar, TimeSlots } from "@/app/components/DateTimePicker"
+import ReviewSmsDialog from "../ReviewSmsDialog"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const MONTHS_LONG  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -126,6 +127,7 @@ export default function BookingsPage() {
   const [creating,       setCreating]       = useState(false)
 
   const [schedModal,     setSchedModal]     = useState(null) // { id, name }
+  const [reviewSmsFor,   setReviewSmsFor]   = useState(null) // booking being texted
   const [schedDate,      setSchedDate]      = useState("")
   const [schedTime,      setSchedTime]      = useState("")
   const [savingSched,    setSavingSched]    = useState(false)
@@ -566,6 +568,7 @@ export default function BookingsPage() {
         onResend={() => resendInstallerEmail(b._id)}
         onResendClient={() => resendClientEmail(b._id)}
         onReviewRequest={() => sendReviewRequest(b._id)}
+        onReviewSms={() => setReviewSmsFor(b)}
         onCloseoutChange={fields => updateCloseout(b._id, fields)}
         onSaveCustomer={fields => saveCustomer(b._id, fields)}
         onMaterialsUpdate={updateMaterials}
@@ -1212,13 +1215,27 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      {reviewSmsFor && (
+        <ReviewSmsDialog
+          bookingId={reviewSmsFor._id}
+          name={`${reviewSmsFor.firstName || ""} ${reviewSmsFor.lastName || ""}`.trim()}
+          onClose={() => setReviewSmsFor(null)}
+          onSent={json => {
+            if (json.reviewRequestedAt) {
+              setBookings(prev => prev.map(x => x._id === reviewSmsFor._id
+                ? { ...x, reviewRequestedAt: json.reviewRequestedAt, reviewRequestCount: json.reviewRequestCount } : x))
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onReviewSms, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [crewPick,          setCrewPick]          = useState([])
   const [savingCrew,        setSavingCrew]        = useState(false)
@@ -1271,7 +1288,7 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
   async function handleReviewRequest() {
     if (b.reviewRequestedAt) {
       const when = new Date(b.reviewRequestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      if (!confirm(`A review request already went to ${b.email} on ${when}. Send it again?`)) return
+      if (!confirm(`This customer was already asked for a review on ${when}. Email ${b.email} anyway?`)) return
     }
     setReviewState("sending"); setReviewMsg("")
     const data = await onReviewRequest()
@@ -1564,6 +1581,12 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
                       ? (reviewMsg || "Could not send")
                       : b.reviewRequestedAt ? "⭐ Ask for a Google review again" : "⭐ Ask for a Google review"}
                   </button>
+                  {b.status === "completed" && (
+                    <button type="button" onClick={onReviewSms}
+                      className="mt-2 w-full rounded-xl border border-amber-300 bg-amber-50 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100">
+                      📱 Ask for a Google review by text
+                    </button>
+                  )}
                   {b.reviewRequestedAt && (
                     <p className="mt-1 text-[10px] text-gray-400">
                       Sent {new Date(b.reviewRequestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}

@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
-  toE164, arrivalWindow, buildReminder, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
+  toE164, arrivalWindow, buildReminder, buildReviewRequest, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
 } from "./smsRules.js"
 import { consentState, twilioSignature, validTwilioSignature, sendSms, smsMode, statusRank } from "./sms.js"
 import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT } from "./smsConfig.js"
@@ -29,6 +29,16 @@ test("the reminder reads like the brief and stays in plain-SMS characters", () =
   assert.equal(segments(t).encoding, "GSM-7")
   assert.equal(segments(t).parts, 2)
   assert.match(buildReminder({ firstName: "Ana", date: "2026-11-07", timePref: "10:30 AM", tomorrow: false }), /at your home on Nov 7, between 10:30-11 AM/)
+})
+
+test("the review request matches the registered sample and stays in plain-SMS characters", () => {
+  const url = "https://g.page/r/CblSDOdhtcueEBI/review"
+  const t = buildReviewRequest({ firstName: "Mike Smith", service: "TV mounting", reviewUrl: url })
+  assert.equal(t, `PrimeTV: Hi Mike, thanks for choosing us for your TV mounting. If you have a minute, we'd be grateful for a quick Google review: ${url} Reply STOP to opt out.`)
+  assert.equal(finalizeBody(t), t) // the link and the ending survive sending as they are
+  assert.equal(segments(t).encoding, "GSM-7")
+  assert.equal(segments(t).parts, 2)
+  assert.match(buildReviewRequest({ firstName: "", reviewUrl: url }), /^PrimeTV: Hi, thanks/)
 })
 
 test("every text keeps the required start and STOP ending", () => {

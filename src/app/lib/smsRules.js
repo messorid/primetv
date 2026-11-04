@@ -5,6 +5,7 @@
 //   toE164            a US phone as +1XXXXXXXXXX, or null
 //   arrivalWindow     "2:00 PM" → "2-2:30 PM" (the booked time plus 30 min)
 //   buildReminder     the default day-before reminder
+//   buildReviewRequest  the default request for a Google review
 //   finalizeBody      keeps the required "PrimeTV:" start and STOP ending
 //   sendingHours      whether it is between 8 AM and 9 PM in Nashville
 //
@@ -84,6 +85,14 @@ export function buildReminder({ firstName, date, timePref, service = "TV mountin
   const when = [tomorrow ? `tomorrow, ${shortDate(date)}` : `on ${shortDate(date)}`, window && `between ${window}`].filter(Boolean).join(", ")
   return `${SMS_PREFIX} Hi${name ? ` ${name}` : ""}, reminder that we'll be at your home ${when} for your ${service}. ` +
     `Reply here with any questions. ${SMS_SUFFIX}`
+}
+
+// The review request, as registered with the carriers. The same for every
+// customer: no asking only the happy ones, and nothing offered in return.
+export function buildReviewRequest({ firstName, service = "TV mounting", reviewUrl }) {
+  const name = String(firstName || "").trim().split(/\s+/)[0]
+  return `${SMS_PREFIX} Hi${name ? ` ${name}` : ""}, thanks for choosing us for your ${service}. ` +
+    `If you have a minute, we'd be grateful for a quick Google review: ${reviewUrl} ${SMS_SUFFIX}`
 }
 
 // The text as it will be sent: trimmed, one line-ending style, and always
