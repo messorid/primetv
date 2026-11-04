@@ -61,7 +61,7 @@ Customers find PrimeTvNashville through Google search, our Facebook and Instagra
 
 ```
 Live public web form: https://www.primetvnashville.com/book
-The required "Mobile phone" field and the SMS opt-in checkbox are on the same final step of the booking form, and the consent is recorded for the number entered in that field. The checkbox is optional, unchecked, directly below the Terms & Conditions checkbox, and not required to submit the form. Because the final step appears only after the earlier steps are filled in, the same page also shows a copy of the phone field and the checkbox, below the form, under "Optional text messages".
+The required "Mobile phone" field and the optional, unchecked SMS checkbox are on the same final step of the form. The checkbox is not required to submit it. Consent is recorded for the number entered there. That step appears after the earlier steps are filled in, so the same page also shows a copy of the phone field and checkbox, below the form, under "Optional text messages".
 ```
 
 **Privacy policy URL**
