@@ -22,7 +22,7 @@
   
           <div className="space-y-6 text-gray-700 leading-relaxed text-base">
             <p>
-              At Prime TV Nashville, we value your privacy. This Privacy Policy explains how we collect, use, and protect the personal information you provide when you use our website or book services.
+              At PrimeTvNashville, we value your privacy. This Privacy Policy explains how we collect, use, and protect the personal information you provide when you use our website or book services.
             </p>
   
             <h2 className="font-semibold text-lg">1. Information We Collect</h2>
@@ -54,7 +54,8 @@
               <a href="/sms-terms" className="font-semibold underline">SMS Terms</a>.
             </p>
             <p>
-              No mobile information will be shared with third parties or affiliates for marketing or promotional
+              We do not sell or share your SMS opt-in data or personal information with third parties for marketing
+              purposes. No mobile information will be shared with third parties or affiliates for marketing or promotional
               purposes. Text messaging originator opt-in data and consent will not be shared with any third parties,
               except the service providers that deliver our messages on our behalf.
             </p>

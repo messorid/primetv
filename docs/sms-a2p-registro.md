@@ -64,10 +64,10 @@ Customers who reply STOP receive no further messages.
 https://www.primetvnashville.com/privacy-policy
 ```
 
-**Terms and conditions URL**
+**Terms and conditions URL** (Twilio exige una pagina titulada "Terms & Conditions" con seccion de SMS)
 
 ```
-https://www.primetvnashville.com/sms-terms
+https://www.primetvnashville.com/terms
 ```
 
 **Sample messages** (pega los tres)

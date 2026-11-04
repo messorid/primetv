@@ -21,7 +21,7 @@ export default function TermsPage() {
           Terms &amp; Conditions
         </h1>
         <p className="text-sm text-muted mb-10">
-          Last updated: August 2026 · PrimeTvNashville · Nashville, TN
+          Last updated: November 2026 · PrimeTvNashville · Nashville, TN
         </p>
 
         {/* ── WALL LIABILITY WARNING — FIRST AND PROMINENT ── */}
@@ -133,7 +133,16 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-black mb-2">8. Changes to These Terms</h2>
+            <h2 className="text-base font-bold text-black mb-2">8. SMS Terms</h2>
+            <p>
+              PrimeTvNashville (&quot;PrimeTV&quot;) sends text messages only to customers who agree to receive them: appointment reminders, a request for a review after the job, and replies to messages you send us. Agreeing is optional and is not a condition of booking. Message frequency varies. Message and data rates may apply. Reply STOP at any time to opt out, or HELP for help. Carriers are not liable for delayed or undelivered messages. See our{" "}
+              <a href="/sms-terms" className="text-[#E50914] font-semibold">SMS Terms</a> and{" "}
+              <a href="/privacy-policy" className="text-[#E50914] font-semibold">Privacy Policy</a>.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">9. Changes to These Terms</h2>
             <p>
               PrimeTvNashville reserves the right to update these Terms and Conditions at any time. Changes will be posted on this page. Continued use of our services constitutes acceptance of the updated terms.
             </p>
