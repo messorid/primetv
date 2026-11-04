@@ -98,9 +98,9 @@ PrimeTV: Hi [First Name], thanks for your message. We can move your [Service] to
 
 | Campo | Valor |
 |---|---|
-| Opt-in keywords | `YES, START` |
+| Opt-in keywords | `START, UNSTOP` (sin `YES`: un cliente que responde "yes" para confirmar una cita recibiría el mensaje de suscripción) |
 | Opt-in message | `PrimeTV: Thanks! You'll get appointment reminders and a review request after your job from PrimeTV. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.` |
-| Opt-out keywords | `STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT` |
+| Opt-out keywords | `STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, OPTOUT, REVOKE` |
 | Opt-out message | `PrimeTV: You're unsubscribed and will no longer receive texts from us. Reply START to resubscribe.` |
 | Help keywords | `HELP, INFO` |
 | Help message | `PrimeTV: For help, call (615) 669-0251 or email info@primetvnashville.com. Msg & data rates may apply. Reply STOP to opt out.` |
