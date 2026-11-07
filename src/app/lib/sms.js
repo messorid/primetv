@@ -27,6 +27,9 @@ export const smsMode = () => {
 const TEST_FROM = "+15005550006"
 
 export const statusCallbackUrl = () => `${process.env.SITE_URL || BRAND.site}/api/sms/status`
+// The number's "A message comes in" webhook. Set exactly this URL in Twilio:
+// the signature is checked against it.
+export const inboundUrl = () => `${process.env.SITE_URL || BRAND.site}/api/sms/inbound`
 
 // ── Tables ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +81,15 @@ export async function ensureSmsTables(sql) {
       status_at     TIMESTAMPTZ
     )
   `
+  // Texts customers send us are rows too: direction 'in', from_phone is theirs,
+  // read_at is when someone opened the conversation.
+  await sql`
+    ALTER TABLE sms_messages
+      ADD COLUMN IF NOT EXISTS direction  TEXT NOT NULL DEFAULT 'out',
+      ADD COLUMN IF NOT EXISTS from_phone TEXT,
+      ADD COLUMN IF NOT EXISTS read_at    TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS media      JSONB
+  `
   await sql`CREATE INDEX IF NOT EXISTS sms_messages_booking_idx ON sms_messages (booking_id, kind)`
   await sql`CREATE INDEX IF NOT EXISTS sms_messages_sid_idx ON sms_messages (twilio_sid)`
 }
@@ -127,6 +139,15 @@ export async function recordOptout(sql, { phone, source, recordedBy, note }) {
     ON CONFLICT (phone) DO UPDATE SET opted_out_at = NOW(), source = EXCLUDED.source,
       recorded_by = EXCLUDED.recorded_by, note = EXCLUDED.note
   `
+}
+
+// START after a STOP: the customer agreed on the booking form before, so that
+// consent applies again. Without an earlier consent it changes nothing.
+export async function liftOptout(sql, phone) {
+  const [c] = await sql`SELECT 1 FROM sms_consents WHERE phone = ${phone} LIMIT 1`
+  if (!c) return false
+  await sql`DELETE FROM sms_optouts WHERE phone = ${phone}`
+  return true
 }
 
 // ── Sending ─────────────────────────────────────────────────────────────────

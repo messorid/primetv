@@ -1,13 +1,17 @@
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-// POST /api/sms/send { bookingId, kind, body, sentBy, resend }
+// POST /api/sms/send { kind, bookingId, phone, body, sentBy, resend }
 //
 // Sends ONE text, because a person pressed "Send" after reading it. Every
 // rule is checked again here, whatever the screen showed: a name for who is
-// sending, consent on record and no STOP, 8 AM–9 PM in Nashville, the
-// required "PrimeTV:" start and STOP ending, and a second confirmation before
-// repeating a text that already went out.
+// sending, consent on record and no STOP, 8 AM–9 PM in Nashville, and the
+// required "PrimeTV:" start and STOP ending.
+//
+//   reminder  needs bookingId; asks again before repeating one already sent
+//   review    needs bookingId of a completed job and keeps the review link;
+//             asks again before repeating
+//   reply     an answer in a conversation: needs phone (bookingId optional)
 
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
@@ -15,18 +19,19 @@ import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, UNSUBSCRIBED } fr
 import { toE164, finalizeBody, sendingHours, MAX_SMS_CHARS } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
-const KINDS = { reminder: "A reminder", review: "A review request" }
+const KINDS = { reminder: "A reminder", review: "A review request", reply: "A reply" }
 const bad = (error, status = 400, extra = {}) => Response.json({ ok: false, error, ...extra }, { status })
 
 export async function POST(request) {
   if (!(await isAdminRequest(request))) return unauthorized()
   let input
   try { input = await request.json() } catch { return bad("Bad request") }
-  const { bookingId, kind = "reminder", resend = false } = input || {}
+  const { kind = "reminder", resend = false } = input || {}
+  const bookingId = input?.bookingId || null
   const sentBy = String(input?.sentBy || "").trim().slice(0, 60)
 
   if (!Object.hasOwn(KINDS, kind)) return bad("Unknown message type")
-  if (!bookingId) return bad("bookingId required")
+  if (kind !== "reply" && !bookingId) return bad("bookingId required")
   if (!sentBy) return bad("Enter your name first, so the log shows who sent it.")
 
   const hours = sendingHours()
@@ -39,26 +44,36 @@ export async function POST(request) {
   try {
     const sql = neon(process.env.DATABASE_URL)
     await ensureSmsTables(sql)
-    const [b] = await sql`SELECT id, phone, status FROM bookings WHERE id = ${bookingId}`
-    if (!b) return bad("Booking not found", 404)
-    if (b.status === "cancelled") return bad("This booking is cancelled.", 409)
-    if (kind === "review" && b.status !== "completed") return bad("The job has to be marked completed first.", 409)
-    const to = toE164(b.phone)
-    if (!to) return bad("This booking has no valid US mobile number.", 409)
+
+    let to
+    if (kind === "reply") {
+      to = toE164(input?.phone)
+      if (!to) return bad("A valid US mobile number is required.")
+    } else {
+      const [b] = await sql`SELECT id, phone, status FROM bookings WHERE id = ${bookingId}`
+      if (!b) return bad("Booking not found", 404)
+      if (b.status === "cancelled") return bad("This booking is cancelled.", 409)
+      if (kind === "review" && b.status !== "completed") return bad("The job has to be marked completed first.", 409)
+      to = toE164(b.phone)
+      if (!to) return bad("This booking has no valid US mobile number.", 409)
+    }
 
     const st = (await smsStatusFor(sql, [to])).get(to)
     if (!st.allowed) return bad(st.reason, 409, { code: "no_consent" })
 
-    // Already sent (or logged in dry-run)? Only again on purpose.
-    const [prev] = await sql`
-      SELECT created_at, sent_by, status FROM sms_messages
-      WHERE booking_id = ${bookingId} AND kind = ${kind} AND status NOT IN ('failed', 'undelivered')
-      ORDER BY created_at DESC LIMIT 1
-    `
-    if (prev && !resend) {
-      return bad(`${KINDS[kind]} was already sent for this booking.`, 409, {
-        code: "already_sent", previous: { at: prev.created_at, by: prev.sent_by, status: prev.status },
-      })
+    // Already sent (or logged in dry-run)? Only again on purpose. Replies are
+    // each different, so they don't ask.
+    if (kind !== "reply") {
+      const [prev] = await sql`
+        SELECT created_at, sent_by, status FROM sms_messages
+        WHERE booking_id = ${bookingId} AND kind = ${kind} AND status NOT IN ('failed', 'undelivered')
+        ORDER BY created_at DESC LIMIT 1
+      `
+      if (prev && !resend) {
+        return bad(`${KINDS[kind]} was already sent for this booking.`, 409, {
+          code: "already_sent", previous: { at: prev.created_at, by: prev.sent_by, status: prev.status },
+        })
+      }
     }
 
     const result = await sendSms({ to, body })

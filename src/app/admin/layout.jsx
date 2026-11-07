@@ -18,10 +18,11 @@ const MENU = [
     { href: "/admin/insights", label: "Insights", icon: "💰", desc: "Trends, services and sources" },
   ] },
   { href: "/admin/reporte", label: "Reporte", icon: "📊" },
-  // People who have not booked yet.
-  { key: "leads", label: "Leads", icon: "📋", items: [
-    { href: "/admin/dashboard", label: "Website Leads", icon: "📋", desc: "Quote requests from the site" },
-    { href: "/admin/crm-leads", label: "CRM",           icon: "🚀", desc: "Pipeline and follow-ups" },
+  // Talking to customers. Website quote requests still arrive by email; their
+  // old page (/admin/dashboard) is kept but no longer in the menu.
+  { key: "inbox", label: "Inbox", icon: "💬", items: [
+    { href: "/admin/messages",  label: "Messages", icon: "💬", desc: "Texts to and from customers" },
+    { href: "/admin/crm-leads", label: "CRM",      icon: "🚀", desc: "Messenger and Instagram leads" },
   ] },
 ]
 

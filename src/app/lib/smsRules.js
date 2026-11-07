@@ -8,6 +8,7 @@
 //   buildReviewRequest  the default request for a Google review
 //   finalizeBody      keeps the required "PrimeTV:" start and STOP ending
 //   sendingHours      whether it is between 8 AM and 9 PM in Nashville
+//   inboundKeyword    STOP / START / HELP in a text a customer sent
 //
 // No imports beyond the settings, so the browser can use it too.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,3 +144,20 @@ export function startMinutes(timePref) {
   const one = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(String(timePref || ""))
   return one ? toMinutes(one[1], one[2], one[3]) : 24 * 60
 }
+
+// What an incoming text asks for. Twilio's Advanced Opt-Out already answers
+// these and says which one it was (OptOutType); the words are the fallback.
+const KEYWORDS = {
+  stop: ["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT", "OPTOUT", "REVOKE"],
+  start: ["START", "UNSTOP"],
+  help: ["HELP", "INFO"],
+}
+export function inboundKeyword(body, optOutType) {
+  const t = String(optOutType || "").trim().toLowerCase()
+  if (t === "stop" || t === "start" || t === "help") return t
+  const word = String(body || "").trim().toUpperCase().replace(/[.!]+$/, "")
+  return Object.keys(KEYWORDS).find(k => KEYWORDS[k].includes(word)) || null
+}
+
+// The customer's number on a logged text, whichever way it went.
+export const customerPhoneOf = m => (m.direction === "in" ? m.from_phone : m.to_phone)

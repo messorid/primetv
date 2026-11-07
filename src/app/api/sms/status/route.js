@@ -3,8 +3,7 @@ export const dynamic = "force-dynamic"
 
 // POST /api/sms/status — Twilio's delivery report for a text we sent
 // (StatusCallback). Public, so every request must carry a valid Twilio
-// signature for this exact URL. Incoming texts are NOT handled here: the
-// number's inbound webhook belongs to the CRM.
+// signature for this exact URL. Incoming texts go to /api/sms/inbound.
 
 import { neon } from "@neondatabase/serverless"
 import {

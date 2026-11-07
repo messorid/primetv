@@ -100,3 +100,30 @@ export function ComposeFields({ bookingId, kind, noun, phone, draft, sender, las
     </>
   )
 }
+
+// Who is sending, kept on this device and written into the log of every text.
+export function useSmsSender() {
+  const [sender, setSender] = useState("")
+  useEffect(() => { try { setSender(localStorage.getItem(SENDER_KEY) || "") } catch {} }, [])
+  const save = v => {
+    const name = String(v || "").trim().slice(0, 60)
+    setSender(name)
+    try { name ? localStorage.setItem(SENDER_KEY, name) : localStorage.removeItem(SENDER_KEY) } catch {}
+  }
+  return [sender, save]
+}
+
+export function SenderPrompt({ onSave }) {
+  const [draft, setDraft] = useState("")
+  return (
+    <form onSubmit={e => { e.preventDefault(); onSave(draft) }} className="flex flex-wrap items-end gap-2">
+      <label className="flex-1 min-w-[12rem]">
+        <span className="block text-sm font-semibold text-gray-800">Your name</span>
+        <span className="block text-xs text-gray-600">Saved on this device and shown in the log of every text you send.</span>
+        <input value={draft} onChange={e => setDraft(e.target.value)} maxLength={60} autoComplete="name"
+          className="mt-1.5 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-red-300" />
+      </label>
+      <button type="submit" disabled={!draft.trim()} className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40">Save</button>
+    </form>
+  )
+}

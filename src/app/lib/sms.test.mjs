@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
-  toE164, arrivalWindow, buildReminder, buildReviewRequest, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
+  toE164, arrivalWindow, buildReminder, buildReviewRequest, inboundKeyword, customerPhoneOf, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
 } from "./smsRules.js"
 import { consentState, twilioSignature, validTwilioSignature, sendSms, smsMode, statusRank } from "./sms.js"
 import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT } from "./smsConfig.js"
@@ -39,6 +39,20 @@ test("the review request matches the registered sample and stays in plain-SMS ch
   assert.equal(segments(t).encoding, "GSM-7")
   assert.equal(segments(t).parts, 2)
   assert.match(buildReviewRequest({ firstName: "", reviewUrl: url }), /^PrimeTV: Hi, thanks/)
+})
+
+test("incoming STOP, START and HELP are recognized; other texts are not", () => {
+  assert.equal(inboundKeyword("Stop", ""), "stop")
+  assert.equal(inboundKeyword("  unsubscribe. ", undefined), "stop")
+  assert.equal(inboundKeyword("START", ""), "start")
+  assert.equal(inboundKeyword("help!", ""), "help")
+  assert.equal(inboundKeyword("anything", "STOP"), "stop") // Twilio's own reading wins
+  for (const t of ["Yes", "stop by at 3?", "Can you stop by tomorrow", "", null]) assert.equal(inboundKeyword(t, ""), null, String(t))
+})
+
+test("a conversation is keyed by the customer's number either way", () => {
+  assert.equal(customerPhoneOf({ direction: "in", from_phone: "+16155550142", to_phone: "+16153956565" }), "+16155550142")
+  assert.equal(customerPhoneOf({ direction: "out", to_phone: "+16155550142" }), "+16155550142")
 })
 
 test("every text keeps the required start and STOP ending", () => {

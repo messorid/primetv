@@ -115,10 +115,11 @@ PrimeTV: Hi [First Name], thanks for your message. We can move your [Service] to
 
 1. **Advanced Opt-Out: activado.** Pega ahí el opt-out, opt-in y help de la
    tabla de arriba: Twilio responde STOP/START/HELP por nosotros.
-2. **Incoming messages: "Defer to sender's webhook".** Las respuestas siguen el
-   webhook configurado en el propio número. El (615) 395-6565 es nuevo: hay que
-   ponerle el webhook del CRM antes de salir en vivo, o las respuestas de los
-   clientes no llegarán al CRM.
+2. **Integration → Inbound messages: "Send a webhook".** Request URL
+   `https://www.primetvnashville.com/api/sms/inbound`, método **HTTP POST**.
+   Los textos de los clientes llegan a **Admin → Inbox → Messages** y a un
+   correo para la oficina. La URL debe ser exactamente esa (con `www`): la
+   firma de Twilio se comprueba contra ella. Ya no se usa el CRM para esto.
 3. Agrega el número (615) al servicio y asocia la campaña cuando se apruebe.
 4. En Vercel (Settings → Environment Variables), pon tú:
    `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID`.

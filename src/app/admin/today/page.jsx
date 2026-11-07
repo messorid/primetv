@@ -1,7 +1,7 @@
 "use client"
 // TODAY — the first screen of the admin: today's and tomorrow's jobs, and a
 // to-do list built from the bookings themselves (jobs with no crew, jobs not
-// confirmed, sign-offs to close, reviews to ask for, new website leads), each
+// confirmed, sign-offs to close, reviews to ask for, unread texts), each
 // with the one action it needs.
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -37,7 +37,7 @@ const active = b => b.status === "pending" || b.status === "confirmed"
 
 export default function TodayPage() {
   const [bookings, setBookings] = useState([])
-  const [leads, setLeads] = useState([])
+  const [texts, setTexts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [sending, setSending] = useState(null)
@@ -48,10 +48,10 @@ export default function TodayPage() {
     try {
       const [b, l] = await Promise.all([
         fetch("/api/bookings").then(r => r.json()),
-        fetch("/api/quote-leads").then(r => r.json()).catch(() => null),
+        fetch("/api/sms/conversations").then(r => r.json()).catch(() => null),
       ])
       if (b.ok) { setBookings(b.bookings); setError("") } else setError(b.error || "Could not load bookings.")
-      if (l?.success) setLeads(l.leads)
+      if (l?.ok) setTexts(l.conversations.filter(c => c.unread > 0))
     } catch {
       setError("Could not reach the server.")
     } finally {
@@ -118,12 +118,11 @@ export default function TodayPage() {
       tomorrows: live.filter(b => b.date === tomorrow).sort(byTime),
       week: live.filter(b => b.date && b.date >= today && b.date <= weekEnd).length,
       todo,
-      // Only recent ones: a lead nobody answered in a month is not today's work.
-      newLeads: leads.filter(l => l.status === "new" && l.createdAt && isoDate(new Date(l.createdAt)) >= monthAgo),
+      unreadTexts: texts,
     }
-  }, [bookings, leads, today, tomorrow, sent])
+  }, [bookings, texts, today, tomorrow, sent])
 
-  const todoCount = view.todo.reduce((n, g) => n + g.items.length, 0) + view.newLeads.length
+  const todoCount = view.todo.reduce((n, g) => n + g.items.length, 0) + view.unreadTexts.length
 
   async function askReview(b) {
     if (!confirm(`Email ${b.firstName} (${b.email}) the Google review request?`)) return
@@ -212,15 +211,15 @@ export default function TodayPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {view.newLeads.length > 0 && (
-                    <TodoGroup title="New website leads" tone="purple" count={view.newLeads.length}
-                      hint="Quote requests from the last 30 days still marked new.">
-                      {view.newLeads.slice(0, 6).map(l => (
-                        <Row key={l.id} title={l.name || l.email || l.phone || "Lead"}
-                          sub={[l.service, l.zip, l.createdAt && new Date(l.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })].filter(Boolean).join(" · ")}
-                          action={<Link href={`/admin/dashboard?q=${encodeURIComponent(l.phone || l.email || l.name || "")}`} className={btn}>Open</Link>} />
+                  {view.unreadTexts.length > 0 && (
+                    <TodoGroup title="Unread texts" tone="purple" count={view.unreadTexts.length}
+                      hint="Customers who texted the PrimeTV number.">
+                      {view.unreadTexts.slice(0, 6).map(c => (
+                        <Row key={c.phone} title={c.name || c.phone}
+                          sub={c.last.body}
+                          action={<Link href={`/admin/messages?phone=${encodeURIComponent(c.phone)}`} className={btn}>Open</Link>} />
                       ))}
-                      {view.newLeads.length > 6 && <MoreLink href="/admin/dashboard" n={view.newLeads.length - 6} />}
+                      {view.unreadTexts.length > 6 && <MoreLink href="/admin/messages" n={view.unreadTexts.length - 6} />}
                     </TodoGroup>
                   )}
                   {view.todo.filter(g => g.items.length).map(g => (
