@@ -40,9 +40,15 @@ const STEPS = {
       id = row.id
     }
     const fwd = forwardNumber()
-    // Nowhere to ring, or the forwarding phone calling its own line.
+    // Nowhere to ring (calls not switched on yet), or the forwarding phone
+    // calling its own line: the caller hears the message, the office gets the
+    // missed-call email.
     if (!fwd || from === fwd) {
+      const [c] = await sql`SELECT * FROM calls WHERE id = ${id}`
       await sql`UPDATE calls SET status = 'missed', ended_at = NOW() WHERE id = ${id}`
+      if (c && c.status !== "missed" && from !== fwd) {
+        after(() => emailMissed(sql, c).catch(err => console.error("missed call email failed", err)))
+      }
       return missed()
     }
     return twiml(
