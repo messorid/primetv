@@ -21,7 +21,7 @@ const MENU = [
   // Talking to customers. Website quote requests still arrive by email; their
   // old page (/admin/dashboard) is kept but no longer in the menu.
   { key: "inbox", label: "Inbox", icon: "💬", items: [
-    { href: "/admin/messages",  label: "Messages", icon: "💬", desc: "Texts to and from customers" },
+    { href: "/admin/messages",  label: "Messages", icon: "💬", desc: "Texts and calls with customers" },
     { href: "/admin/crm-leads", label: "CRM",      icon: "🚀", desc: "Messenger and Instagram leads" },
   ] },
 ]

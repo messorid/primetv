@@ -212,11 +212,11 @@ export default function TodayPage() {
               ) : (
                 <div className="space-y-3">
                   {view.unreadTexts.length > 0 && (
-                    <TodoGroup title="Unread texts" tone="purple" count={view.unreadTexts.length}
-                      hint="Customers who texted the PrimeTV number.">
+                    <TodoGroup title="Unread texts and missed calls" tone="purple" count={view.unreadTexts.length}
+                      hint="Customers who texted or called the PrimeTV number.">
                       {view.unreadTexts.slice(0, 6).map(c => (
                         <Row key={c.phone} title={c.name || c.phone}
-                          sub={c.last.body}
+                          sub={c.last.type === "call" ? "Missed call" : c.last.body}
                           action={<Link href={`/admin/messages?phone=${encodeURIComponent(c.phone)}`} className={btn}>Open</Link>} />
                       ))}
                       {view.unreadTexts.length > 6 && <MoreLink href="/admin/messages" n={view.unreadTexts.length - 6} />}

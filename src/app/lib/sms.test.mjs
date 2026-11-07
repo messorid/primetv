@@ -124,3 +124,13 @@ test("the consent checkbox says what, who, how often, cost and how to stop", () 
     assert.ok(SMS_CONSENT_TEXT.includes(must), must)
   }
 })
+
+test("a finished call is logged as answered or missed, never as answered by mistake", async () => {
+  const { callStatusFromDial, xml } = await import("./voice.js")
+  assert.equal(callStatusFromDial("completed", "in"), "answered")
+  assert.equal(callStatusFromDial("answered", "out"), "answered")
+  for (const s of ["no-answer", "busy", "failed", "canceled", ""]) assert.equal(callStatusFromDial(s, "in"), "missed", s)
+  assert.equal(callStatusFromDial("no-answer", "out"), "no-answer")
+  assert.equal(callStatusFromDial("canceled", "out"), "not-connected")
+  assert.equal(xml(`a<b & "c"`), "a&lt;b &amp; &quot;c&quot;")
+})

@@ -1,7 +1,7 @@
 "use client"
-// MESSAGES — every text to and from customers, one conversation per number:
+// MESSAGES — every text and call with customers, one conversation per number:
 // what we sent (reminders, review requests, replies), what they wrote back,
-// and whether it was delivered. Replies are typed and sent by hand, one at a
+// whether it was delivered, and calls both ways. Replies are typed and sent by hand, one at a
 // time; the server re-checks consent, hours and the required wording.
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -11,6 +11,25 @@ import { SMS_MODES, fmtWhen, useSmsSender, SenderPrompt } from "../SmsCompose"
 
 const POLL_MS = 20000
 const KIND_LABEL = { reminder: "Reminder", review: "Review request", reply: "Reply", inbound: "" }
+
+const fmtDur = s => (!s ? "" : s < 60 ? `${s}s` : `${Math.round(s / 60)} min`)
+// One line for a call, as the list and the conversation show it.
+function callText(c) {
+  const dur = fmtDur(c.duration)
+  if (c.direction === "in") {
+    if (c.status === "answered") return `Incoming call${dur ? ` · ${dur}` : ""}`
+    if (c.status === "missed") return "Missed call"
+    return "Incoming call…"
+  }
+  const out = {
+    calling: "Ringing your phone…", connecting: "Connecting…", answered: `Call${dur ? ` · ${dur}` : ""}`,
+    "no-answer": "Call · no answer", busy: "Call · busy", failed: "Call failed", "not-connected": "Call not connected",
+  }
+  return out[c.status] || "Call"
+}
+const snippet = item => item.type === "call"
+  ? `📞 ${callText(item)}`
+  : `${item.direction === "in" ? "" : "You: "}${item.body || (item.media?.length ? "📎 Attachment" : "")}`
 
 export default function MessagesPage() {
   return <Suspense fallback={<p className="py-16 text-center text-gray-500">Loading…</p>}><Messages /></Suspense>
@@ -55,7 +74,7 @@ function Messages() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Messages</h1>
-          <p className="mt-0.5 text-sm text-gray-600">Texts to and from customers on the PrimeTV number. Every reply is sent by hand.</p>
+          <p className="mt-0.5 text-sm text-gray-600">Texts and calls with customers on the PrimeTV number. Every reply and call is made by hand.</p>
         </div>
         <div className="flex items-center gap-3">
           {list?.mode === "live" && (
@@ -76,7 +95,7 @@ function Messages() {
           {!list && !error && <p className="py-10 text-center text-gray-500">Loading…</p>}
           {list && list.conversations.length === 0 && (
             <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-10 text-center text-sm text-gray-600">
-              No texts yet.{list.mode === "live" && !tests && " Tick “Show test texts” to see the ones logged in test mode."}
+              No texts or calls yet.{list.mode === "live" && !tests && " Tick “Show test texts” to see the ones logged in test mode."}
             </p>
           )}
           <ul className="space-y-1.5">
@@ -94,7 +113,7 @@ function Messages() {
                     </span>
                     <span className="mt-0.5 flex items-center justify-between gap-2">
                       <span className="truncate text-sm text-gray-600">
-                        {c.last.direction === "in" ? "" : "You: "}{c.last.body || (c.last.media?.length ? "📎 Attachment" : "")}
+                        {snippet(c.last)}
                       </span>
                       {c.unread > 0 && (
                         <span className="flex-none rounded-full bg-[#E50914] px-2 py-0.5 text-xs font-bold text-white">
@@ -124,13 +143,14 @@ function Thread({ phone, tests, onBack, onRead, onSent }) {
   const [error, setError] = useState("")
   const box = useRef(null)
   const seen = useRef(0)
+  const [sender, saveSender] = useSmsSender()
 
   const load = useCallback(async () => {
     try {
       const json = await fetch(`/api/sms/conversations?phone=${encodeURIComponent(phone)}${tests ? "&tests=1" : ""}`).then(r => r.json())
       if (!json.ok) { setError(json.error || "Could not load this conversation."); return }
       setData(json); setError("")
-      if (json.messages.some(m => m.direction === "in" && !m.readAt)) {
+      if ([...json.messages, ...json.calls].some(m => m.direction === "in" && !m.readAt && (m.type === "sms" || m.status === "missed"))) {
         await fetch("/api/sms/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) }).catch(() => {})
         onRead(phone)
       }
@@ -140,10 +160,13 @@ function Thread({ phone, tests, onBack, onRead, onSent }) {
 
   // Scroll the conversation (not the page) to the newest text when one
   // arrives, not on every refresh.
+  const timeline = useMemo(() => data
+    ? [...data.messages, ...data.calls].sort((x, y) => new Date(x.at) - new Date(y.at))
+    : [], [data])
   useEffect(() => {
-    const n = data?.messages.length || 0
+    const n = timeline.length
     if (n !== seen.current && box.current) { seen.current = n; box.current.scrollTop = box.current.scrollHeight }
-  }, [data])
+  }, [timeline])
 
   const b = data?.booking
   return (
@@ -157,6 +180,7 @@ function Thread({ phone, tests, onBack, onRead, onSent }) {
             {b ? <Link href={`/admin/bookings?open=${b.id}`} className="font-semibold underline">Open booking</Link> : "No booking with this number"}
           </p>
         </div>
+        {data?.canCall && <CallButton phone={phone} bookingId={b?.id} sender={sender} saveSender={saveSender} onPlaced={load} />}
         {data && (
           <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${data.consent.allowed ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-gray-300 bg-gray-50 text-gray-700"}`}>
             {data.consent.allowed ? "✓ Can text" : "Can't text"}
@@ -167,11 +191,56 @@ function Thread({ phone, tests, onBack, onRead, onSent }) {
       <ol ref={box} className="flex max-h-[60vh] min-h-[16rem] flex-col gap-3 overflow-y-auto px-4 py-4" aria-live="polite">
         {!data && !error && <li className="py-10 text-center text-gray-500">Loading…</li>}
         {error && <li role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</li>}
-        {data?.messages.length === 0 && <li className="py-10 text-center text-sm text-gray-600">No texts with this number yet.</li>}
-        {data?.messages.map(m => <Bubble key={m.id} m={m} />)}
+        {data && timeline.length === 0 && <li className="py-10 text-center text-sm text-gray-600">No texts or calls with this number yet.</li>}
+        {timeline.map(m => (m.type === "call" ? <CallItem key={`c${m.id}`} c={m} /> : <Bubble key={m.id} m={m} />))}
       </ol>
 
-      {data && <Composer data={data} phone={phone} onSent={() => { load(); onSent() }} />}
+      {data && <Composer data={data} phone={phone} sender={sender} saveSender={saveSender} onSent={() => { load(); onSent() }} />}
+    </div>
+  )
+}
+
+function CallItem({ c }) {
+  const bad = c.status === "missed"
+  return (
+    <li className="self-center">
+      <p className={`rounded-full border px-3 py-1 text-xs font-semibold ${bad ? "border-red-200 bg-red-50 text-red-800" : "border-gray-200 bg-gray-50 text-gray-700"}`}>
+        📞 {callText(c)} · {fmtWhen(c.at)}{c.direction === "out" && c.by ? ` · by ${c.by}` : ""}
+      </p>
+    </li>
+  )
+}
+
+// Rings our phone first (the one in CALL_FORWARD_TO); answer and press 1 and
+// the customer is dialed from the PrimeTV number.
+function CallButton({ phone, bookingId, sender, saveSender, onPlaced }) {
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState("")
+  async function call() {
+    let who = sender
+    if (!who) {
+      who = (window.prompt("Your name, for the call log:") || "").trim()
+      if (!who) return
+      saveSender(who)
+    }
+    if (!window.confirm(`Call ${displayPhone(phone)}?\n\nYour phone rings first. Answer and press 1, and the customer is called from the PrimeTV number.`)) return
+    setBusy(true); setNote("")
+    try {
+      const json = await fetch("/api/voice/call", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, bookingId: bookingId || null, placedBy: who }),
+      }).then(r => r.json())
+      setNote(json.ok ? "Your phone is ringing — answer and press 1." : json.error || "Could not call.")
+      onPlaced()
+    } catch { setNote("No connection. No call was placed.") } finally { setBusy(false) }
+  }
+  return (
+    <div className="flex flex-col items-end">
+      <button type="button" onClick={call} disabled={busy}
+        className="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-800 hover:bg-gray-50 disabled:opacity-40">
+        📞 {busy ? "Calling…" : "Call"}
+      </button>
+      {note && <p role="status" className="mt-1 max-w-[16rem] text-right text-xs text-gray-700">{note}</p>}
     </div>
   )
 }
@@ -202,8 +271,7 @@ function Bubble({ m }) {
   )
 }
 
-function Composer({ data, phone, onSent }) {
-  const [sender, saveSender] = useSmsSender()
+function Composer({ data, phone, sender, saveSender, onSent }) {
   const [text, setText] = useState("")
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState("")
