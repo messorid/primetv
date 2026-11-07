@@ -150,6 +150,19 @@ export async function liftOptout(sql, phone) {
   return true
 }
 
+// Whether this number got a real text with the STOP ending in the last
+// `days` days, so a reply can go without it.
+export async function recentOptOutNotice(sql, phone, days = 30) {
+  const [r] = await sql`
+    SELECT 1 FROM sms_messages
+    WHERE direction <> 'in' AND to_phone = ${phone} AND mode = 'live'
+      AND status NOT IN ('failed', 'undelivered') AND body LIKE ${"%Reply STOP to opt out."}
+      AND created_at > NOW() - make_interval(days => ${days})
+    LIMIT 1
+  `
+  return !!r
+}
+
 // ── Sending ─────────────────────────────────────────────────────────────────
 
 // Twilio error 21610: the number replied STOP to our Messaging Service.

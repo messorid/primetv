@@ -6,7 +6,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { finalizeBody, segments, displayPhone, MAX_SMS_CHARS } from "@/app/lib/smsRules"
+import { replyBody, segments, displayPhone, MAX_SMS_CHARS, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules"
 import { SMS_MODES, fmtWhen, useSmsSender, SenderPrompt } from "../SmsCompose"
 
 const POLL_MS = 20000
@@ -207,7 +207,7 @@ function Composer({ data, phone, onSent }) {
   const [text, setText] = useState("")
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState("")
-  const final = useMemo(() => finalizeBody(text), [text])
+  const final = useMemo(() => replyBody(text, data.noticeIsRecent), [text, data.noticeIsRecent])
   const seg = segments(final)
   const tooLong = final.length > MAX_SMS_CHARS
   const blocked = !data.consent.allowed ? data.consent.reason : !data.hours.ok ? data.hours.reason : null
@@ -237,8 +237,13 @@ function Composer({ data, phone, onSent }) {
           <label htmlFor="reply-text" className="block text-sm font-semibold text-gray-800">
             Reply <span className="font-normal text-gray-600">as {sender} · <button type="button" onClick={() => saveSender("")} className="underline">change</button></span>
           </label>
-          <textarea id="reply-text" value={text} onChange={e => setText(e.target.value)} rows={3}
+          <textarea id="reply-text" value={text} onChange={e => setText(e.target.value)} rows={3} aria-describedby="reply-note"
             className="mt-1.5 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-red-300" />
+          <p id="reply-note" className="mt-1 text-xs text-gray-600">
+            {data.noticeIsRecent
+              ? `Sent as you type it: they got the “Reply STOP” notice in the last ${REPLY_NOTICE_DAYS} days.`
+              : `“PrimeTV:” and “Reply STOP to opt out.” are added: they haven't had that notice in the last ${REPLY_NOTICE_DAYS} days.`}
+          </p>
           {text.trim() && (
             <div className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">
               <p className="mb-1 text-xs font-bold uppercase tracking-wide text-gray-600">Will be sent as · {seg.chars} characters · {seg.parts} text{seg.parts !== 1 ? "s" : ""}</p>

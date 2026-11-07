@@ -96,11 +96,18 @@ export function buildReviewRequest({ firstName, service = "TV mounting", reviewU
     `If you have a minute, we'd be grateful for a quick Google review: ${reviewUrl} ${SMS_SUFFIX}`
 }
 
+// A reply in an ongoing conversation goes as typed when the customer was told
+// how to opt out recently; carriers ask for that in the first text and from
+// time to time, not in every message. Otherwise it gets the start and ending.
+export const REPLY_NOTICE_DAYS = 30
+export const plainBody = text => String(text || "").replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").trim()
+export const replyBody = (text, noticeIsRecent) => (noticeIsRecent ? plainBody(text) : finalizeBody(text))
+
 // The text as it will be sent: trimmed, one line-ending style, and always
 // starting with "PrimeTV:" and ending with "Reply STOP to opt out." — added
 // back if an edit removed them, so no message can go out without them.
 export function finalizeBody(text) {
-  let body = String(text || "").replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").trim()
+  let body = plainBody(text)
   if (!body.startsWith(SMS_PREFIX)) body = `${SMS_PREFIX} ${body}`
   if (!body.endsWith(SMS_SUFFIX)) body = `${body}${/[.!?]$/.test(body) ? "" : "."} ${SMS_SUFFIX}`
   return body

@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
-import { toE164, sendingHours, customerPhoneOf } from "@/app/lib/smsRules.js"
+import { ensureSmsTables, smsStatusFor, smsMode, recentOptOutNotice } from "@/app/lib/sms.js"
+import { toE164, sendingHours, customerPhoneOf, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 
 const shape = m => ({
   id: m.id, direction: m.direction, kind: m.kind, body: m.body, at: m.created_at, by: m.sent_by,
@@ -49,6 +49,8 @@ export async function GET(request) {
       const st = (await smsStatusFor(sql, [phone])).get(phone)
       return Response.json({
         ok: true, mode: smsMode(), hours: sendingHours(), phone,
+        // Whether a reply can go as typed (see /api/sms/send).
+        noticeIsRecent: await recentOptOutNotice(sql, phone, REPLY_NOTICE_DAYS),
         booking: people.get(phone) || null,
         consent: st ? { allowed: st.allowed, reason: st.reason } : { allowed: false, reason: "Not a valid US mobile number." },
         messages: rows.map(shape),

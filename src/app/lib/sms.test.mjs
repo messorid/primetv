@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
-  toE164, arrivalWindow, buildReminder, buildReviewRequest, inboundKeyword, customerPhoneOf, finalizeBody, sendingHours, nashvilleDate, segments, startMinutes,
+  toE164, arrivalWindow, buildReminder, buildReviewRequest, inboundKeyword, customerPhoneOf, finalizeBody, replyBody, sendingHours, nashvilleDate, segments, startMinutes,
 } from "./smsRules.js"
 import { consentState, twilioSignature, validTwilioSignature, sendSms, smsMode, statusRank } from "./sms.js"
 import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT } from "./smsConfig.js"
@@ -53,6 +53,11 @@ test("incoming STOP, START and HELP are recognized; other texts are not", () => 
 test("a conversation is keyed by the customer's number either way", () => {
   assert.equal(customerPhoneOf({ direction: "in", from_phone: "+16155550142", to_phone: "+16153956565" }), "+16155550142")
   assert.equal(customerPhoneOf({ direction: "out", to_phone: "+16155550142" }), "+16155550142")
+})
+
+test("a reply goes as typed only after a recent STOP notice", () => {
+  assert.equal(replyBody("  See you   at 3 ", true), "See you at 3")
+  assert.equal(replyBody("See you at 3", false), `${SMS_PREFIX} See you at 3. ${SMS_SUFFIX}`)
 })
 
 test("every text keeps the required start and STOP ending", () => {

@@ -11,12 +11,14 @@ export const dynamic = "force-dynamic"
 //   reminder  needs bookingId; asks again before repeating one already sent
 //   review    needs bookingId of a completed job and keeps the review link;
 //             asks again before repeating
-//   reply     an answer in a conversation: needs phone (bookingId optional)
+//   reply     an answer in a conversation: needs phone (bookingId optional).
+//             Goes as typed when the number got the STOP ending in the last
+//             30 days; otherwise it gets the start and ending too.
 
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, UNSUBSCRIBED } from "@/app/lib/sms.js"
-import { toE164, finalizeBody, sendingHours, MAX_SMS_CHARS } from "@/app/lib/smsRules.js"
+import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, recentOptOutNotice, UNSUBSCRIBED } from "@/app/lib/sms.js"
+import { toE164, finalizeBody, replyBody, sendingHours, MAX_SMS_CHARS, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
 const KINDS = { reminder: "A reminder", review: "A review request", reply: "A reply" }
@@ -37,8 +39,8 @@ export async function POST(request) {
   const hours = sendingHours()
   if (!hours.ok) return bad(hours.reason, 409, { code: "quiet_hours" })
 
-  const body = finalizeBody(input?.body)
-  if (body.length > MAX_SMS_CHARS) return bad(`The message is too long (${body.length} of ${MAX_SMS_CHARS} characters).`)
+  if (kind === "reply" && !String(input?.body || "").trim()) return bad("Write a message first.")
+  let body = finalizeBody(input?.body)
   if (kind === "review" && !body.includes(GOOGLE_REVIEW_URL)) return bad(`The message must include the review link: ${GOOGLE_REVIEW_URL}`)
 
   try {
@@ -49,6 +51,7 @@ export async function POST(request) {
     if (kind === "reply") {
       to = toE164(input?.phone)
       if (!to) return bad("A valid US mobile number is required.")
+      body = replyBody(input?.body, await recentOptOutNotice(sql, to, REPLY_NOTICE_DAYS))
     } else {
       const [b] = await sql`SELECT id, phone, status FROM bookings WHERE id = ${bookingId}`
       if (!b) return bad("Booking not found", 404)
@@ -58,6 +61,7 @@ export async function POST(request) {
       if (!to) return bad("This booking has no valid US mobile number.", 409)
     }
 
+    if (body.length > MAX_SMS_CHARS) return bad(`The message is too long (${body.length} of ${MAX_SMS_CHARS} characters).`)
     const st = (await smsStatusFor(sql, [to])).get(to)
     if (!st.allowed) return bad(st.reason, 409, { code: "no_consent" })
 
