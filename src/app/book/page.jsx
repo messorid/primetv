@@ -1,5 +1,6 @@
 ﻿import Link from "next/link"
 import BookingFormSection from "@/app/components/BookingFormSection"
+import HideAfterBooking from "@/app/components/HideAfterBooking"
 import { SMS_CONSENT_TEXT } from "@/app/lib/smsConfig"
 
 export const metadata = {
@@ -28,7 +29,9 @@ export default function Page() {
           which only appears once the earlier steps are filled in. This disabled
           copy puts them in the page itself, so they can be seen without filling
           the form in. It submits nothing; consent is only recorded from the real
-          form. Keep this the same as step 4. */}
+          form. Keep this the same as step 4. Hidden once the booking is sent:
+          by then there is no form left to explain. */}
+      <HideAfterBooking>
       <section aria-labelledby="sms-optin-title" className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
         <div className="rounded-2xl border border-zinc-200 bg-soft p-5 sm:p-6">
           <h2 id="sms-optin-title" className="text-lg font-extrabold text-ink">Optional text messages</h2>
@@ -61,6 +64,7 @@ export default function Page() {
           </form>
         </div>
       </section>
+      </HideAfterBooking>
     </div>
   )
 }

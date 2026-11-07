@@ -11,6 +11,7 @@ import {
 } from "./forms/FormKit"
 import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAGES } from "../lib/formValidation"
 import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
+import { BOOKING_DONE_EVENT } from "./HideAfterBooking"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -283,6 +284,8 @@ export default function BookingFormSection() {
         form_name: "booking_form",
       })
       setStatus("ok")
+      // Lets the page hide what only makes sense before booking (the opt-in example).
+      window.dispatchEvent(new Event(BOOKING_DONE_EVENT))
     } catch {
       setStatus("error")
     }
