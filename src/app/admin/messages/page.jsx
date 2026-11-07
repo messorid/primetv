@@ -58,10 +58,12 @@ function Messages() {
           <p className="mt-0.5 text-sm text-gray-600">Texts to and from customers on the PrimeTV number. Every reply is sent by hand.</p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={tests} onChange={e => setTests(e.target.checked)} className="size-4" />
-            Show test texts
-          </label>
+          {list?.mode === "live" && (
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={tests} onChange={e => setTests(e.target.checked)} className="size-4" />
+              Show test texts
+            </label>
+          )}
           <button type="button" onClick={loadList} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">↻ Refresh</button>
         </div>
       </div>
@@ -74,7 +76,7 @@ function Messages() {
           {!list && !error && <p className="py-10 text-center text-gray-500">Loading…</p>}
           {list && list.conversations.length === 0 && (
             <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-10 text-center text-sm text-gray-600">
-              No texts yet.{!tests && " Tick “Show test texts” to see the ones logged in test mode."}
+              No texts yet.{list.mode === "live" && !tests && " Tick “Show test texts” to see the ones logged in test mode."}
             </p>
           )}
           <ul className="space-y-1.5">

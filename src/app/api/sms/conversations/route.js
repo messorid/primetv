@@ -4,7 +4,8 @@ export const dynamic = "force-dynamic"
 // GET  /api/sms/conversations              every conversation, newest first
 // GET  /api/sms/conversations?phone=+1…    one conversation, oldest first, with
 //                                          what's needed to reply
-//   &tests=1 includes texts logged in test mode (dry-run).
+//   &tests=1 includes texts logged in test mode (dry-run). Outside live mode
+//   they are always included, or what you just "sent" would vanish.
 // POST /api/sms/conversations { phone }    marks its incoming texts as read
 
 import { neon } from "@neondatabase/serverless"
@@ -31,7 +32,7 @@ async function bookingsByPhone(sql) {
 export async function GET(request) {
   if (!(await isAdminRequest(request))) return unauthorized()
   const q = new URL(request.url).searchParams
-  const tests = q.get("tests") === "1"
+  const tests = q.get("tests") === "1" || smsMode() !== "live"
   try {
     const sql = neon(process.env.DATABASE_URL)
     await ensureSmsTables(sql)
