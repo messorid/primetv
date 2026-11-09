@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
-  toE164, arrivalWindow, buildReminder, buildReviewRequest, inboundKeyword, customerPhoneOf, finalizeBody, replyBody, sendingHours, nashvilleDate, segments, startMinutes,
+  toE164, arrivalWindow, buildReminder, buildReviewRequest, inboundKeyword, customerPhoneOf, finalizeBody, replyBody, plainBody, partsLimit, sendingHours, nashvilleDate, segments, startMinutes,
 } from "./smsRules.js"
 import { consentState, twilioSignature, validTwilioSignature, sendSms, smsMode, statusRank } from "./sms.js"
 import { SMS_PREFIX, SMS_SUFFIX, SMS_CONSENT_TEXT } from "./smsConfig.js"
@@ -23,21 +23,53 @@ test("the arrival window is the booked time plus 30 minutes", () => {
   assert.equal(arrivalWindow(""), null)
 })
 
-test("the reminder reads like the brief and stays in plain-SMS characters", () => {
+test("the reminder is one plain-SMS text", () => {
   const t = buildReminder({ firstName: "Mike Smith", date: "2026-11-05", timePref: "2:00 PM" })
-  assert.equal(t, "PrimeTV: Hi Mike, reminder that we'll be at your home tomorrow, Nov 5, between 2-2:30 PM for your TV mounting. Reply here with any questions. Reply STOP to opt out.")
+  assert.equal(t, "PrimeTV: Hi Mike, we'll arrive tomorrow, Nov 5, between 2-2:30 PM for your TV mounting. Questions? Reply here. Reply STOP to opt out.")
   assert.equal(segments(t).encoding, "GSM-7")
-  assert.equal(segments(t).parts, 2)
-  assert.match(buildReminder({ firstName: "Ana", date: "2026-11-07", timePref: "10:30 AM", tomorrow: false }), /at your home on Nov 7, between 10:30-11 AM/)
+  assert.equal(segments(t).parts, 1)
+  assert.match(buildReminder({ firstName: "Ana", date: "2026-11-07", timePref: "10:30 AM", tomorrow: false }), /we'll arrive on Nov 7, between 10:30-11 AM/)
 })
 
-test("the review request matches the registered sample and stays in plain-SMS characters", () => {
+test("even the longest reminder and review fit in one text", () => {
   const url = "https://g.page/r/CblSDOdhtcueEBI/review"
-  const t = buildReviewRequest({ firstName: "Mike Smith", service: "TV mounting", reviewUrl: url })
-  assert.equal(t, `PrimeTV: Hi Mike, thanks for choosing us for your TV mounting. If you have a minute, we'd be grateful for a quick Google review: ${url} Reply STOP to opt out.`)
+  const long = buildReminder({ firstName: "Maximilianusss", date: "2026-11-25", timePref: "11:45 AM", service: "installation" })
+  assert.equal(segments(long).parts, 1, long)
+  assert.match(long, /Hi Maximilianusss,/)
+  assert.equal(segments(buildReminder({ firstName: "Bartholomew-Alexander", date: "2026-11-25", timePref: "11:45 AM", service: "installation" })).parts, 1)
+  assert.equal(segments(buildReviewRequest({ firstName: "Maximilianusss", reviewUrl: url })).parts, 1)
+})
+
+test("accents that would make a text Unicode are dropped from the name", () => {
+  const t = buildReminder({ firstName: "Ramón", date: "2026-11-05", timePref: "2:00 PM" })
+  assert.match(t, /Hi Ramon,/)
+  assert.equal(segments(t).encoding, "GSM-7")
+  assert.match(buildReminder({ firstName: "José", date: "2026-11-05", timePref: "2:00 PM" }), /Hi José,/) // é is plain SMS
+})
+
+test("curly quotes and long dashes become plain, keeping a text in GSM-7", () => {
+  assert.equal(plainBody("We’ll be there — see you “soon”…"), `We'll be there - see you "soon"...`)
+  assert.equal(segments(plainBody("We’ll be there")).encoding, "GSM-7")
+})
+
+test("each kind has its own text limit", () => {
+  assert.equal(partsLimit("reminder"), 1)
+  assert.equal(partsLimit("review"), 1)
+  assert.equal(partsLimit("reply"), 2)
+  assert.equal(segments("a".repeat(160)).parts, 1)
+  assert.equal(segments("a".repeat(161)).parts, 2)
+  assert.equal(segments("a".repeat(306)).parts, 2)
+  assert.equal(segments("a".repeat(307)).parts, 3)
+  assert.equal(segments("{" + "a".repeat(159)).parts, 2) // { counts double
+})
+
+test("the review request is one plain-SMS text with the link", () => {
+  const url = "https://g.page/r/CblSDOdhtcueEBI/review"
+  const t = buildReviewRequest({ firstName: "Mike Smith", reviewUrl: url })
+  assert.equal(t, `PrimeTV: Hi Mike, thanks for choosing us! Would you leave us a quick Google review? ${url} Reply STOP to opt out.`)
   assert.equal(finalizeBody(t), t) // the link and the ending survive sending as they are
   assert.equal(segments(t).encoding, "GSM-7")
-  assert.equal(segments(t).parts, 2)
+  assert.equal(segments(t).parts, 1)
   assert.match(buildReviewRequest({ firstName: "", reviewUrl: url }), /^PrimeTV: Hi, thanks/)
 })
 

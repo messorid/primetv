@@ -17,7 +17,11 @@ import {
   SMS_PREFIX, SMS_SUFFIX, SMS_TZ, SMS_HOUR_FROM, SMS_HOUR_TO, ARRIVAL_WINDOW_MIN,
 } from "./smsConfig.js"
 
-export const MAX_SMS_CHARS = 480 // three segments; reminders are about two
+// How many texts (segments) each kind may take, so each one costs and reads as
+// little as possible: the reminder and the review request fit in one text, a
+// reply in at most two. A GSM-7 text is one segment up to 160 characters.
+export const MAX_PARTS = { reminder: 1, review: 1, reply: 2 }
+export const partsLimit = kind => MAX_PARTS[kind] || 1
 
 // A US number as E.164, or null. Area codes and exchanges can't start with 0
 // or 1 (NANP), which also rejects obvious typos.
@@ -78,29 +82,52 @@ export function serviceLabel(b) {
   return "TV mounting"
 }
 
+// A first name as it fits a text: one word, at most 15 letters, and without
+// accents outside the plain SMS alphabet, which would turn the whole text into
+// Unicode (70 characters a segment). José stays José; Ramón becomes Ramon.
+function smsFirstName(firstName) {
+  let n = plainChars(firstName).trim().split(/\s+/)[0] || ""
+  if (segments(n).encoding !== "GSM-7") n = n.normalize("NFD").replace(/[̀-ͯ]/g, "")
+  return segments(n).encoding === "GSM-7" && n.length <= 15 ? n : ""
+}
+
+// The first wording that fits in one text; the shorter ones drop the name, then
+// the line about replying, only when a long name or time needs the room.
+const firstThatFits = versions => versions.find(v => segments(v).parts === 1) || versions[versions.length - 1]
+
 // `tomorrow` is false when the reminder is for another day, so the text says
 // "on Nov 7" instead of promising "tomorrow".
 export function buildReminder({ firstName, date, timePref, service = "TV mounting", tomorrow = true }) {
-  const name = String(firstName || "").trim().split(/\s+/)[0]
+  const name = smsFirstName(firstName)
   const window = arrivalWindow(timePref)
-  const when = [tomorrow ? `tomorrow, ${shortDate(date)}` : `on ${shortDate(date)}`, window && `between ${window}`].filter(Boolean).join(", ")
-  return `${SMS_PREFIX} Hi${name ? ` ${name}` : ""}, reminder that we'll be at your home ${when} for your ${service}. ` +
-    `Reply here with any questions. ${SMS_SUFFIX}`
+  const day = tomorrow ? `tomorrow, ${shortDate(date)}` : `on ${shortDate(date)}`
+  const visit = `we'll arrive ${window ? `${day}, between ${window}` : day} for your ${service}.`
+  const hi = n => `${SMS_PREFIX} Hi${n ? ` ${n}` : ""}, `
+  return firstThatFits([
+    `${hi(name)}${visit} Questions? Reply here. ${SMS_SUFFIX}`,
+    `${hi("")}${visit} Questions? Reply here. ${SMS_SUFFIX}`,
+    `${hi("")}${visit} ${SMS_SUFFIX}`,
+  ])
 }
 
-// The review request, as registered with the carriers. The same for every
-// customer: no asking only the happy ones, and nothing offered in return.
-export function buildReviewRequest({ firstName, service = "TV mounting", reviewUrl }) {
-  const name = String(firstName || "").trim().split(/\s+/)[0]
-  return `${SMS_PREFIX} Hi${name ? ` ${name}` : ""}, thanks for choosing us for your ${service}. ` +
-    `If you have a minute, we'd be grateful for a quick Google review: ${reviewUrl} ${SMS_SUFFIX}`
+// The review request. The same for every customer: no asking only the happy
+// ones, and nothing offered in return.
+export function buildReviewRequest({ firstName, reviewUrl }) {
+  const text = n => `${SMS_PREFIX} Hi${n ? ` ${n}` : ""}, thanks for choosing us! ` +
+    `Would you leave us a quick Google review? ${reviewUrl} ${SMS_SUFFIX}`
+  return firstThatFits([text(smsFirstName(firstName)), text("")])
 }
 
 // A reply in an ongoing conversation goes as typed when the customer was told
 // how to opt out recently; carriers ask for that in the first text and from
 // time to time, not in every message. Otherwise it gets the start and ending.
 export const REPLY_NOTICE_DAYS = 30
-export const plainBody = text => String(text || "").replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").trim()
+// Curly quotes, long dashes and "…" that phones and keyboards put in would turn
+// a text into Unicode (70 characters a segment instead of 160); they become
+// their plain equivalents.
+const PLAIN = { "‘": "'", "’": "'", "‚": "'", "“": '"', "”": '"', "–": "-", "—": "-", "…": "...", " ": " " }
+export const plainChars = text => String(text || "").replace(/[‘’‚“”–—… ]/g, c => PLAIN[c])
+export const plainBody = text => plainChars(text).replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").trim()
 export const replyBody = (text, noticeIsRecent) => (noticeIsRecent ? plainBody(text) : finalizeBody(text))
 
 // The text as it will be sent: trimmed, one line-ending style, and always
@@ -139,11 +166,13 @@ export function nashvilleDate(now = new Date(), addDays = 0) {
 
 // GSM-7 texts split at 160 characters (153 per part when joined); anything
 // with emoji or curly quotes switches to UCS-2 at 70 (67).
+// ^ { } [ ] ~ \ | € take two characters' room each in GSM-7.
 export function segments(text) {
   const s = String(text || "")
   const gsm = /^[\n\r @£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà^{}\\[~\]|€]*$/.test(s)
+  const size = gsm ? s.length + (s.match(/[\^{}\\[\]~|€]/g) || []).length : s.length
   const single = gsm ? 160 : 70, multi = gsm ? 153 : 67
-  return { chars: s.length, encoding: gsm ? "GSM-7" : "Unicode", parts: s.length <= single ? 1 : Math.ceil(s.length / multi) }
+  return { chars: size, encoding: gsm ? "GSM-7" : "Unicode", parts: size <= single ? 1 : Math.ceil(size / multi) }
 }
 
 // Start of the booked time in minutes, for putting a day in order.

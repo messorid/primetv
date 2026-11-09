@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic"
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, recentOptOutNotice, UNSUBSCRIBED } from "@/app/lib/sms.js"
-import { toE164, finalizeBody, replyBody, sendingHours, MAX_SMS_CHARS, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
+import { toE164, finalizeBody, replyBody, sendingHours, segments, partsLimit, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
 const KINDS = { reminder: "A reminder", review: "A review request", reply: "A reply" }
@@ -61,7 +61,10 @@ export async function POST(request) {
       if (!to) return bad("This booking has no valid US mobile number.", 409)
     }
 
-    if (body.length > MAX_SMS_CHARS) return bad(`The message is too long (${body.length} of ${MAX_SMS_CHARS} characters).`)
+    const seg = segments(body), limit = partsLimit(kind)
+    if (seg.parts > limit) {
+      return bad(`Too long: this has to fit in ${limit === 1 ? "one text" : `${limit} texts`} and it would take ${seg.parts}${seg.encoding === "Unicode" ? " (an emoji or special character makes texts shorter)" : ""}.`)
+    }
     const st = (await smsStatusFor(sql, [to])).get(to)
     if (!st.allowed) return bad(st.reason, 409, { code: "no_consent" })
 

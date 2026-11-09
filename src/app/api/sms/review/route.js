@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 import { neon } from "@neondatabase/serverless"
 import { isAdminRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
-import { toE164, buildReviewRequest, serviceLabel, sendingHours } from "@/app/lib/smsRules.js"
+import { toE164, buildReviewRequest, sendingHours } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
 export async function GET(request) {
@@ -41,7 +41,7 @@ export async function GET(request) {
       mode: smsMode(),
       hours: sendingHours(),
       phone,
-      draft: buildReviewRequest({ firstName: b.first_name, service: serviceLabel(b), reviewUrl: GOOGLE_REVIEW_URL }),
+      draft: buildReviewRequest({ firstName: b.first_name, reviewUrl: GOOGLE_REVIEW_URL }),
       reviewUrl: GOOGLE_REVIEW_URL,
       reviewRequestedAt: b.review_requested_at ?? null,
       last: last ? { at: last.created_at, by: last.sent_by, mode: last.mode, status: last.status, errorMessage: last.error_message } : null,

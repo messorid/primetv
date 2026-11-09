@@ -3,7 +3,7 @@
 // confirm. Used by the reminders screen and the review request. The server
 // re-checks every rule shown here.
 import { useEffect, useMemo, useState } from "react"
-import { finalizeBody, segments, displayPhone, MAX_SMS_CHARS } from "@/app/lib/smsRules"
+import { finalizeBody, segments, displayPhone, partsLimit } from "@/app/lib/smsRules"
 import { SMS_PREFIX, SMS_SUFFIX } from "@/app/lib/smsConfig"
 
 export const SENDER_KEY = "primetv-sms-sender"
@@ -45,7 +45,8 @@ export function ComposeFields({ bookingId, kind, noun, phone, draft, sender, las
   const [err, setErr] = useState("")
   const final = useMemo(() => finalizeBody(text), [text])
   const seg = segments(final)
-  const tooLong = final.length > MAX_SMS_CHARS
+  const limit = partsLimit(kind)
+  const tooLong = seg.parts > limit
   const missing = !!mustInclude && !final.includes(mustInclude)
 
   async function send() {
@@ -68,7 +69,7 @@ export function ComposeFields({ bookingId, kind, noun, phone, draft, sender, las
         className="mt-1.5 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-red-300" />
       <p className="mt-1 text-xs text-gray-600">
         Always starts with “{SMS_PREFIX}” and ends with “{SMS_SUFFIX}” — added back if removed.
-        {" "}{seg.chars} characters · {seg.parts} text{seg.parts !== 1 ? "s" : ""}{seg.encoding === "Unicode" ? " (an emoji or special character makes texts shorter)" : ""}.
+        {" "}<span className={tooLong ? "font-bold text-red-700" : ""}>{seg.chars} characters · {seg.parts} text{seg.parts !== 1 ? "s" : ""} (max {limit})</span>{seg.encoding === "Unicode" ? " — an emoji or special character makes texts shorter" : ""}.
       </p>
       {final !== text.trim() && (
         <div className="mt-3 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">
@@ -86,7 +87,7 @@ export function ComposeFields({ bookingId, kind, noun, phone, draft, sender, las
           </span>
         </label>
       )}
-      {tooLong && <p className="mt-2 text-sm font-semibold text-red-700">Too long — keep it under {MAX_SMS_CHARS} characters.</p>}
+      {tooLong && <p className="mt-2 text-sm font-semibold text-red-700">Too long — this has to fit in {limit === 1 ? "one text (160 characters)" : `${limit} texts`}. Shorten it to send.</p>}
       {missing && <p className="mt-2 text-sm font-semibold text-red-700">The message must include this link: {mustInclude}</p>}
       {blocked && <p className="mt-2 text-sm font-semibold text-red-700">{blocked}</p>}
       {err && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}

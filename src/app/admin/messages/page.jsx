@@ -6,7 +6,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { replyBody, segments, displayPhone, MAX_SMS_CHARS, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules"
+import { replyBody, segments, displayPhone, partsLimit, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules"
 import { SMS_MODES, fmtWhen, useSmsSender, SenderPrompt } from "../SmsCompose"
 
 const POLL_MS = 20000
@@ -277,7 +277,8 @@ function Composer({ data, phone, sender, saveSender, onSent }) {
   const [err, setErr] = useState("")
   const final = useMemo(() => replyBody(text, data.noticeIsRecent), [text, data.noticeIsRecent])
   const seg = segments(final)
-  const tooLong = final.length > MAX_SMS_CHARS
+  const limit = partsLimit("reply")
+  const tooLong = seg.parts > limit
   const blocked = !data.consent.allowed ? data.consent.reason : !data.hours.ok ? data.hours.reason : null
 
   async function send() {
@@ -318,7 +319,7 @@ function Composer({ data, phone, sender, saveSender, onSent }) {
               {final}
             </div>
           )}
-          {tooLong && <p className="mt-2 text-sm font-semibold text-red-700">Too long — keep it under {MAX_SMS_CHARS} characters.</p>}
+          {tooLong && <p className="mt-2 text-sm font-semibold text-red-700">Too long — a reply can take at most {limit} texts. Shorten it or send it in two replies.</p>}
           {blocked && <p className="mt-2 text-sm font-semibold text-red-700">{blocked}</p>}
           {err && <p role="alert" className="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
           <div className="mt-3 flex justify-end">
