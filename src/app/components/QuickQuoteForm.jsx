@@ -174,7 +174,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
             Get your price in a minute
           </h2>
           <p className="mt-3 text-lg leading-relaxed text-body">
-            Answer a few quick questions and we reply with your price and the times we have available.
+            Answer a few quick questions and we reply with your price and the times we have available. We usually reply within 5 minutes during business hours.
             No payment is needed to ask.
           </p>
           <p className="mt-5 text-base text-body">
@@ -379,7 +379,7 @@ function SuccessPanel({ onAgain }) {
       <div aria-hidden="true" className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">✓</div>
       <h3 className="text-xl font-extrabold">Request received — thank you!</h3>
       <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-black/65">
-        We&rsquo;ll reply with your price and available times. Need it sooner? Call or text{" "}
+        We usually reply within 5 minutes during business hours, with your price and available times. Rather not wait? Call or text{" "}
         <a href={PHONE_HREF} className="font-semibold text-[#E50914] underline underline-offset-2">{PHONE_DISPLAY}</a>.
       </p>
       <button type="button" onClick={onAgain}

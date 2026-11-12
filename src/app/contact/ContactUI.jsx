@@ -6,7 +6,7 @@ export default function ContactUI() {
   const contactMethods = [
     {
       title: "Call Us",
-      description: "Mon-Sat from 8am to 6pm.",
+      description: "Every day from 8am to 6pm.",
       value: "+1 615-669-0251",
       href: "tel:+16156690251",
       icon: (

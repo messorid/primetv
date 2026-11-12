@@ -80,7 +80,7 @@ Name: ${form.name || "-"}`.trim()
             <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
               <h3 className="text-xl font-bold">Talk to a specialist</h3>
               <p className="mt-1 text-sm text-black/70">
-                Business hours Mon to Sat 9 to 6. Same day options when available
+                Open every day, 8 AM to 6 PM. Same day options when available
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-2">

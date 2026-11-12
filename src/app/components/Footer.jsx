@@ -201,7 +201,7 @@ export default function Footer() {
             </div>
             <div className="flex justify-between gap-4">
               <span>Sunday</span>
-              <span className="text-white/65">Closed</span>
+              <span className="text-white/80 font-medium">8 AM – 6 PM</span>
             </div>
           </div>
 
