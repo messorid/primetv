@@ -21,7 +21,7 @@ export default function ReviewsSection() {
             <blockquote className="mt-3 flex-1 text-base leading-relaxed text-body">“{r.text}”</blockquote>
             <p className="mt-4 text-base font-bold text-ink">
               {r.name}
-              {r.when && <span className="block text-sm font-normal text-muted">{r.when} · Google review</span>}
+              <span className="block text-sm font-normal text-muted">{r.when ? `${r.when} · ` : ""}Google review</span>
             </p>
           </li>
         ))}
