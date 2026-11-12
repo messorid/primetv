@@ -5,12 +5,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ButtonLink, Check, PHONE_DISPLAY, PHONE_TEL } from "./ui/Section"
-import { BF_PROMOS, BF_DISCOUNT_PCT, bfBookHref } from "../lib/blackFriday"
+import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, bfBookHref } from "../lib/blackFriday"
 
 const POINTS = ["Licensed & insured", "Upfront pricing", "Clean cable finish", "Workmanship warranty"]
 
 export default function BlackFridayHero({ children }) {
-  const lowest = Math.min(...BF_PROMOS.map(p => p.amount))
+  const first = BF_PROMOS.reduce((a, b) => (b.amount < a.amount ? b : a))
   return (
     <section aria-labelledby="hero-title" className="w-full bg-ink text-white">
       <div className="relative overflow-hidden">
@@ -41,11 +41,12 @@ export default function BlackFridayHero({ children }) {
             <div className="mt-7 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
               <div className="rounded-2xl bg-brand p-4 sm:p-5">
                 <p className="text-sm font-bold uppercase tracking-wide text-white">Black Friday Promo</p>
-                <p className="mt-1 text-base font-semibold text-white">2 TVs mounted</p>
+                <p className="mt-1 text-base font-semibold text-white">{first.short}</p>
                 <p className="mt-1 flex items-baseline gap-2">
                   <span className="text-base font-semibold text-white">From</span>
-                  <span className="text-5xl font-black leading-none text-white">${lowest}</span>
+                  <span className="text-5xl font-black leading-none text-white">${first.amount}</span>
                 </p>
+                <p className="mt-2 text-sm font-semibold leading-snug text-white">{BF_PROMO_TERMS.join(" · ")}</p>
               </div>
               <div className="rounded-2xl border border-white/25 bg-white/10 p-4 sm:p-5">
                 <p className="text-sm font-bold uppercase tracking-wide text-brand-bright">Everything else</p>

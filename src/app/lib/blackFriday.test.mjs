@@ -21,6 +21,8 @@ test("every promo has its price in the emails, its artwork on disk and a booking
     assert.ok(fs.existsSync(new URL(`../../../public${p.image}`, import.meta.url)), p.image)
     assert.ok(p.alt.includes(`$${p.amount}`))
     assert.equal(bfPromoById(p.id), p)
+    assert.match(p.title, /max/)
+    assert.match(p.short, /max/)
   }
   assert.equal(bfPromoById("nope"), null)
   assert.equal(validateCoupon(BF_COUPON_CODE)?.hideCodeFromClient, true)

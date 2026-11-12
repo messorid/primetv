@@ -13,7 +13,7 @@ import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAG
 import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
 import { BOOKING_DONE_EVENT } from "./HideAfterBooking"
 import Image from "next/image"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfPromoById } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, bfPromoById } from "../lib/blackFriday"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -711,6 +711,10 @@ export default function BookingFormSection() {
                             </div>
                           )
                         })()}
+
+                        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-sm font-semibold leading-relaxed text-amber-950">
+                          {BF_PROMO_TERMS_LINE} The sizes shown are the maximum for each TV. For other walls, a fireplace or bigger TVs, use Standard.
+                        </p>
 
                         {!selectedPromo && (
                           <p className="mt-3 text-xs text-muted">Select the {BLACK_FRIDAY_ON ? "Black Friday Promo" : "promo"} that fits your installation</p>

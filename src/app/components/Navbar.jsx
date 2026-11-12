@@ -94,7 +94,7 @@ export default function Navbar() {
                     <span className="relative inline-flex size-2 rounded-full bg-white" />
                   </span>
                   {BLACK_FRIDAY_ON
-                    ? <Link href="/#black-friday" className="underline-offset-2 hover:underline"><strong>Black Friday:</strong> 2 TVs mounted from ${BF_PROMOS[0].amount} · {BF_DISCOUNT_PCT}% off everything else</Link>
+                    ? <Link href="/#black-friday" className="underline-offset-2 hover:underline"><strong>Black Friday:</strong> {BF_PROMOS[0].short} from ${BF_PROMOS[0].amount} · {BF_DISCOUNT_PCT}% off everything else</Link>
                     : "Same-Day & Next-Day Availability in Nashville"}
                 </span>
                 <span className="sm:hidden">

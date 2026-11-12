@@ -3,7 +3,7 @@
 // prices (the office applies it when it confirms the price). Shown only
 // while BLACK_FRIDAY_ON is true (lib/blackFriday.js).
 import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
-import { BF_PROMOS, BF_DISCOUNT_PCT, bfBookHref } from "../lib/blackFriday"
+import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, BF_PROMO_TERMS_LINE, bfBookHref } from "../lib/blackFriday"
 
 // Regular starting prices, as in the pricing section.
 const DISCOUNTED = [
@@ -33,7 +33,11 @@ export default function BlackFridayDeals() {
             </p>
             <ul className="mt-5 space-y-2.5 text-base text-white/90">
               <li className="flex items-start gap-3"><Check className="mt-0.5 text-emerald-400" />Both TVs in the same visit, same address</li>
-              <li className="flex items-start gap-3"><Check className="mt-0.5 text-emerald-400" />Drywall at no extra cost</li>
+              {BF_PROMO_TERMS.map(t => (
+                <li key={t} className="flex items-start gap-3 font-semibold text-white">
+                  <span aria-hidden="true" className="mt-0.5 flex size-5 flex-none items-center justify-center rounded-full border border-white/60 text-xs font-black">!</span>{t}
+                </li>
+              ))}
               <li className="flex items-start gap-3"><Check className="mt-0.5 text-emerald-400" />Brackets not included</li>
             </ul>
             <ButtonLink href={bfBookHref(p.id)} className="mt-7 w-full">
@@ -69,7 +73,7 @@ export default function BlackFridayDeals() {
       </div>
 
       <p className="mt-6 text-sm leading-relaxed text-muted">
-        Black Friday prices are starting prices: your final price depends on the job, the wall type and the mount, and is
+        {BF_PROMO_TERMS_LINE} Black Friday prices are starting prices: your final price depends on the job, the wall type and the mount, and is
         confirmed by our team before any work begins. The {BF_DISCOUNT_PCT}% is taken off that confirmed price, applies to services booked without a Black Friday
         Promo and can&apos;t be combined with coupon codes. Limited-time offer.
       </p>

@@ -4,7 +4,7 @@
 import Link from "next/link"
 import PriceDisclaimer from "./PriceDisclaimer"
 import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfBookHref } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, bfBookHref } from "../lib/blackFriday"
 
 
 const BASE = [
@@ -35,7 +35,7 @@ const ADDONS = [
 ]
 
 // The bundles, from the same list the booking form uses.
-const PROMOS = BF_PROMOS.map(p => ({ id: p.id, title: p.title, price: `$${p.amount}`, note: "Same visit, same address" }))
+const PROMOS = BF_PROMOS.map(p => ({ id: p.id, title: p.title, price: `$${p.amount}`, note: "Same visit, same address · drywall only · not over a fireplace" }))
 
 const FINE_PRINT = [
   "All prices are starting prices — the final cost depends on the difficulty of the job, the wall type and the mount being installed.",
@@ -113,6 +113,7 @@ export default function PricingSection() {
               </li>
             ))}
           </ul>
+          <p className="mt-4 text-sm text-body">{BF_PROMO_TERMS_LINE}</p>
           <Link href={bfBookHref(PROMOS[0].id)} className="mt-4 inline-flex min-h-[44px] items-center text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
             {BLACK_FRIDAY_ON ? "Book a Black Friday Promo" : "Book a promo"}
           </Link>
