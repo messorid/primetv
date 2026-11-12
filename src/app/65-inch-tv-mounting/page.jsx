@@ -40,7 +40,7 @@ export const viewport = { width: "device-width", initialScale: 1 }
 const FAQS = [
   {
     q: "How much does it cost to mount a 65-inch TV in Nashville?",
-    a: `A 65-inch TV falls into our over-55-inch bracket, so mounting starts ${PRICES.over55.toLowerCase()}. If you are having two done in the same visit at the same address, the promotional rate for two sets over 55 inches starts ${PRICES.twoOver55.toLowerCase()}. All of these are starting prices — the difficulty, the wall type and the bracket decide the final number, and a sales representative confirms it before any work begins.`,
+    a: `A 65-inch TV falls into our over-55-inch bracket, so mounting starts ${PRICES.over55.toLowerCase()}. If you are having two done in the same visit at the same address, the package for two TVs up to 70 inches starts ${PRICES.twoUpTo70.toLowerCase()}, on drywall and not over a fireplace. All of these are starting prices — the difficulty, the wall type and the bracket decide the final number, and a sales representative confirms it before any work begins.`,
   },
   {
     q: "What height should a 65-inch TV be mounted at?",
@@ -110,7 +110,7 @@ export default function Size65Page() {
         body="Levelled, anchored into studs, set at the height that suits your sofa rather than the wall, and tested on every input before we leave. Across Nashville, Brentwood, Franklin and the rest of Middle Tennessee."
         facts={[
           { label: "Mounting from",  value: PRICES.over55 },
-          { label: "Two TVs from",   value: PRICES.twoOver55 },
+          { label: "Two TVs up to 70 in", value: PRICES.twoUpTo70 },
           { label: "Workmanship",    value: PRICES.warranty },
         ]}
       />

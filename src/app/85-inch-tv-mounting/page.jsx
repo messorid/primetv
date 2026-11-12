@@ -40,7 +40,7 @@ export const viewport = { width: "device-width", initialScale: 1 }
 const FAQS = [
   {
     q: "How much does it cost to mount an 85-inch TV in Nashville?",
-    a: `Mounting starts ${PRICES.over55.toLowerCase()} for anything over 55 inches, and an 85-inch set is at the top of that band, so expect the final figure to sit above the starting price. Two sets over 55 inches at the same address in one visit start ${PRICES.twoOver55.toLowerCase()}. The wall type, the difficulty and the bracket all move the number, and a sales representative confirms it before any work begins.`,
+    a: `Mounting starts ${PRICES.over55.toLowerCase()} for anything over 55 inches, and an 85-inch set is at the top of that band, so expect the final figure to sit above the starting price. Our two-TV package (${PRICES.twoUpTo70.toLowerCase()}) covers TVs up to 70 inches, so 85-inch sets are quoted separately. The wall type, the difficulty and the bracket all move the number, and a sales representative confirms it before any work begins.`,
   },
   {
     q: "Can drywall hold an 85-inch TV, and how many studs does it need?",

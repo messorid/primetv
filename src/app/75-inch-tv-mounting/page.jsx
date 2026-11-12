@@ -40,7 +40,7 @@ export const viewport = { width: "device-width", initialScale: 1 }
 const FAQS = [
   {
     q: "How much does it cost to mount a 75-inch TV in Nashville?",
-    a: `Mounting starts ${PRICES.over55.toLowerCase()} for any set over 55 inches, which includes every 75-inch panel. Two sets over 55 inches at the same address in the same visit start ${PRICES.twoOver55.toLowerCase()}. These are starting prices: the wall type, the difficulty and the bracket move the final figure, and one of our sales representatives confirms it before work begins.`,
+    a: `Mounting starts ${PRICES.over55.toLowerCase()} for any set over 55 inches, which includes every 75-inch panel. Our two-TV package (${PRICES.twoUpTo70.toLowerCase()}) covers TVs up to 70 inches, so two 75-inch sets are quoted separately. These are starting prices: the wall type, the difficulty and the bracket move the final figure, and one of our sales representatives confirms it before work begins.`,
   },
   {
     q: "Do you really need two people to mount a 75-inch TV?",
@@ -110,7 +110,7 @@ export default function Size75Page() {
         body="Two technicians on every job, studs located and confirmed, the height decided from your sofa rather than a tape measure. Across Nashville, Murfreesboro, Mount Juliet and the rest of Middle Tennessee."
         facts={[
           { label: "Mounting from", value: PRICES.over55 },
-          { label: "Two TVs from",  value: PRICES.twoOver55 },
+          { label: "Cable concealment", value: PRICES.cables },
           { label: "Crew",          value: "2 technicians" },
         ]}
       />

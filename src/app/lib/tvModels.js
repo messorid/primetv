@@ -525,6 +525,8 @@ export const PRICES = {
   fireplace:   "From $25 extra",
   hardWall:    "From $25 for concrete, tile, stone or metal",
   twoUpTo55:   "From $199",
-  twoOver55:   "From $260",
+  // Two TVs up to 70 inches, same visit — drywall only, not over a fireplace.
+  // It does not cover 75-inch sets and larger.
+  twoUpTo70:   "From $260",
   warranty:    "30-day workmanship warranty",
 }
