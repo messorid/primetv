@@ -11,6 +11,8 @@ import { Star } from "lucide-react"
 import HeroCarousel from "./HeroCarousel"
 import { HERO_SLIDES } from "../lib/photos"
 import { ButtonLink, Check, PHONE_DISPLAY, PHONE_TEL } from "./ui/Section"
+import BlackFridayHero from "./BlackFridayHero"
+import { BLACK_FRIDAY_ON } from "../lib/blackFriday"
 
 const POINTS = ["Licensed & insured", "Upfront pricing", "Clean cable finish", "Workmanship warranty"]
 
@@ -22,6 +24,7 @@ const STATS = [
 ]
 
 export default function HeroSection() {
+  if (BLACK_FRIDAY_ON) return <BlackFridayHero><HeroStats /></BlackFridayHero>
   return (
     <section aria-labelledby="hero-title" className="w-full bg-white text-ink">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pt-8 pb-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-14 lg:pb-16">
@@ -77,8 +80,15 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* The numbers, in a plain strip under the hero rather than as cards
-          floating over the photo. */}
+      <HeroStats />
+    </section>
+  )
+}
+
+// The numbers, in a plain strip under the hero rather than as cards floating
+// over the photo.
+function HeroStats() {
+  return (
       <div className="border-y border-zinc-200 bg-soft">
         <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 sm:px-6 md:grid-cols-4">
           {STATS.map(s => (
@@ -92,6 +102,5 @@ export default function HeroSection() {
           ))}
         </dl>
       </div>
-    </section>
   )
 }

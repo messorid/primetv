@@ -12,6 +12,8 @@ import {
 import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAGES } from "../lib/formValidation"
 import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
 import { BOOKING_DONE_EVENT } from "./HideAfterBooking"
+import Image from "next/image"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfPromoById, bfPrice, money } from "../lib/blackFriday"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -44,11 +46,10 @@ const HOME_INSTALL_SERVICES = [
   { id: "other",          label: "Other Installation",       icon: "🔧" },
 ]
 
-const PROMOS = [
-  { label: '2 TVs up to 55"',                    price: "From $199" },
-  { label: '2 TVs up to 70"',                    price: "From $260" },
-  { label: '1 TV up to 55" + 1 TV up to 70"',   price: "From $230" },
-]
+// The bundles and their prices live in lib/blackFriday.js; while the sale is
+// on they are shown as "Black Friday Promo", with their artwork.
+const PROMOS = BF_PROMOS.map(p => ({ label: p.label, price: `From $${p.amount}`, image: p.image }))
+const PROMO_TAB = BLACK_FRIDAY_ON ? "Black Friday Promo" : "Promos"
 
 // Per hidden cable run. The booking emails charge the same (CABLE_RUN_PRICE in
 // lib/clientEmail.js), so change both together.
@@ -224,6 +225,16 @@ export default function BookingFormSection() {
   function removeTv(i)       { setTvs(prev => prev.filter((_, idx) => idx !== i)) }
   function updateTv(i, f, v) { setTvs(prev => prev.map((tv, idx) => idx === i ? { ...tv, [f]: v } : tv)) }
 
+  // A Black Friday card on the site links here as /book?promo=<id>: open the
+  // form with that bundle already chosen.
+  useEffect(() => {
+    const promo = bfPromoById(new URLSearchParams(window.location.search).get("promo"))
+    if (promo) { setBookingMode("promo"); setSelectedPromo(promo.label) }
+  }, [])
+
+  // The 10% applies to anything that isn't a bundle, unless a coupon is used.
+  const bfDiscount = BLACK_FRIDAY_ON && bookingMode !== "promo" && !appliedCoupon
+
   function switchMode(mode) {
     setBookingMode(mode)
     if (mode !== "promo") setSelectedPromo("")
@@ -336,6 +347,13 @@ export default function BookingFormSection() {
           <h1 className="text-3xl md:text-4xl font-extrabold">Book Your Installation</h1>
           <p className="mt-1 text-muted text-sm">Fast and easy — takes less than 2 minutes</p>
         </div>
+
+        {BLACK_FRIDAY_ON && status !== "ok" && (
+          <p className="mb-6 rounded-2xl bg-ink px-4 py-3 text-center text-sm font-semibold leading-relaxed text-white">
+            <span className="font-black uppercase tracking-wide text-brand-bright">Black Friday</span>{" "}
+            2-TV promos from ${BF_PROMOS[0].amount}, and {BF_DISCOUNT_PCT}% off every other service.
+          </p>
+        )}
 
         {/* progress */}
         <ol aria-label="Booking progress" className="flex items-center mb-7">
@@ -491,7 +509,7 @@ export default function BookingFormSection() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-2xl border border-black/10 bg-gray-50 p-1.5 mb-5">
                       {[
                         { id: "standard",    label: "Standard"     },
-                        { id: "promo",       label: "Promos"       },
+                        { id: "promo",       label: PROMO_TAB      },
                         { id: "bundle",      label: "Bundle"       },
                         { id: "homeinstall", label: "Home Install" },
                       ].map(m => (
@@ -499,8 +517,11 @@ export default function BookingFormSection() {
                           key={m.id}
                           type="button"
                           onClick={() => switchMode(m.id)}
-                          className={`rounded-xl py-2 text-xs font-bold transition ${
-                            bookingMode === m.id
+                          aria-pressed={bookingMode === m.id}
+                          className={`rounded-xl px-1 py-2 text-xs font-bold leading-tight transition ${
+                            BLACK_FRIDAY_ON && m.id === "promo"
+                              ? (bookingMode === m.id ? "bg-ink text-white shadow" : "bg-ink/90 text-white hover:bg-ink")
+                              : bookingMode === m.id
                               ? "bg-white shadow text-black"
                               : "text-muted hover:text-black/70"
                           }`}
@@ -509,6 +530,14 @@ export default function BookingFormSection() {
                         </button>
                       ))}
                     </div>
+
+                    {bfDiscount && (
+                      <p role="status" className="mb-5 rounded-xl border border-ink bg-ink px-4 py-3 text-sm leading-relaxed text-white">
+                        <strong className="font-black uppercase tracking-wide text-brand-bright">Black Friday: {BF_DISCOUNT_PCT}% off</strong>{" "}
+                        this booking, applied automatically. Or pick a{" "}
+                        <button type="button" onClick={() => switchMode("promo")} className="font-bold underline underline-offset-2">Black Friday Promo</button>.
+                      </p>
+                    )}
 
                     {/* ── Standard ── */}
                     {bookingMode === "standard" && (
@@ -562,6 +591,7 @@ export default function BookingFormSection() {
                                     value={tv.size}
                                     onChange={v => updateTv(i, "size", v)}
                                     showPrice={tv.model !== "frame"}
+                                    discount={bfDiscount}
                                   />
                                 </div>
                               </div>
@@ -637,6 +667,11 @@ export default function BookingFormSection() {
                     {/* ── Promos ── */}
                     {bookingMode === "promo" && (
                       <div>
+                        {BLACK_FRIDAY_ON && (
+                          <p className="mb-3 text-sm font-black uppercase tracking-wide text-ink">
+                            Black Friday Promo <span className="font-semibold normal-case tracking-normal text-muted">— two TVs, one visit, one price</span>
+                          </p>
+                        )}
                         <div className="space-y-2.5">
                           {PROMOS.map(promo => (
                             <label
@@ -655,6 +690,10 @@ export default function BookingFormSection() {
                                   </svg>
                                 )}
                               </div>
+                              {BLACK_FRIDAY_ON && (
+                                <Image src={promo.image} alt="" width={56} height={56} sizes="56px"
+                                  className="size-14 flex-none rounded-lg object-cover" />
+                              )}
                               <span className="text-sm text-black/80 flex-1">{promo.label}</span>
                               <span className="text-sm font-bold text-black">{promo.price}</span>
                             </label>
@@ -666,7 +705,7 @@ export default function BookingFormSection() {
                           return (
                             <div className="mt-3 flex items-center justify-between rounded-xl bg-[#E50914]/8 border border-[#E50914]/20 px-4 py-3">
                               <div>
-                                <p className="text-xs font-semibold text-[#E50914] uppercase tracking-wide">Promo price</p>
+                                <p className="text-xs font-semibold text-[#E50914] uppercase tracking-wide">{BLACK_FRIDAY_ON ? "Black Friday Promo price" : "Promo price"}</p>
                                 <p className="text-xs text-muted mt-0.5">{selectedPromo}</p>
                               </div>
                               <span className="text-2xl font-extrabold text-[#E50914]">{promo?.price}</span>
@@ -675,7 +714,7 @@ export default function BookingFormSection() {
                         })()}
 
                         {!selectedPromo && (
-                          <p className="mt-3 text-xs text-muted">Select the promo that fits your installation</p>
+                          <p className="mt-3 text-xs text-muted">Select the {BLACK_FRIDAY_ON ? "Black Friday Promo" : "promo"} that fits your installation</p>
                         )}
                       </div>
                     )}
@@ -761,7 +800,7 @@ export default function BookingFormSection() {
                     {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
                       <div className="mt-5 rounded-2xl border-2 border-dashed border-black/15 bg-gray-50 p-4">
                         <p className="text-xs font-bold text-muted uppercase tracking-widest mb-3">Add-ons</p>
-                        <CableToggle count={cableConcealment} onChange={setCableConcealment} />
+                        <CableToggle count={cableConcealment} onChange={setCableConcealment} discount={bfDiscount} />
                       </div>
                     )}
 
@@ -772,6 +811,7 @@ export default function BookingFormSection() {
                         couponStatus={couponStatus} couponComment={couponComment}
                         onCodeChange={v => { setCouponCode(v.toUpperCase()); setCouponStatus("idle") }}
                         onApply={applyCoupon} onClear={clearCoupon} onCommentChange={setCouponComment}
+                        bfNote={BLACK_FRIDAY_ON && bookingMode !== "promo"}
                         customMode={customMode} onCustomModeChange={setCustomMode}
                         customTvSize={customTvSize} onCustomTvSizeChange={setCustomTvSize}
                         customTvQty={customTvQty} onCustomTvQtyChange={setCustomTvQty}
@@ -941,15 +981,18 @@ export default function BookingFormSection() {
 
 /* ── Sub-components ───────────────────────────────────────────────────────── */
 
-function CableToggle({ count, onChange }) {
-  const total = count * CABLE_RUN_PRICE
+function CableToggle({ count, onChange, discount = false }) {
+  const run = bfPrice(CABLE_RUN_PRICE, discount)
+  const total = Math.round(count * run * 100) / 100
   return (
     <div>
       <div className="flex items-center justify-between gap-3 bg-white rounded-xl border border-black/10 px-4 py-3">
         <div>
           <span className="text-sm font-bold">🔌 Hidden Cable Concealment</span>
           <span className="block text-xs text-muted mt-0.5">
-            In-wall routing or raceway — <strong className="text-black/70">from ${CABLE_RUN_PRICE} per run</strong>
+            In-wall routing or raceway —{" "}
+            {discount && <><s>${CABLE_RUN_PRICE}</s><span className="sr-only"> regular price, now</span>{" "}</>}
+            <strong className="text-black/70">from {money(run)} per run</strong>
           </span>
         </div>
         <div className="flex items-center gap-2 flex-none">
@@ -974,7 +1017,7 @@ function CableToggle({ count, onChange }) {
       {count > 0 && (
         <div className="mt-2 flex items-center justify-between rounded-xl bg-[#E50914]/8 border border-[#E50914]/20 px-4 py-2.5">
           <span className="text-xs text-[#E50914] font-semibold">{count} hidden cable run{count > 1 ? "s" : ""}</span>
-          <span className="text-sm font-extrabold text-[#E50914]">+${total}</span>
+          <span className="text-sm font-extrabold text-[#E50914]">+{money(total)}</span>
         </div>
       )}
     </div>
@@ -984,7 +1027,14 @@ function CableToggle({ count, onChange }) {
 // Single-choice (radio-style) TV size picker with a search box — always picks
 // exactly one value from TV_SIZES, so every submission stores the same
 // normalized size string for later reporting (Admin → Reporte).
-function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
+// "From $110" as "$110 From $99" while the Black Friday 10% applies.
+function PriceHint({ hint, discount }) {
+  const m = /^From \$(\d+)$/.exec(hint)
+  if (!discount || !m) return hint
+  return <><s>${m[1]}</s><span className="sr-only"> regular price, now</span> <strong className="text-[#B80711]">From {money(bfPrice(Number(m[1]), true))}</strong></>
+}
+
+function TvSizeSelect({ value, onChange, tone = "red", showPrice = true, discount = false }) {
   const [query, setQuery] = useState("")
   const [open,  setOpen]  = useState(false)
   const wrapRef = useRef(null)
@@ -1033,7 +1083,7 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
             >
               <span>{s}&quot;</span>
               <span className="text-xs text-muted">
-                {showPrice ? priceHintForSize(s) : "By quote"}
+                {showPrice ? <PriceHint hint={priceHintForSize(s)} discount={discount} /> : "By quote"}
               </span>
             </button>
           ))}
@@ -1046,11 +1096,18 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
 function CouponField({
   appliedCoupon, couponCode, couponStatus, couponComment, onCodeChange, onApply, onClear, onCommentChange,
   customMode, onCustomModeChange, customTvSize, onCustomTvSizeChange, customTvQty, onCustomTvQtyChange,
-  customPrice, onCustomPriceChange,
+  customPrice, onCustomPriceChange, bfNote = false,
 }) {
   return (
     <div className="mt-4 pt-4 border-t border-black/8">
       <label className="text-xs font-semibold text-black/60">Coupon Code (optional)</label>
+      {bfNote && (
+        <p className="mt-1 text-xs text-muted">
+          {appliedCoupon
+            ? "This code replaces the Black Friday 10% — they can't be combined."
+            : "The Black Friday 10% is already applied. A coupon code replaces it; they can't be combined."}
+        </p>
+      )}
       {appliedCoupon ? (
         <div className="mt-1.5 rounded-xl border border-emerald-300 bg-emerald-50 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2.5">

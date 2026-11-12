@@ -4,6 +4,15 @@
 import Link from "next/link"
 import PriceDisclaimer from "./PriceDisclaimer"
 import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfBookHref, bfPrice, money } from "../lib/blackFriday"
+
+// "$110" or "From $70 per TV" with the Black Friday 10% taken off, and the
+// regular figure to strike through. Text without a price is left alone.
+function sale(text) {
+  const m = /\$(\d+)/.exec(text)
+  if (!BLACK_FRIDAY_ON || !m) return { text, was: null }
+  return { text: text.replace(m[0], money(bfPrice(Number(m[1])))), was: m[0] }
+}
 
 const BASE = [
   {
@@ -32,10 +41,8 @@ const ADDONS = [
   ["Drywall", "No extra charge"],
 ]
 
-const PROMOS = [
-  { title: "2 TVs up to 55 inches", price: "$199", note: "Same visit, same address" },
-  { title: "2 TVs over 55 inches", price: "$260", note: "Same visit, same address" },
-]
+// The bundles, from the same list the booking form uses.
+const PROMOS = BF_PROMOS.map(p => ({ id: p.id, title: p.title, price: `$${p.amount}`, note: "Same visit, same address" }))
 
 const FINE_PRINT = [
   "All prices are starting prices — the final cost depends on the difficulty of the job, the wall type and the mount being installed.",
@@ -54,7 +61,7 @@ export default function PricingSection() {
         id="pricing-title"
         eyebrow="Pricing"
         title="Simple, upfront pricing"
-        sub="Starting rates for professional TV mounting. Pick your size and book in minutes."
+        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_DISCOUNT_PCT}% off, already shown in the prices below. ` : ""}Starting rates for professional TV mounting. Pick your size and book in minutes.`}
       />
 
       <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -67,9 +74,15 @@ export default function PricingSection() {
             <h3 className="text-xl font-extrabold text-ink">{p.title}</h3>
             <p className="mt-3 flex items-baseline gap-2">
               <span className="text-base font-semibold text-muted">From</span>
-              <span className="text-5xl font-black tracking-tight text-ink">{p.price}</span>
+              <span className="text-5xl font-black tracking-tight text-ink">{sale(p.price).text}</span>
               <span className="text-base font-semibold text-muted">{p.unit}</span>
             </p>
+            {sale(p.price).was && (
+              <p className="mt-1 text-base font-bold text-brand-dark">
+                Black Friday · {BF_DISCOUNT_PCT}% off{" "}
+                <span className="font-semibold text-muted"><span className="sr-only">regular price </span><s>{sale(p.price).was}</s></span>
+              </p>
+            )}
             <ul className="mt-6 space-y-3">
               {p.features.map(f => (
                 <li key={f} className="flex items-start gap-3 text-base text-body"><Check className="mt-0.5 text-emerald-600" />{f}</li>
@@ -87,14 +100,17 @@ export default function PricingSection() {
             {ADDONS.map(([k, v]) => (
               <div key={k} className="flex items-baseline justify-between gap-4 py-3">
                 <dt className="text-base text-body">{k}</dt>
-                <dd className="flex-none text-base font-bold text-ink">{v}</dd>
+                <dd className="flex-none text-base font-bold text-ink">
+                  {sale(v).was && <span className="mr-2 font-semibold text-muted"><span className="sr-only">Regular price </span><s>{sale(v).was}</s></span>}
+                  {sale(v).text}
+                </dd>
               </div>
             ))}
           </dl>
         </div>
 
         <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
-          <h3 className="text-lg font-extrabold text-ink">Current promotions</h3>
+          <h3 className="text-lg font-extrabold text-ink">{BLACK_FRIDAY_ON ? "Black Friday Promos" : "Current promotions"}</h3>
           <ul className="mt-4 space-y-3">
             {PROMOS.map(p => (
               <li key={p.title} className="flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-4 py-3">
@@ -109,8 +125,8 @@ export default function PricingSection() {
               </li>
             ))}
           </ul>
-          <Link href="/book" className="mt-4 inline-flex min-h-[44px] items-center text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
-            Book a promo
+          <Link href={bfBookHref(PROMOS[0].id)} className="mt-4 inline-flex min-h-[44px] items-center text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
+            {BLACK_FRIDAY_ON ? "Book a Black Friday Promo" : "Book a promo"}
           </Link>
         </div>
       </div>

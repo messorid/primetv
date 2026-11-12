@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { validateCoupon } from "./coupons.js"
+import { BLACK_FRIDAY_ON } from "./blackFriday.js"
 import {
   BRAND, emailDocument, heading, para, sectionTitle, details, panel, priceBox, buttons, fmtDate,
   appointmentBlock,
@@ -140,14 +141,14 @@ export function buildClientEmail(b, { organizer } = {}) {
     : isCombo
     ? ["Service", "Custom Installation"]
     : hasPromo
-    ? ["Package", safe(b.selectedPromo)]
+    ? [BLACK_FRIDAY_ON ? "Black Friday Promo" : "Package", safe(b.selectedPromo)]
     : b.moreTvs
     ? ["TVs", "3+ TVs — custom quote"]
     : ["TVs", `${tvList.length} TV${tvList.length !== 1 ? "s" : ""}`]
 
   // ── Price and quote blocks ────────────────────────────────────────────────
   const promoPriceBlock = hasPromo ? priceBox({
-    label: "Package Price",
+    label: BLACK_FRIDAY_ON ? "Black Friday Promo" : "Package Price",
     sub: safe(b.selectedPromo),
     amount: promoPrice,
     note: cableQty > 0 ? `🔌 + Cable Concealment ×${cableQty}: +$${cableTotal}` : "",

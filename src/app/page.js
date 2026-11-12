@@ -9,11 +9,15 @@ import CoverageMap from "./components/CoverageMap";
 import InternalLinksHub from "./components/InternalLinksHub";
 import FaqsSection from "./components/FaqsSection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
+import BlackFridayDeals from "./components/BlackFridayDeals";
+import { BLACK_FRIDAY_ON } from "./lib/blackFriday";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
 export const metadata = {
   title: "TV Mounting Nashville TN | PrimeTvNashville",
-  description: "Professional TV mounting in Nashville TN. Same-day options, clean cable concealment, upfront pricing. Homes, apartments and businesses. Book today!",
+  description: BLACK_FRIDAY_ON
+    ? "Black Friday TV mounting deals in Nashville TN: 2 TVs mounted from $199 and 10% off any other service. Same-day options and clean cable concealment. Book today!"
+    : "Professional TV mounting in Nashville TN. Same-day options, clean cable concealment, upfront pricing. Homes, apartments and businesses. Book today!",
   keywords: ["TV mounting Nashville", "TV mounting Nashville TN", "TV installation Nashville", "same-day TV mounting Nashville", "TV wall mount Nashville", "cable concealment Nashville", "PrimeTvNashville"],
   robots: {
     index: true,
@@ -106,6 +110,7 @@ export default function HomePage() {
           site's <main> wraps this, so this is a plain container. */}
       <div className="flex w-full flex-col overflow-hidden bg-white">
         <HeroSection />
+        {BLACK_FRIDAY_ON && <BlackFridayDeals />}
         <ServicesSection />
         <PricingSection />
         <BookingSteps />

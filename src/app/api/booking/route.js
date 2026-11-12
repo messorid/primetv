@@ -14,10 +14,20 @@ import { runAfterResponse } from "../../lib/afterResponse.js"
 import { ensureSmsTables, recordConsent } from "../../lib/sms.js"
 import { toE164 } from "../../lib/smsRules.js"
 import { SMS_CONSENT_TEXT, SMS_CONSENT_VERSION } from "../../lib/smsConfig.js"
+import { bfDiscountApplies, BF_COUPON_CODE, BF_COUPON_LABEL } from "../../lib/blackFriday.js"
 
 export async function POST(request) {
   try {
     const body = await request.json()
+    // Black Friday: a booking that isn't one of the bundles and uses no coupon
+    // gets the 10%, recorded as an offer on the booking so the office, the
+    // installer and the customer's confirmation all show it.
+    if (bfDiscountApplies(body)) {
+      body.couponCode = BF_COUPON_CODE
+      body.appliedCouponLabel = BF_COUPON_LABEL
+      body.couponHidden = true
+      body.couponComment = ""
+    }
     const {
       date, timePreference, tvs, address, info,
       bookingMode, selectedPromo, cableConcealment, comboDetails,

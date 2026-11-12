@@ -15,6 +15,7 @@ import {
   panel, customerCard, contactActions, appointmentBlock,
 } from "./emailLayout.js"
 import { PROMO_PRICES, HOME_INSTALL_LABELS, CABLE_RUN_PRICE } from "./clientEmail.js"
+import { BLACK_FRIDAY_ON } from "./blackFriday.js"
 
 function rawAddress(a = {}) {
   return [a.street, a.apt, [a.city, a.state].filter(Boolean).join(", "), a.zip]
@@ -66,7 +67,7 @@ export function buildBusinessBookingEmail(body) {
   const c = context(body)
   const { info } = c
 
-  const modeLabel = c.isHomeInst ? "Home Installation" : c.isCombo ? "Bundle (custom)" : c.isPromo ? "Promo Package" : "Standard"
+  const modeLabel = c.isHomeInst ? "Home Installation" : c.isCombo ? "Bundle (custom)" : c.isPromo ? (BLACK_FRIDAY_ON ? "Black Friday Promo" : "Promo Package") : "Standard"
 
   const whatRows = details([
     ["Booking type", modeLabel],

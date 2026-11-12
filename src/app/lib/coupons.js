@@ -26,6 +26,16 @@ export const COUPON_CODES = {
     active:        true,
   },
 
+  // Applied by the server to every non-bundle booking while BLACK_FRIDAY_ON is
+  // true (lib/blackFriday.js). Listed here so the confirmation email shows it
+  // as an offer, and so it also works if someone types it.
+  BLACKFRIDAY10: {
+    offer:              "Black Friday — 10% off your service",
+    note:               "Black Friday 2026 — 10% off any service that isn't a Black Friday bundle",
+    hideCodeFromClient: true,
+    active:             true,
+  },
+
   PRIMETV5: {
     offer:  "5% discount applied to your installation",
     note:   "5% off — general promo code",

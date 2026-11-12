@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Menu, Phone, X } from "lucide-react"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT } from "../lib/blackFriday"
 
 const services = [
   { label: "TV Wall Mounting", href: "/services/tv-mounting", desc: "Secure mounting for any wall type" },
@@ -92,9 +93,15 @@ export default function Navbar() {
                   <span className="relative flex size-2">
                     <span className="relative inline-flex size-2 rounded-full bg-white" />
                   </span>
-                  Same-Day & Next-Day Availability in Nashville
+                  {BLACK_FRIDAY_ON
+                    ? <Link href="/#black-friday" className="underline-offset-2 hover:underline"><strong>Black Friday:</strong> 2 TVs mounted from ${BF_PROMOS[0].amount} · {BF_DISCOUNT_PCT}% off everything else</Link>
+                    : "Same-Day & Next-Day Availability in Nashville"}
                 </span>
-                <span className="sm:hidden">Same-Day Availability</span>
+                <span className="sm:hidden">
+                  {BLACK_FRIDAY_ON
+                    ? <Link href="/#black-friday" className="font-bold underline underline-offset-2">Black Friday deals</Link>
+                    : "Same-Day Availability"}
+                </span>
                 <span className="hidden sm:block text-white/60">·</span>
                 <a href="tel:+16156690251" className="flex items-center gap-1 font-bold underline-offset-2 hover:underline">
                   <Phone size={12} />
