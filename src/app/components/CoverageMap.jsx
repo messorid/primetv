@@ -5,6 +5,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Section, SectionHeader, ButtonLink } from "./ui/Section"
+import MobileCollapse from "./MobileCollapse"
 
 const AREAS = [
   "Nashville",
@@ -49,8 +50,8 @@ export default function CoverageMap() {
         sub="Around 50 miles from downtown Nashville. Jobs outside that radius may include a small trip fee." />
 
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="order-2 lg:order-1">
-          <h3 className="text-lg font-extrabold text-ink">Areas we serve</h3>
+        <MobileCollapse label="Show the areas we serve" className="order-2 lg:order-1">
+          <h3 className="mt-5 text-lg font-extrabold text-ink md:mt-0">Areas we serve</h3>
           <ul className="mt-4 flex flex-wrap gap-2">
             {AREAS.map(name => (
               <li key={name}>
@@ -66,7 +67,7 @@ export default function CoverageMap() {
             ))}
           </ul>
           <p className="mt-4 text-sm text-muted">Linked areas have their own page with local details.</p>
-        </div>
+        </MobileCollapse>
 
         <div className="order-1 space-y-5 lg:order-2">
           <ZipQuickCheck />

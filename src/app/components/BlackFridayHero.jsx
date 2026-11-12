@@ -21,49 +21,50 @@ export default function BlackFridayHero({ children }) {
           <div className="absolute -left-24 top-0 h-full w-40 -skew-x-12 bg-gradient-to-b from-brand/40 to-transparent" />
         </div>
 
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pt-8 pb-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-14 lg:pb-16">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pt-6 pb-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-10 lg:pb-14">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-sm font-bold text-white">
               <span aria-hidden="true" className="size-2 flex-none rounded-full bg-brand-bright" />
               Limited-time deals · Same-day &amp; next-day availability
             </p>
 
-            <h1 id="hero-title" className="mt-5 font-black tracking-tight">
-              <span className="block text-[3.5rem] italic uppercase leading-[0.92] sm:text-7xl lg:text-[5.75rem]">
+            <h1 id="hero-title" className="mt-4 font-black tracking-tight">
+              <span className="block text-[3.25rem] italic uppercase leading-[0.92] sm:text-7xl lg:text-[4.5rem] xl:text-[5rem]">
                 Black <span className="text-brand-bright">Friday</span>
               </span>
-              <span className="mt-4 block text-2xl leading-tight sm:text-3xl lg:text-4xl">
+              <span className="mt-3 block text-2xl leading-tight sm:text-3xl lg:text-[2rem]">
                 TV Mounting Deals in Nashville, TN
               </span>
             </h1>
 
             {/* The two offers, as large as the headline. */}
-            <div className="mt-7 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-              <div className="rounded-2xl bg-brand p-4 sm:p-5">
-                <p className="text-sm font-bold uppercase tracking-wide text-white">Black Friday Promo</p>
-                <p className="mt-1 text-base font-semibold text-white">{first.short}</p>
-                <p className="mt-1 flex items-baseline gap-2">
-                  <span className="text-base font-semibold text-white">From</span>
-                  <span className="text-5xl font-black leading-none text-white">${first.amount}</span>
+            <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3 lg:mt-6">
+              <div className="rounded-2xl bg-brand p-3.5 sm:p-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-white sm:text-sm">Black Friday Promo</p>
+                <p className="mt-1 text-sm font-semibold leading-snug text-white sm:text-base">{first.short}</p>
+                <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-sm font-semibold text-white sm:text-base">From</span>
+                  <span className="text-4xl font-black leading-none text-white sm:text-5xl">${first.amount}</span>
                 </p>
-                <p className="mt-2 text-sm font-semibold leading-snug text-white">{BF_PROMO_TERMS.join(" · ")}</p>
+                <p className="mt-2 text-xs font-semibold leading-snug text-white sm:text-sm">{BF_PROMO_TERMS.join(" · ")}</p>
               </div>
-              <div className="rounded-2xl border border-white/25 bg-white/10 p-4 sm:p-5">
-                <p className="text-sm font-bold uppercase tracking-wide text-brand-bright">Everything else</p>
-                <p className="mt-1 text-base font-semibold text-white">Any other service</p>
-                <p className="mt-1 text-5xl font-black leading-none text-white">{BF_DISCOUNT_PCT}% OFF</p>
+              <div className="rounded-2xl border border-white/25 bg-white/10 p-3.5 sm:p-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-bright sm:text-sm">Everything else</p>
+                <p className="mt-1 text-sm font-semibold leading-snug text-white sm:text-base">Any other service</p>
+                <p className="mt-1 text-[2rem] font-black leading-none text-white sm:text-5xl">{BF_DISCOUNT_PCT}% OFF</p>
               </div>
             </div>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href="#black-friday" className="w-full sm:w-auto">
-                See the Black Friday deals
+            {/* Booking is the main action; the deals are one scroll away. */}
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row lg:mt-6">
+              <ButtonLink href="/book" className="w-full sm:w-auto">
+                Book a Black Friday deal
                 <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12l7 7 7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </ButtonLink>
-              <ButtonLink href="/book" variant="outlineDark" className="w-full sm:w-auto">
-                Book installation
+              <ButtonLink href="#black-friday" variant="outlineDark" className="w-full sm:w-auto">
+                See all the deals
               </ButtonLink>
             </div>
 
@@ -74,9 +75,9 @@ export default function BlackFridayHero({ children }) {
               </a>
             </p>
 
-            <ul className="mt-7 grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
+            <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2.5">
               {POINTS.map(p => (
-                <li key={p} className="flex items-center gap-2.5 text-base font-semibold text-white">
+                <li key={p} className="flex items-center gap-2 text-sm font-semibold text-white sm:text-base">
                   <Check className="text-emerald-400" /> {p}
                 </li>
               ))}

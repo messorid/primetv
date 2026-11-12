@@ -4,6 +4,7 @@
 import Link from "next/link"
 import { BRANDS, SIZES } from "../lib/tvModels"
 import { Section, SectionHeader } from "./ui/Section"
+import MobileCollapse from "./MobileCollapse"
 
 const SERVICES = [
   {
@@ -44,6 +45,8 @@ export default function InternalLinksHub() {
       <SectionHeader id="specialty-title" eyebrow="Specialty installs" title="Got a special setup?"
         sub="Frame TVs, fireplaces, hidden cables and soundbars each have their own page with the details." />
 
+      <MobileCollapse label="Show specialty installs and guides" className="mt-8 md:mt-0">
+
       <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {SERVICES.map(sv => (
           <li key={sv.href}>
@@ -75,6 +78,7 @@ export default function InternalLinksHub() {
           </li>
         </ul>
       </nav>
+      </MobileCollapse>
     </Section>
   )
 }

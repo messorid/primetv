@@ -32,10 +32,14 @@ export default function Page() {
           form. Keep this the same as step 4. Hidden once the booking is sent:
           by then there is no form left to explain. */}
       <HideAfterBooking>
-      <section aria-labelledby="sms-optin-title" className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
-        <div className="rounded-2xl border border-zinc-200 bg-soft p-5 sm:p-6">
-          <h2 id="sms-optin-title" className="text-lg font-extrabold text-ink">Optional text messages</h2>
-          <p className="mt-2 text-base leading-relaxed text-body">
+      <section aria-labelledby="sms-optin-title" className="mx-auto max-w-xl px-5 pb-16">
+        <details className="group rounded-2xl border border-zinc-200 bg-soft">
+          <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-4 px-5 [&::-webkit-details-marker]:hidden">
+            <h2 id="sms-optin-title" className="text-base font-bold text-ink">Optional text messages: how they work</h2>
+            <span aria-hidden="true" className="text-xl text-muted transition-transform group-open:rotate-45">+</span>
+          </summary>
+          <div className="px-5 pb-5">
+          <p className="text-base leading-relaxed text-body">
             On the last step of this form you enter your mobile number and can choose to get text messages
             from PrimeTvNashville (&quot;PrimeTV&quot;) at that number. The box starts unchecked and you can
             book without it.
@@ -62,7 +66,8 @@ export default function Page() {
               </div>
             </fieldset>
           </form>
-        </div>
+          </div>
+        </details>
       </section>
       </HideAfterBooking>
     </div>

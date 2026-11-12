@@ -3,6 +3,7 @@
 // mounting"), and adds ceiling fans, which now have their own page.
 import Link from "next/link"
 import { Section, SectionHeader, ButtonLink } from "./ui/Section"
+import MobileCollapse from "./MobileCollapse"
 
 const SERVICES = [
   { emoji: "🪑", title: "Furniture assembly", desc: "Beds, dressers, desks, TV stands, IKEA and office furniture.", href: "/furniture-assembly-nashville" },
@@ -19,6 +20,8 @@ export default function MoreThanTVSection() {
       <SectionHeader id="more-title" eyebrow="Home installation"
         title="More than TV mounting"
         sub="Add other jobs to the same visit — no second trip needed." />
+
+      <MobileCollapse label="Show home installation services" className="mt-8 md:mt-0">
 
       <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {SERVICES.map(s => (
@@ -50,6 +53,7 @@ export default function MoreThanTVSection() {
         </div>
         <ButtonLink href="/home-installation-services-nashville#commercial">Request a commercial quote</ButtonLink>
       </div>
+      </MobileCollapse>
     </Section>
   )
 }

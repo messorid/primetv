@@ -181,7 +181,6 @@ export default function BookingFormSection() {
       ["lastName",  isValidName(info.lastName),  "Enter your last name."],
       ["email",     isValidEmail(info.email),    MESSAGES.email],
       ["phone",     isValidUSPhone(info.phone),  MESSAGES.phone],
-      ["referral",  !!info.referral,             "Tell us how you heard about us."],
       ["payment",   !!info.payment,              "Choose how you'd like to pay."],
       ["agreed",    info.agreed,                 "Please accept the Terms & Conditions to book."],
     ]),
@@ -874,7 +873,7 @@ export default function BookingFormSection() {
                     onBlur={blur("phone")} error={shown("phone")} enterKeyHint="done"
                     hint="10-digit US number, for updates about your appointment." />
 
-                  <ChoiceGroup id="bk-referral" legend="How did you hear about us?" required
+                  <ChoiceGroup id="bk-referral" legend="How did you hear about us? (optional)"
                     columns={3} size="sm" options={REFERRAL_OPTIONS}
                     value={info.referral} onChange={v => setInfo(i => ({ ...i, referral: v }))}
                     error={shown("referral")} />
@@ -962,6 +961,9 @@ export default function BookingFormSection() {
         </AnimatePresence>
 
         {/* pricing note */}
+        {/* The price notice belongs with the prices, on the service step; under
+            the calendar it was just more to scroll past. */}
+        {step === 1 && (<>
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-[11px] leading-relaxed text-amber-900 text-center">
             <span className="font-bold">Prices start from the amounts shown.</span> Your final price
@@ -976,6 +978,7 @@ export default function BookingFormSection() {
           Drywall standard · Concrete / Tile / Stone / Metal by quote · Fireplace by quote ·
           Frame TV &amp; home installations by quote
         </p>
+        </>)}
 
       </div>
     </section>

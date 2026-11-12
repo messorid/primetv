@@ -83,7 +83,7 @@ export default function PricingSection() {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className={`mt-8 grid grid-cols-1 gap-5 ${BLACK_FRIDAY_ON ? "" : "lg:grid-cols-2"}`}>
         <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
           <h3 className="text-lg font-extrabold text-ink">Add-ons</h3>
           {BLACK_FRIDAY_ON && <p className="mt-1 text-sm font-bold text-brand-dark">Black Friday · {BF_DISCOUNT_PCT}% off</p>}
@@ -97,8 +97,18 @@ export default function PricingSection() {
           </dl>
         </div>
 
+        {/* While the sale is on, the bundles are in the Black Friday section
+            above; repeating them here only made the page longer. */}
+        {BLACK_FRIDAY_ON ? (
+          <p className="rounded-3xl bg-ink px-6 py-5 text-base font-semibold text-white">
+            Mounting two TVs?{" "}
+            <Link href="#black-friday" className="font-bold text-white underline decoration-brand-bright decoration-2 underline-offset-4 hover:text-brand-bright">
+              See the Black Friday Promos from {PROMOS[0].price}
+            </Link>
+          </p>
+        ) : (
         <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
-          <h3 className="text-lg font-extrabold text-ink">{BLACK_FRIDAY_ON ? "Black Friday Promos" : "Current promotions"}</h3>
+          <h3 className="text-lg font-extrabold text-ink">Current promotions</h3>
           <ul className="mt-4 space-y-3">
             {PROMOS.map(p => (
               <li key={p.title} className="flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-4 py-3">
@@ -115,9 +125,10 @@ export default function PricingSection() {
           </ul>
           <p className="mt-4 text-sm text-body">{BF_PROMO_TERMS_LINE}</p>
           <Link href={bfBookHref(PROMOS[0].id)} className="mt-4 inline-flex min-h-[44px] items-center text-base font-bold text-brand-dark underline decoration-2 underline-offset-4 hover:text-ink">
-            {BLACK_FRIDAY_ON ? "Book a Black Friday Promo" : "Book a promo"}
+            Book a promo
           </Link>
         </div>
+        )}
       </div>
 
       <PriceDisclaimer className="mt-8" />

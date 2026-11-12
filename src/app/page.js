@@ -10,6 +10,7 @@ import InternalLinksHub from "./components/InternalLinksHub";
 import FaqsSection from "./components/FaqsSection";
 import QuickQuoteForm from "./components/QuickQuoteForm";
 import BlackFridayDeals from "./components/BlackFridayDeals";
+import ReviewsSection from "./components/ReviewsSection";
 import { BLACK_FRIDAY_ON } from "./lib/blackFriday";
 
 // 📝 OPTIMIZACIÓN DE METADATOS PARA SEO Y REDES SOCIALES
@@ -105,22 +106,25 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* The order follows the visitor's questions: what and how much,
-          how it works, proof, what else, where, doubts, then the quote. The
-          site's <main> wraps this, so this is a plain container. */}
+      {/* The order follows what a visitor needs to book: the offer, proof
+          (reviews, real photos), prices, how it works, then the quote form
+          while they are still reading. Doubts and the extras (other services,
+          areas, specialty pages) come after. The site's <main> wraps this, so
+          this is a plain container. */}
       <div className="flex w-full flex-col overflow-hidden bg-white">
         <HeroSection />
+        <ReviewsSection />
         {BLACK_FRIDAY_ON && <BlackFridayDeals />}
+        <GallerySection />
         <ServicesSection />
         <PricingSection />
         <BookingSteps />
-        <GallerySection />
+        <QuickQuoteForm />
         <WhyChooseSection />
+        <FaqsSection />
         <MoreThanTVSection />
         <CoverageMap />
         <InternalLinksHub />
-        <FaqsSection />
-        <QuickQuoteForm />
       </div>
     </>
   );

@@ -55,7 +55,7 @@ function tvErrors(f) {
     ["location", f.location.trim().length >= 3,   "Enter your ZIP code or city, like 37209 or Franklin."],
     ["name",     isValidName(f.name),             MESSAGES.name],
     ["phone",    isValidUSPhone(f.phone),         MESSAGES.phone],
-    ["email",    isValidEmail(f.email),           MESSAGES.email],
+    ["email",    !f.email.trim() || isValidEmail(f.email), MESSAGES.email],
   ])
 }
 
@@ -64,7 +64,7 @@ function installErrors(service, f) {
     ["service", !!service,                MESSAGES.choose("the service you need")],
     ["name",    isValidName(f.name),      MESSAGES.name],
     ["phone",   isValidUSPhone(f.phone),  MESSAGES.phone],
-    ["email",   isValidEmail(f.email),    MESSAGES.email],
+    ["email",   !f.email.trim() || isValidEmail(f.email), MESSAGES.email],
   ])
 }
 
@@ -231,7 +231,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
             >
               <h3 className="text-xl font-extrabold">Quick TV quote</h3>
               <p className="mt-1 text-sm leading-relaxed text-black/60">
-                Five quick answers. We reply with your price and available times.
+                A few quick answers. We reply with your price and available times.
                 Fields marked <span className="text-[#E50914]">*</span> are required.
               </p>
 
@@ -262,10 +262,10 @@ export default function QuickQuoteForm({ onSubmitted }) {
                   onBlur={blur("phone")} error={shown("phone")} enterKeyHint="next"
                 />
                 <EmailField
-                  id={fid("email")} label="Email" required
+                  id={fid("email")} label="Email" optional
                   value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))}
                   onBlur={blur("email")} error={shown("email")} enterKeyHint="send"
-                  hint="Where we can reach you with your quote."
+                  hint="Only if you want your quote by email too."
                 />
               </div>
 
@@ -341,10 +341,10 @@ export default function QuickQuoteForm({ onSubmitted }) {
                   onBlur={blur("phone")} error={shown("phone")} enterKeyHint="next"
                 />
                 <EmailField
-                  id={fid("email")} label="Email" required
+                  id={fid("email")} label="Email" optional
                   value={installForm.email} onChange={v => setInstallForm(f => ({ ...f, email: v }))}
                   onBlur={blur("email")} error={shown("email")} enterKeyHint="send"
-                  hint="Where we can reach you with your quote."
+                  hint="Only if you want your quote by email too."
                 />
               </div>
 
