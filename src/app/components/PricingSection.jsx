@@ -18,7 +18,7 @@ const BASE = [
   },
   {
     title: "TV over 55 inches",
-    price: "$140",
+    price: "$150",
     unit: "per TV",
     features: ["Two-person handling for large screens", "Level, secure mount on studs", "Drywall at no extra cost"],
     href: "/book?service=tv-over-55",

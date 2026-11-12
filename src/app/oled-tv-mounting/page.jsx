@@ -13,7 +13,7 @@ const URL = `${BASE}/oled-tv-mounting`
 export const metadata = {
   title: "OLED TV Mounting in Nashville, TN | PrimeTvNashville",
   description:
-    "OLED TV mounting in Nashville TN. LG C6 and C5 and Samsung S90F panels carried on edge by two technicians and mounted flush. Starting from $140 per TV.",
+    "OLED TV mounting in Nashville TN. LG C6 and C5 and Samsung S90F panels carried on edge by two technicians and mounted flush. Starting from $150 per TV.",
   keywords: [
     "OLED TV mounting Nashville",
     "OLED TV installation Nashville TN",

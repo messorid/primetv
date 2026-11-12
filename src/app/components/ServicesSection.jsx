@@ -52,7 +52,7 @@ const SERVICES = [
     title: "TV over 55 inches",
     desc: "Two person handling and precise leveling",
     img: "/images/tv1.jpeg",
-    priceLabel: "From $140 per TV",
+    priceLabel: "From $150 per TV",
     time: "60 to 90 min",
     notes: ["Drywall no extra", "Bracket not included"],
     highlight: true,

@@ -62,7 +62,7 @@ const jsonLd = {
         "itemOffered": { "@type": "Service", "name": "Large Screen Mounting (60\"-70\")" },
         "priceSpecification": {
           "@type": "PriceSpecification",
-          "minPrice": "140",
+          "minPrice": "150",
           "priceCurrency": "USD",
           "valueAddedTaxIncluded": false
         }
@@ -85,7 +85,7 @@ const jsonLd = {
     {
       title: "Large Screen Mounting",
       description: "For TVs larger than 55 inches",
-      price: "From $140"
+      price: "From $150"
     }
   ]
   

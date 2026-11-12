@@ -38,7 +38,7 @@ const INSTALL_SERVICES = [
 
 const TV_SIZES = [
   { value: "up_to_55", label: "Up to 55 in", desc: "From $110" },
-  { value: "over_55",  label: "Over 55 in",  desc: "From $140" },
+  { value: "over_55",  label: "Over 55 in",  desc: "From $150" },
 ]
 
 const TV_LABELS = { tvSize: "TV size", location: "ZIP or city", name: "Name", phone: "Phone", email: "Email" }

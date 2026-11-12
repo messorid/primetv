@@ -14,7 +14,7 @@ const URL = `${BASE}/75-inch-tv-mounting`
 export const metadata = {
   title: "75-Inch TV Mounting in Nashville, TN | PrimeTvNashville",
   description:
-    "75-inch TV mounting in Nashville TN from $140 per TV. Two technicians, studs confirmed, height set from your sofa. Samsung, Hisense, TCL, LG and more.",
+    "75-inch TV mounting in Nashville TN from $150 per TV. Two technicians, studs confirmed, height set from your sofa. Samsung, Hisense, TCL, LG and more.",
   keywords: [
     "75 inch TV mounting Nashville",
     "mount 75 inch TV Nashville TN",

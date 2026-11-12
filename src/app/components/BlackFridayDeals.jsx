@@ -8,7 +8,7 @@ import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, BF_PROMO_TERMS_LINE, bfBook
 // Regular starting prices, as in the pricing section.
 const DISCOUNTED = [
   ["TV up to 55 inches", 110, "per TV"],
-  ["TV over 55 inches", 140, "per TV"],
+  ["TV over 55 inches", 150, "per TV"],
   ["Cable concealment", 70, "per TV"],
 ]
 

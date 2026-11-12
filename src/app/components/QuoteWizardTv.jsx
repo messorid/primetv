@@ -162,7 +162,7 @@ export default function QuoteWizardTv() {
                     <select name="tvSize" value={tv.tvSize} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>
                       <option value="">Select TV Size</option>
                       <option value="<55">Less than 55 inches (from $110)</option>
-                      <option value=">=55">55 inches or larger (from $140)</option>
+                      <option value=">=55">55 inches or larger (from $150)</option>
                     </select>
 
                     <select name="wallType" value={tv.wallType} onChange={(e) => handleTvChange(index, e)} className="w-full border rounded p-2 text-black" required>

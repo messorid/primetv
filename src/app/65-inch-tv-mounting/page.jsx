@@ -14,7 +14,7 @@ const URL = `${BASE}/65-inch-tv-mounting`
 export const metadata = {
   title: "65-Inch TV Mounting in Nashville, TN | PrimeTvNashville",
   description:
-    "65-inch TV mounting in Nashville TN from $140 per TV. Samsung, Hisense, TCL and LG 65 inch models mounted into studs at the right height. Same-day available.",
+    "65-inch TV mounting in Nashville TN from $150 per TV. Samsung, Hisense, TCL and LG 65 inch models mounted into studs at the right height. Same-day available.",
   keywords: [
     "65 inch TV mounting Nashville",
     "mount 65 inch TV Nashville TN",

@@ -14,7 +14,7 @@ const URL = `${BASE}/85-inch-tv-mounting`
 export const metadata = {
   title: "85-Inch TV Mounting in Nashville, TN | PrimeTvNashville",
   description:
-    "85-inch TV mounting in Nashville TN from $140 per TV. Two technicians, studs confirmed, honest advice on whether your wall can take it. Book a visit today.",
+    "85-inch TV mounting in Nashville TN from $150 per TV. Two technicians, studs confirmed, honest advice on whether your wall can take it. Book a visit today.",
   keywords: [
     "85 inch TV mounting Nashville",
     "mount 85 inch TV Nashville TN",
