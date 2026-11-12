@@ -4,19 +4,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Section, SectionHeader } from "./ui/Section"
-import { BLACK_FRIDAY_ON, BF_DISCOUNT_PCT, bfPrice, money } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_DISCOUNT_PCT } from "../lib/blackFriday"
 
 // While the sale is on, the two bundles are shown in the Black Friday section
-// above, and every other card shows its price with the 10% taken off.
+// above, and every other card announces the 10% next to its regular price.
 const visible = s => !(BLACK_FRIDAY_ON && s.promo)
 
-// "From $110 per TV" → the same label with the discounted figure, plus the
-// regular figure to strike through.
-function salePrice(label) {
-  const m = /\$(\d+)/.exec(label)
-  if (!BLACK_FRIDAY_ON || !m) return { label, was: null }
-  return { label: label.replace(m[0], money(bfPrice(Number(m[1])))), was: m[0] }
-}
 
 const SERVICES = [
   {
@@ -99,7 +92,7 @@ export default function ServicesSection() {
         id="services-title"
         eyebrow="Services & prices"
         title="Choose your TV installation"
-        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_DISCOUNT_PCT}% off every service below, already shown in the prices. ` : ""}Starting prices per TV. Your final price depends on the job, the wall type and the mount — confirmed by our team before any work begins.`}
+        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_DISCOUNT_PCT}% off every service below. ` : ""}Starting prices per TV. Your final price depends on the job, the wall type and the mount — confirmed by our team before any work begins.`}
       />
 
       <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
@@ -117,7 +110,6 @@ export default function ServicesSection() {
 function ServiceCard({ slug, title, desc, img, priceLabel, time, notes = [], promo, addon, highlight }) {
   const tag = promo ? "Promo" : addon ? "Add-on" : highlight ? "Most booked" : null
   const cta = promo ? "Book this promo" : addon ? "Add to a booking" : "Book this service"
-  const price = salePrice(priceLabel)
   return (
     <li className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${highlight ? "border-brand ring-1 ring-brand" : "border-zinc-200"}`}>
       <div className="flex gap-4 p-4 sm:block sm:p-0">
@@ -131,11 +123,8 @@ function ServiceCard({ slug, title, desc, img, priceLabel, time, notes = [], pro
         <div className="min-w-0 sm:p-5 sm:pb-0">
           {tag && <p className="text-xs font-bold uppercase tracking-wide text-brand-dark sm:hidden">{tag}</p>}
           <h3 className="text-lg font-extrabold leading-snug text-ink">{title}</h3>
-          <p className="mt-1 text-xl font-black text-brand-dark">
-            {price.label}
-            {price.was && <span className="ml-2 text-base font-semibold text-muted"><span className="sr-only">Regular price </span><s>{price.was}</s></span>}
-          </p>
-          {price.was && <p className="text-sm font-bold text-ink">Black Friday · {BF_DISCOUNT_PCT}% off</p>}
+          <p className="mt-1 text-xl font-black text-brand-dark">{priceLabel}</p>
+          {BLACK_FRIDAY_ON && !promo && <p className="text-sm font-bold text-ink">Black Friday · {BF_DISCOUNT_PCT}% off</p>}
           <p className="mt-1 text-sm text-body">{desc}</p>
         </div>
       </div>

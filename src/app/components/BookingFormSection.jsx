@@ -13,7 +13,7 @@ import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAG
 import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
 import { BOOKING_DONE_EVENT } from "./HideAfterBooking"
 import Image from "next/image"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfPromoById, bfPrice, money } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, bfPromoById } from "../lib/blackFriday"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -534,7 +534,7 @@ export default function BookingFormSection() {
                     {bfDiscount && (
                       <p role="status" className="mb-5 rounded-xl border border-ink bg-ink px-4 py-3 text-sm leading-relaxed text-white">
                         <strong className="font-black uppercase tracking-wide text-brand-bright">Black Friday: {BF_DISCOUNT_PCT}% off</strong>{" "}
-                        this booking, applied automatically. Or pick a{" "}
+                        this booking — we take it off when we confirm your price. Or pick a{" "}
                         <button type="button" onClick={() => switchMode("promo")} className="font-bold underline underline-offset-2">Black Friday Promo</button>.
                       </p>
                     )}
@@ -591,7 +591,6 @@ export default function BookingFormSection() {
                                     value={tv.size}
                                     onChange={v => updateTv(i, "size", v)}
                                     showPrice={tv.model !== "frame"}
-                                    discount={bfDiscount}
                                   />
                                 </div>
                               </div>
@@ -800,7 +799,7 @@ export default function BookingFormSection() {
                     {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
                       <div className="mt-5 rounded-2xl border-2 border-dashed border-black/15 bg-gray-50 p-4">
                         <p className="text-xs font-bold text-muted uppercase tracking-widest mb-3">Add-ons</p>
-                        <CableToggle count={cableConcealment} onChange={setCableConcealment} discount={bfDiscount} />
+                        <CableToggle count={cableConcealment} onChange={setCableConcealment} />
                       </div>
                     )}
 
@@ -981,18 +980,15 @@ export default function BookingFormSection() {
 
 /* ── Sub-components ───────────────────────────────────────────────────────── */
 
-function CableToggle({ count, onChange, discount = false }) {
-  const run = bfPrice(CABLE_RUN_PRICE, discount)
-  const total = Math.round(count * run * 100) / 100
+function CableToggle({ count, onChange }) {
+  const total = count * CABLE_RUN_PRICE
   return (
     <div>
       <div className="flex items-center justify-between gap-3 bg-white rounded-xl border border-black/10 px-4 py-3">
         <div>
           <span className="text-sm font-bold">🔌 Hidden Cable Concealment</span>
           <span className="block text-xs text-muted mt-0.5">
-            In-wall routing or raceway —{" "}
-            {discount && <><s>${CABLE_RUN_PRICE}</s><span className="sr-only"> regular price, now</span>{" "}</>}
-            <strong className="text-black/70">from {money(run)} per run</strong>
+            In-wall routing or raceway — <strong className="text-black/70">from ${CABLE_RUN_PRICE} per run</strong>
           </span>
         </div>
         <div className="flex items-center gap-2 flex-none">
@@ -1017,7 +1013,7 @@ function CableToggle({ count, onChange, discount = false }) {
       {count > 0 && (
         <div className="mt-2 flex items-center justify-between rounded-xl bg-[#E50914]/8 border border-[#E50914]/20 px-4 py-2.5">
           <span className="text-xs text-[#E50914] font-semibold">{count} hidden cable run{count > 1 ? "s" : ""}</span>
-          <span className="text-sm font-extrabold text-[#E50914]">+{money(total)}</span>
+          <span className="text-sm font-extrabold text-[#E50914]">+${total}</span>
         </div>
       )}
     </div>
@@ -1027,14 +1023,7 @@ function CableToggle({ count, onChange, discount = false }) {
 // Single-choice (radio-style) TV size picker with a search box — always picks
 // exactly one value from TV_SIZES, so every submission stores the same
 // normalized size string for later reporting (Admin → Reporte).
-// "From $110" as "$110 From $99" while the Black Friday 10% applies.
-function PriceHint({ hint, discount }) {
-  const m = /^From \$(\d+)$/.exec(hint)
-  if (!discount || !m) return hint
-  return <><s>${m[1]}</s><span className="sr-only"> regular price, now</span> <strong className="text-[#B80711]">From {money(bfPrice(Number(m[1]), true))}</strong></>
-}
-
-function TvSizeSelect({ value, onChange, tone = "red", showPrice = true, discount = false }) {
+function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
   const [query, setQuery] = useState("")
   const [open,  setOpen]  = useState(false)
   const wrapRef = useRef(null)
@@ -1083,7 +1072,7 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true, discoun
             >
               <span>{s}&quot;</span>
               <span className="text-xs text-muted">
-                {showPrice ? <PriceHint hint={priceHintForSize(s)} discount={discount} /> : "By quote"}
+                {showPrice ? priceHintForSize(s) : "By quote"}
               </span>
             </button>
           ))}
@@ -1105,7 +1094,7 @@ function CouponField({
         <p className="mt-1 text-xs text-muted">
           {appliedCoupon
             ? "This code replaces the Black Friday 10% — they can't be combined."
-            : "The Black Friday 10% is already applied. A coupon code replaces it; they can't be combined."}
+            : "This booking already gets the Black Friday 10%. A coupon code replaces it; they can't be combined."}
         </p>
       )}
       {appliedCoupon ? (

@@ -11,6 +11,10 @@
 //   • 10% off any other service (anything booked that is not one of the
 //     bundles). It isn't combined with coupon codes.
 //
+// The site only ANNOUNCES the 10%: every price shown stays the regular
+// starting price, and the office takes the 10% off when it confirms the
+// final price. Nothing here calculates a discounted figure.
+//
 // The bundle `label`s are stored with each booking and looked up in
 // PROMO_PRICES (lib/clientEmail.js) — keep them the same in both places.
 // No imports, so the browser, the server and the tests can all use it.
@@ -52,14 +56,6 @@ export const BF_PROMOS = [
 export const bfPromoById = id => BF_PROMOS.find(p => p.id === id) || null
 export const bfBookHref = id => `/book?promo=${id}`
 
-// A regular price with the Black Friday discount, in whole dollars when it
-// comes out even ($110 → $99) and with cents when it doesn't.
-export function bfPrice(amount, on = BLACK_FRIDAY_ON) {
-  const n = Number(amount)
-  if (!on || !Number.isFinite(n)) return n
-  return Math.round(n * (100 - BF_DISCOUNT_PCT)) / 100
-}
-export const money = n => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`)
 
 // Whether a booking gets the 10%: the sale is on, it is not one of the
 // bundles, and no coupon code was used.

@@ -1,18 +1,9 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
-import { BF_PROMOS, bfPrice, money, bfDiscountApplies, bfPromoById, BF_COUPON_CODE } from "./blackFriday.js"
+import { BF_PROMOS, bfDiscountApplies, bfPromoById, BF_COUPON_CODE } from "./blackFriday.js"
 import { PROMO_PRICES } from "./clientEmail.js"
 import { validateCoupon } from "./coupons.js"
-
-test("the Black Friday 10% gives the advertised prices", () => {
-  assert.equal(money(bfPrice(110, true)), "$99")
-  assert.equal(money(bfPrice(140, true)), "$126")
-  assert.equal(money(bfPrice(150, true)), "$135")
-  assert.equal(money(bfPrice(70, true)), "$63")
-  assert.equal(money(bfPrice(25, true)), "$22.50")
-  assert.equal(bfPrice(110, false), 110) // sale off: regular price
-})
 
 test("the 10% is for anything that isn't a promo, and never stacks with a coupon", () => {
   assert.equal(bfDiscountApplies({ bookingMode: "standard" }, true), true)
