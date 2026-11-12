@@ -3,6 +3,8 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import Image from 'next/image'
 import Link from 'next/link'
 import ShareButton from '../ShareButton'
+import remarkGfm from 'remark-gfm'
+import BlackFridayNote from '../../components/BlackFridayNote'
 
 // Styles for what Markdown produces. Without these the reset leaves every
 // heading, list and link looking like body text.
@@ -20,6 +22,18 @@ const mdx = {
   strong: props => <strong className="font-bold text-ink" {...props} />,
   hr: () => <hr className="my-10 border-zinc-200" />,
   blockquote: props => <blockquote className="border-l-4 border-brand pl-4 italic text-body" {...props} />,
+  // Markdown tables (remark-gfm), scrollable sideways on a phone.
+  table: props => (
+    <div className="not-prose my-6 overflow-x-auto rounded-2xl border border-zinc-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand/30" tabIndex={0} role="region" aria-label="Table, scroll sideways for more">
+      <table className="w-full min-w-[480px] text-left text-[15px]" {...props} />
+    </div>
+  ),
+  thead: props => <thead className="bg-soft text-ink" {...props} />,
+  tbody: props => <tbody className="divide-y divide-zinc-200 text-body" {...props} />,
+  th: props => <th className="px-4 py-3 font-bold" {...props} />,
+  td: props => <td className="px-4 py-3" {...props} />,
+  // <BlackFridayNote /> in a post: shown only while the sale is on.
+  BlackFridayNote,
 }
 
 const BASE = "https://www.primetvnashville.com"
@@ -142,7 +156,7 @@ export default async function BlogPost({ params }) {
         )}
 
         <article className="space-y-6 text-[17px] leading-relaxed text-neutral-800">
-          <MDXRemote source={content} components={mdx} />
+          <MDXRemote source={content} components={mdx} options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }} />
         </article>
 
         {faq.length > 0 && (

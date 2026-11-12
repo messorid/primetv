@@ -15,6 +15,7 @@ const CITIES = [
 const STATIC_PAGES = [
   { path: "",                          priority: 1.0,  freq: "weekly",  date: "2026-06-20" },
   { path: "/book",                     priority: 0.95, freq: "monthly", date: "2026-05-01" },
+  { path: "/black-friday-tv-mounting-nashville", priority: 0.90, freq: "weekly", date: "2026-11-12" },
   { path: "/services/tv-mounting",     priority: 0.85, freq: "monthly", date: "2026-05-01" },
   { path: "/services/home-theater",    priority: 0.80, freq: "monthly", date: "2026-05-01" },
   { path: "/services",                 priority: 0.75, freq: "monthly", date: "2026-05-01" },
