@@ -9,6 +9,8 @@
 // The code key is always UPPERCASE — clients can type lowercase, it still works.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { BLACK_FRIDAY_ON } from "./blackFriday.js"
+
 export const COUPON_CODES = {
 
   MESSORID: {
@@ -26,14 +28,13 @@ export const COUPON_CODES = {
     active:        true,
   },
 
-  // Applied by the server to every non-bundle booking while BLACK_FRIDAY_ON is
-  // true (lib/blackFriday.js). Listed here so the confirmation email shows it
-  // as an offer, and so it also works if someone types it.
+  // Only when the customer types it. Works while BLACK_FRIDAY_ON is true
+  // (lib/blackFriday.js), and not with a Black Friday Promo.
   BLACKFRIDAY10: {
-    offer:              "Black Friday — 10% off your service",
-    note:               "Black Friday 2026 — 10% off any service that isn't a Black Friday bundle",
-    hideCodeFromClient: true,
-    active:             true,
+    offer:        "Black Friday — 10% off your service",
+    note:         "Black Friday 2026 — 10% off any service that isn't a Black Friday Promo",
+    notWithPromo: true,
+    active:       BLACK_FRIDAY_ON,
   },
 
   PRIMETV5: {

@@ -4,10 +4,10 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Section, SectionHeader } from "./ui/Section"
-import { BLACK_FRIDAY_ON, BF_DISCOUNT_PCT } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_CODE_LINE } from "../lib/blackFriday"
 
 // While the sale is on, the two bundles are shown in the Black Friday section
-// above, and every other card announces the 10% next to its regular price.
+// above, and every other card announces the 10% code next to its regular price.
 const visible = s => !(BLACK_FRIDAY_ON && s.promo)
 
 
@@ -92,7 +92,7 @@ export default function ServicesSection() {
         id="services-title"
         eyebrow="Services & prices"
         title="Choose your TV installation"
-        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_DISCOUNT_PCT}% off every service below. ` : ""}Starting prices per TV. Your final price depends on the job, the wall type and the mount — confirmed by our team before any work begins.`}
+        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_CODE_LINE} on every service below. ` : ""}Starting prices per TV. Your final price depends on the job, the wall type and the mount — confirmed by our team before any work begins.`}
       />
 
       <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
@@ -124,7 +124,7 @@ function ServiceCard({ slug, title, desc, img, priceLabel, time, notes = [], pro
           {tag && <p className="text-xs font-bold uppercase tracking-wide text-brand-dark sm:hidden">{tag}</p>}
           <h3 className="text-lg font-extrabold leading-snug text-ink">{title}</h3>
           <p className="mt-1 text-xl font-black text-brand-dark">{priceLabel}</p>
-          {BLACK_FRIDAY_ON && !promo && <p className="text-sm font-bold text-ink">Black Friday · {BF_DISCOUNT_PCT}% off</p>}
+          {BLACK_FRIDAY_ON && !promo && <p className="text-sm font-bold text-ink">Black Friday · {BF_CODE_LINE}</p>}
           <p className="mt-1 text-sm text-body">{desc}</p>
         </div>
       </div>

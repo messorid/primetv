@@ -5,7 +5,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ButtonLink, Check, PHONE_DISPLAY, PHONE_TEL } from "./ui/Section"
-import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, bfBookHref } from "../lib/blackFriday"
+import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, BF_COUPON_CODE, bfBookHref } from "../lib/blackFriday"
 
 const POINTS = ["Licensed & insured", "Upfront pricing", "Clean cable finish", "Workmanship warranty"]
 
@@ -52,6 +52,9 @@ export default function BlackFridayHero({ children }) {
                 <p className="text-xs font-bold uppercase tracking-wide text-brand-bright sm:text-sm">Everything else</p>
                 <p className="mt-1 text-sm font-semibold leading-snug text-white sm:text-base">Any other service</p>
                 <p className="mt-1 text-[2rem] font-black leading-none text-white sm:text-5xl">{BF_DISCOUNT_PCT}% OFF</p>
+                <p className="mt-2 text-xs font-semibold leading-snug text-white sm:text-sm">
+                  With code <span className="whitespace-nowrap rounded bg-white px-1.5 py-0.5 font-black tracking-wide text-ink">{BF_COUPON_CODE}</span>
+                </p>
               </div>
             </div>
 

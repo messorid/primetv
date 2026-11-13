@@ -8,12 +8,12 @@
 //
 // What the sale is:
 //   • the three 2-TV bundles below, shown as "Black Friday Promo";
-//   • 10% off any other service (anything booked that is not one of the
-//     bundles). It isn't combined with coupon codes.
+//   • 10% off any other service, ONLY with the coupon code BLACKFRIDAY10
+//     typed in the booking form. Nothing applies it automatically. It can't
+//     be used with a Black Friday Promo or combined with other codes.
 //
-// The site only ANNOUNCES the 10%: every price shown stays the regular
-// starting price, and the office takes the 10% off when it confirms the
-// final price. Nothing here calculates a discounted figure.
+// Every price shown stays the regular starting price; the office takes the
+// 10% off when it confirms the final price of a booking that has the code.
 //
 // The bundle `label`s are stored with each booking and looked up in
 // PROMO_PRICES (lib/clientEmail.js) — keep them the same in both places.
@@ -25,6 +25,9 @@ export const BLACK_FRIDAY_ON = true
 export const BF_DISCOUNT_PCT = 10
 export const BF_COUPON_CODE = "BLACKFRIDAY10"
 export const BF_COUPON_LABEL = `Black Friday — ${BF_DISCOUNT_PCT}% off your service`
+// How the code is announced: "10% off with code BLACKFRIDAY10".
+export const BF_CODE_LINE = `${BF_DISCOUNT_PCT}% off with code ${BF_COUPON_CODE}`
+export const isBfCode = code => String(code || "").trim().toUpperCase() === BF_COUPON_CODE
 
 export const BF_PROMOS = [
   {
@@ -62,10 +65,3 @@ export const BF_PROMO_TERMS_LINE = "Black Friday Promos are for drywall walls on
 
 export const bfPromoById = id => BF_PROMOS.find(p => p.id === id) || null
 export const bfBookHref = id => `/book?promo=${id}`
-
-
-// Whether a booking gets the 10%: the sale is on, it is not one of the
-// bundles, and no coupon code was used.
-export function bfDiscountApplies({ bookingMode, couponCode, customQuote } = {}, on = BLACK_FRIDAY_ON) {
-  return on && bookingMode !== "promo" && !customQuote && !String(couponCode || "").trim()
-}

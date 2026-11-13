@@ -1,9 +1,9 @@
 // The Black Friday offers in full, right under the hero: the three bundles as
-// cards, and the 10% for everything else, announced next to the regular
-// prices (the office applies it when it confirms the price). Shown only
+// cards, and the 10% for everything else with the code BLACKFRIDAY10 (the
+// office takes it off when it confirms the price). Shown only
 // while BLACK_FRIDAY_ON is true (lib/blackFriday.js).
 import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
-import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, BF_PROMO_TERMS_LINE, bfBookHref } from "../lib/blackFriday"
+import { BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS, BF_PROMO_TERMS_LINE, BF_COUPON_CODE, bfBookHref } from "../lib/blackFriday"
 
 // Regular starting prices, as in the pricing section.
 const DISCOUNTED = [
@@ -19,7 +19,7 @@ export default function BlackFridayDeals() {
         id="bf-title"
         eyebrow="Black Friday deals"
         title="Two ways to save this Black Friday"
-        sub={`Book a Black Friday Promo for two TVs, or take ${BF_DISCOUNT_PCT}% off any other service. Limited time.`}
+        sub={`Book a Black Friday Promo for two TVs, or take ${BF_DISCOUNT_PCT}% off any other service with code ${BF_COUPON_CODE}. Limited time.`}
       />
 
       <ul className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
@@ -51,7 +51,9 @@ export default function BlackFridayDeals() {
         <div>
           <p className="text-sm font-black uppercase tracking-[0.14em] text-brand-dark">Not a promo? Still a deal</p>
           <p className="mt-1 text-6xl font-black leading-none tracking-tight text-ink">{BF_DISCOUNT_PCT}% OFF</p>
-          <p className="mt-2 text-base font-semibold text-body">any other service — we take it off when we confirm your price</p>
+          <p className="mt-2 text-base font-semibold text-body">any other service with code</p>
+          <p className="mt-2 inline-block rounded-xl border-2 border-dashed border-ink px-4 py-2 text-2xl font-black tracking-wider text-ink">{BF_COUPON_CODE}</p>
+          <p className="mt-2 text-sm text-body">Type it in the coupon box when you book.</p>
         </div>
         <dl className="divide-y divide-zinc-200">
           {DISCOUNTED.map(([name, amount, unit]) => (
@@ -66,16 +68,16 @@ export default function BlackFridayDeals() {
           </div>
           <div className="flex items-baseline justify-between gap-4 py-2.5">
             <dt className="text-base font-bold text-ink">Black Friday</dt>
-            <dd className="flex-none text-base font-black text-brand-dark">{BF_DISCOUNT_PCT}% off all of the above</dd>
+            <dd className="flex-none text-base font-black text-brand-dark">{BF_DISCOUNT_PCT}% off with {BF_COUPON_CODE}</dd>
           </div>
         </dl>
-        <ButtonLink href="/book" variant="secondary" className="w-full lg:w-auto">Book with {BF_DISCOUNT_PCT}% off</ButtonLink>
+        <ButtonLink href="/book" variant="secondary" className="w-full lg:w-auto">Book with code {BF_COUPON_CODE}</ButtonLink>
       </div>
 
       <p className="mt-6 text-sm leading-relaxed text-muted">
         {BF_PROMO_TERMS_LINE} Black Friday prices are starting prices: your final price depends on the job, the wall type and the mount, and is
-        confirmed by our team before any work begins. The {BF_DISCOUNT_PCT}% is taken off that confirmed price, applies to services booked without a Black Friday
-        Promo and can&apos;t be combined with coupon codes. Limited-time offer.
+        confirmed by our team before any work begins. The {BF_DISCOUNT_PCT}% applies only when the code {BF_COUPON_CODE} is entered at booking, is taken off that
+        confirmed price, can&apos;t be used with a Black Friday Promo and can&apos;t be combined with other coupon codes. Limited-time offer.
       </p>
     </Section>
   )

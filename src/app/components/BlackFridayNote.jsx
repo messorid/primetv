@@ -6,7 +6,7 @@
 //   topic="hardwall"   for posts about brick, stone or tile
 //   (none)             the general offer
 import Link from "next/link"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_CODE_LINE } from "../lib/blackFriday"
 
 export const BF_PAGE = "/black-friday-tv-mounting-nashville"
 
@@ -17,10 +17,10 @@ export default function BlackFridayNote({ topic }) {
   const from = Math.min(...BF_PROMOS.map(p => p.amount))
   const text =
     topic === "fireplace"
-      ? `Our Black Friday Promos for two TVs are for drywall walls and don't cover a TV mounted over a fireplace. A fireplace install is booked as a standard service instead, and gets ${BF_DISCOUNT_PCT}% off for Black Friday.`
+      ? `Our Black Friday Promos for two TVs are for drywall walls and don't cover a TV mounted over a fireplace. A fireplace install is booked as a standard service instead, and gets ${BF_CODE_LINE} for Black Friday.`
       : topic === "hardwall"
-      ? `Our Black Friday Promos for two TVs are for drywall walls only. Brick, stone, tile and concrete installs are booked as a standard service instead, and get ${BF_DISCOUNT_PCT}% off for Black Friday.`
-      : `Two TVs mounted from $${from} with a Black Friday Promo (drywall walls only, not over a fireplace), or ${BF_DISCOUNT_PCT}% off any other service. Limited time.`
+      ? `Our Black Friday Promos for two TVs are for drywall walls only. Brick, stone, tile and concrete installs are booked as a standard service instead, and get ${BF_CODE_LINE} for Black Friday.`
+      : `Two TVs mounted from $${from} with a Black Friday Promo (drywall walls only, not over a fireplace), or ${BF_CODE_LINE} on any other service. Limited time.`
   return (
     <div className="not-prose my-8 rounded-2xl bg-ink p-5 text-white">
       <p className="text-sm font-black uppercase tracking-[0.14em] text-brand-bright">Black Friday at PrimeTV</p>

@@ -17,7 +17,7 @@ import { BLACK_FRIDAY_ON } from "./lib/blackFriday";
 export const metadata = {
   title: "TV Mounting Nashville TN | PrimeTvNashville",
   description: BLACK_FRIDAY_ON
-    ? "Black Friday TV mounting deals in Nashville TN: 2 TVs up to 55 inches mounted from $199 and 10% off any other service. Same-day options and clean cable concealment. Book today!"
+    ? "Black Friday TV mounting deals in Nashville TN: 2 TVs up to 55 inches mounted from $199 and 10% off any other service with code BLACKFRIDAY10. Same-day options and clean cable concealment. Book today!"
     : "Professional TV mounting in Nashville TN. Same-day options, clean cable concealment, upfront pricing. Homes, apartments and businesses. Book today!",
   keywords: ["TV mounting Nashville", "TV mounting Nashville TN", "TV installation Nashville", "same-day TV mounting Nashville", "TV wall mount Nashville", "cable concealment Nashville", "PrimeTvNashville"],
   robots: {

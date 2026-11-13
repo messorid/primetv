@@ -13,7 +13,7 @@ import { isValidUSPhone, isValidEmail, isValidName, isValidZip, validate, MESSAG
 import { SMS_CONSENT_TEXT } from "../lib/smsConfig"
 import { BOOKING_DONE_EVENT } from "./HideAfterBooking"
 import Image from "next/image"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, bfPromoById } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_PROMO_TERMS_LINE, BF_CODE_LINE, bfPromoById } from "../lib/blackFriday"
 
 function gtag(...args) {
   if (typeof window !== "undefined" && window.gtag) window.gtag(...args)
@@ -231,20 +231,20 @@ export default function BookingFormSection() {
     if (promo) { setBookingMode("promo"); setSelectedPromo(promo.label) }
   }, [])
 
-  // The 10% applies to anything that isn't a bundle, unless a coupon is used.
-  const bfDiscount = BLACK_FRIDAY_ON && bookingMode !== "promo" && !appliedCoupon
-
   function switchMode(mode) {
     setBookingMode(mode)
     if (mode !== "promo") setSelectedPromo("")
+    // A code that doesn't work with promos comes off when switching to one.
+    if (mode === "promo" && appliedCoupon?.notWithPromo) clearCoupon()
     // Cable concealment is a TV add-on; it makes no sense on a home install.
     if (mode === "homeinstall") setCableConcealment(0)
   }
 
   function applyCoupon() {
     const result = validateCoupon(couponCode)
-    if (result) { setAppliedCoupon(result); setCouponStatus("valid") }
-    else        { setAppliedCoupon(null);   setCouponStatus("invalid") }
+    if (result?.notWithPromo && bookingMode === "promo") { setAppliedCoupon(null); setCouponStatus("notWithPromo") }
+    else if (result) { setAppliedCoupon(result); setCouponStatus("valid") }
+    else             { setAppliedCoupon(null);   setCouponStatus("invalid") }
   }
 
   function clearCoupon() {
@@ -350,7 +350,7 @@ export default function BookingFormSection() {
         {BLACK_FRIDAY_ON && status !== "ok" && (
           <p className="mb-6 rounded-2xl bg-ink px-4 py-3 text-center text-sm font-semibold leading-relaxed text-white">
             <span className="font-black uppercase tracking-wide text-brand-bright">Black Friday</span>{" "}
-            2-TV promos from ${BF_PROMOS[0].amount}, and {BF_DISCOUNT_PCT}% off every other service.
+            2-TV promos from ${BF_PROMOS[0].amount}, or {BF_CODE_LINE} on any other service.
           </p>
         )}
 
@@ -529,14 +529,6 @@ export default function BookingFormSection() {
                         </button>
                       ))}
                     </div>
-
-                    {bfDiscount && (
-                      <p role="status" className="mb-5 rounded-xl border border-ink bg-ink px-4 py-3 text-sm leading-relaxed text-white">
-                        <strong className="font-black uppercase tracking-wide text-brand-bright">Black Friday: {BF_DISCOUNT_PCT}% off</strong>{" "}
-                        this booking — we take it off when we confirm your price. Or pick a{" "}
-                        <button type="button" onClick={() => switchMode("promo")} className="font-bold underline underline-offset-2">Black Friday Promo</button>.
-                      </p>
-                    )}
 
                     {/* ── Standard ── */}
                     {bookingMode === "standard" && (
@@ -806,14 +798,13 @@ export default function BookingFormSection() {
                       </div>
                     )}
 
-                    {/* ── Coupon ── */}
-                    {bookingMode !== "bundle" && bookingMode !== "homeinstall" && (
+                    {/* ── Coupon — every booking type, so BLACKFRIDAY10 works on all of them ── */}
+                    {(
                       <CouponField
                         appliedCoupon={appliedCoupon} couponCode={couponCode}
                         couponStatus={couponStatus} couponComment={couponComment}
                         onCodeChange={v => { setCouponCode(v.toUpperCase()); setCouponStatus("idle") }}
                         onApply={applyCoupon} onClear={clearCoupon} onCommentChange={setCouponComment}
-                        bfNote={BLACK_FRIDAY_ON && bookingMode !== "promo"}
                         customMode={customMode} onCustomModeChange={setCustomMode}
                         customTvSize={customTvSize} onCustomTvSizeChange={setCustomTvSize}
                         customTvQty={customTvQty} onCustomTvQtyChange={setCustomTvQty}
@@ -1092,18 +1083,11 @@ function TvSizeSelect({ value, onChange, tone = "red", showPrice = true }) {
 function CouponField({
   appliedCoupon, couponCode, couponStatus, couponComment, onCodeChange, onApply, onClear, onCommentChange,
   customMode, onCustomModeChange, customTvSize, onCustomTvSizeChange, customTvQty, onCustomTvQtyChange,
-  customPrice, onCustomPriceChange, bfNote = false,
+  customPrice, onCustomPriceChange,
 }) {
   return (
     <div className="mt-4 pt-4 border-t border-black/8">
       <label className="text-xs font-semibold text-black/60">Coupon Code (optional)</label>
-      {bfNote && (
-        <p className="mt-1 text-xs text-muted">
-          {appliedCoupon
-            ? "This code replaces the Black Friday 10% — they can't be combined."
-            : "This booking already gets the Black Friday 10%. A coupon code replaces it; they can't be combined."}
-        </p>
-      )}
       {appliedCoupon ? (
         <div className="mt-1.5 rounded-xl border border-emerald-300 bg-emerald-50 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2.5">
@@ -1230,6 +1214,9 @@ function CouponField({
       )}
       {couponStatus === "invalid" && !appliedCoupon && (
         <p className="mt-1.5 text-xs text-red-500 font-medium">Invalid code. Please check and try again.</p>
+      )}
+      {couponStatus === "notWithPromo" && (
+        <p className="mt-1.5 text-xs text-red-600 font-medium">This code can&apos;t be used with a Black Friday Promo. Choose Standard, Bundle or Home Install to use it.</p>
       )}
     </div>
   )

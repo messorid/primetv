@@ -7,7 +7,7 @@ import Link from "next/link"
 import BlackFridayDeals from "../components/BlackFridayDeals"
 import { Section, SectionHeader, ButtonLink, PHONE_DISPLAY, PHONE_TEL } from "../components/ui/Section"
 import {
-  BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, bfBookHref,
+  BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, BF_COUPON_CODE, BF_CODE_LINE, bfBookHref,
 } from "../lib/blackFriday"
 
 const URL = "https://www.primetvnashville.com/black-friday-tv-mounting-nashville"
@@ -15,7 +15,7 @@ const lowest = Math.min(...BF_PROMOS.map(p => p.amount))
 
 const TITLE = "Black Friday TV Mounting Deals in Nashville, TN | PrimeTvNashville"
 const DESCRIPTION = BLACK_FRIDAY_ON
-  ? `Black Friday TV mounting deals in Nashville: 2 TVs up to 55 inches mounted from $${lowest}, more 2-TV promos, and ${BF_DISCOUNT_PCT}% off any other service. Book online.`
+  ? `Black Friday TV mounting deals in Nashville: 2 TVs up to 55 inches mounted from $${lowest}, more 2-TV promos, and ${BF_CODE_LINE} on any other service. Book online.`
   : "Our Black Friday TV mounting deals in Nashville have ended. See current TV mounting prices and book your installation online."
 
 export const metadata = {
@@ -30,7 +30,7 @@ export const metadata = {
 }
 
 const STEPS = [
-  ["Pick your deal", "Choose a Black Friday Promo for two TVs, or book any other service and get the 10% off."],
+  ["Pick your deal", `Choose a Black Friday Promo for two TVs, or book any other service and type the code ${BF_COUPON_CODE} for ${BF_DISCOUNT_PCT}% off.`],
   ["Choose a date and time", "Book online in a couple of minutes. Same-day and next-day appointments when available."],
   ["We confirm your price", "Our team confirms your exact price before any work begins, then mounts your TVs level and secure."],
 ]
@@ -42,11 +42,11 @@ const FAQ = [
   },
   {
     q: "What if my wall is brick or stone, or the TV goes over a fireplace?",
-    a: `Those installs aren't part of the promos, but they still get the Black Friday ${BF_DISCOUNT_PCT}% off. Book them as a standard service and we take the ${BF_DISCOUNT_PCT}% off when we confirm your price.`,
+    a: `Those installs aren't part of the promos, but they can still get ${BF_DISCOUNT_PCT}% off: book them as a standard service and enter the code ${BF_COUPON_CODE}. We take the ${BF_DISCOUNT_PCT}% off when we confirm your price.`,
   },
   {
     q: `How does the ${BF_DISCOUNT_PCT}% off work?`,
-    a: `Any service booked without a Black Friday Promo gets ${BF_DISCOUNT_PCT}% off: a single TV, a TV over 70 inches, cable concealment, a fireplace install or a home installation. We take it off the price our team confirms with you before the work begins. It can't be combined with coupon codes.`,
+    a: `Enter the code ${BF_COUPON_CODE} in the coupon box when you book any service that isn't a Black Friday Promo: a single TV, a TV over 70 inches, cable concealment, a fireplace install or a home installation. We take ${BF_DISCOUNT_PCT}% off the price our team confirms with you before the work begins. It can't be used with a Black Friday Promo or combined with other coupon codes.`,
   },
   {
     q: "Is the wall mount included?",
@@ -106,7 +106,7 @@ export default function BlackFridayPage() {
             TV Mounting Deals in Nashville, TN
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/90">
-            Two TVs mounted from ${lowest} with a Black Friday Promo, or {BF_DISCOUNT_PCT}% off any other service.
+            Two TVs mounted from ${lowest} with a Black Friday Promo, or {BF_CODE_LINE} on any other service.
             Professional, level and secure, across Nashville and the surrounding areas.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -140,7 +140,7 @@ export default function BlackFridayPage() {
             <li key={title} className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-7">
               <p aria-hidden="true" className="flex size-10 items-center justify-center rounded-full bg-ink text-lg font-black text-white">{i + 1}</p>
               <h3 className="mt-4 text-xl font-extrabold text-ink">{title}</h3>
-              <p className="mt-2 text-base leading-relaxed text-body">{text.replace("10%", `${BF_DISCOUNT_PCT}%`)}</p>
+              <p className="mt-2 text-base leading-relaxed text-body">{text}</p>
             </li>
           ))}
         </ol>

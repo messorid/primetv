@@ -4,7 +4,7 @@
 import Link from "next/link"
 import PriceDisclaimer from "./PriceDisclaimer"
 import { Section, SectionHeader, ButtonLink, Check } from "./ui/Section"
-import { BLACK_FRIDAY_ON, BF_PROMOS, BF_DISCOUNT_PCT, BF_PROMO_TERMS_LINE, bfBookHref } from "../lib/blackFriday"
+import { BLACK_FRIDAY_ON, BF_PROMOS, BF_PROMO_TERMS_LINE, BF_CODE_LINE, bfBookHref } from "../lib/blackFriday"
 
 
 const BASE = [
@@ -54,7 +54,7 @@ export default function PricingSection() {
         id="pricing-title"
         eyebrow="Pricing"
         title="Simple, upfront pricing"
-        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_DISCOUNT_PCT}% off these rates. ` : ""}Starting rates for professional TV mounting. Pick your size and book in minutes.`}
+        sub={`${BLACK_FRIDAY_ON ? `Black Friday: ${BF_CODE_LINE}. ` : ""}Starting rates for professional TV mounting. Pick your size and book in minutes.`}
       />
 
       <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -71,7 +71,7 @@ export default function PricingSection() {
               <span className="text-base font-semibold text-muted">{p.unit}</span>
             </p>
             {BLACK_FRIDAY_ON && (
-              <p className="mt-1 text-base font-bold text-brand-dark">Black Friday · {BF_DISCOUNT_PCT}% off</p>
+              <p className="mt-1 text-base font-bold text-brand-dark">Black Friday · {BF_CODE_LINE}</p>
             )}
             <ul className="mt-6 space-y-3">
               {p.features.map(f => (
@@ -86,7 +86,7 @@ export default function PricingSection() {
       <div className={`mt-8 grid grid-cols-1 gap-5 ${BLACK_FRIDAY_ON ? "" : "lg:grid-cols-2"}`}>
         <div className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
           <h3 className="text-lg font-extrabold text-ink">Add-ons</h3>
-          {BLACK_FRIDAY_ON && <p className="mt-1 text-sm font-bold text-brand-dark">Black Friday · {BF_DISCOUNT_PCT}% off</p>}
+          {BLACK_FRIDAY_ON && <p className="mt-1 text-sm font-bold text-brand-dark">Black Friday · {BF_CODE_LINE}</p>}
           <dl className="mt-4 divide-y divide-zinc-200">
             {ADDONS.map(([k, v]) => (
               <div key={k} className="flex items-baseline justify-between gap-4 py-3">
