@@ -15,6 +15,7 @@ import { ensureSmsTables, recordConsent } from "../../lib/sms.js"
 import { toE164 } from "../../lib/smsRules.js"
 import { SMS_CONSENT_TEXT, SMS_CONSENT_VERSION } from "../../lib/smsConfig.js"
 import { isBfCode } from "../../lib/blackFriday.js"
+import { teamToNotify } from "../../lib/staff.js"
 
 export async function POST(request) {
   try {
@@ -190,13 +191,16 @@ export async function POST(request) {
 
     // ── WhatsApp to the owner ──────────────────────────────────────────────────
     // After the response, so a slow Meta API never holds up the customer.
-    runAfterResponse(() => notifyWhatsApp(bookingAlert(body, { saved: dbSaved })))
+    // Staff marked to hear about bookings get the same alert and email.
+    const team = await teamToNotify("booking")
+    runAfterResponse(() => notifyWhatsApp(bookingAlert(body, { saved: dbSaved }), team.whatsapp))
 
     // ── Email to business ──────────────────────────────────────────────────────
     const businessMail = buildBusinessBookingEmail(body)
     const businessEmailSent = await trySend("business", {
       from: mailFrom("PrimeTvNashville Bookings"),
       to: notifyTo(),
+      cc: team.emails.length ? team.emails : undefined,
       replyTo: info.email,
       subject: businessMail.subject,
       attachments: icsForBusiness ? [{ filename: "appointment.ics", content: icsForBusiness, contentType: "text/calendar; method=REQUEST; charset=utf-8" }] : [],

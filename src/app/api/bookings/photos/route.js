@@ -3,13 +3,13 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, MAX_PHOTOS_PER_BOOKING, MAX_DATA_URL_CHARS } from "./shared"
-import { isAdminRequest } from "@/lib/adminSession"
+import { isAdminRequest, isStaffRequest } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
 // GET /api/bookings/photos?bookingId=<uuid>
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isStaffRequest(request))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
   try {
@@ -40,7 +40,7 @@ export async function GET(request) {
 
 // POST { bookingId, photos: [{ filename, mime, dataUrl }] }
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isStaffRequest(request))) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
   try {

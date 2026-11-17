@@ -7,14 +7,14 @@ export const dynamic = "force-dynamic"
 //   in is the box on the booking form, as the registered campaign says.
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, recordOptout } from "@/app/lib/sms.js"
 import { toE164 } from "@/app/lib/smsRules.js"
 
 const bad = (error, status = 400) => Response.json({ ok: false, error }, { status })
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   let input
   try { input = await request.json() } catch { return bad("Bad request") }
   const { bookingId, action } = input || {}

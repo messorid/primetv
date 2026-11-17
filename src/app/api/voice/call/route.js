@@ -6,14 +6,14 @@ export const dynamic = "force-dynamic"
 // 1, it dials the customer from the PrimeTV number (see src/app/lib/voice.js).
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { toE164 } from "@/app/lib/smsRules.js"
 import { ensureCallTables, forwardNumber, ringAgent } from "@/app/lib/voice.js"
 
 const bad = (error, status = 400) => Response.json({ ok: false, error }, { status })
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   let input
   try { input = await request.json() } catch { return bad("Bad request") }
   const to = toE164(input?.phone)

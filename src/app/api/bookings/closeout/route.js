@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 //   POST { bookingId, action: "reopen" }      — clear the signature so it can be signed again
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { closeoutTokenFor, loadCloseout, publicView, crewFor, closeoutUrl } from "@/app/lib/closeout.js"
 import { buildCloseoutLinkEmail } from "@/app/lib/closeoutEmails.js"
 import { getTransport, mailFrom, canSendMail } from "@/app/lib/mailer.js"
@@ -26,7 +26,7 @@ function payload({ token, data, crew }) {
 }
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   try {
     const bookingId = new URL(request.url).searchParams.get("bookingId")
     if (!bookingId) return Response.json({ ok: false, error: "bookingId required" }, { status: 400 })
@@ -40,7 +40,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   try {
     const { bookingId, action } = await request.json()
     if (!bookingId) return Response.json({ ok: false, error: "bookingId required" }, { status: 400 })

@@ -2,7 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isAdminRequest, getSession, unauthorized } from "@/lib/adminSession"
 import { installerNumber } from "@/app/lib/whatsapp.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
@@ -27,13 +27,16 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE installers ADD COLUMN IF NOT EXISTS crew_share NUMERIC(6,2) DEFAULT 50`
 }
 
+// Sellers list installers too, to assign jobs, but without what anyone earns.
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  const session = await getSession(request)
+  if (!session) return unauthorized()
   try {
     const sql = db()
     await ensureTable(sql)
     const rows = await sql`SELECT * FROM installers WHERE active = TRUE ORDER BY name`
-    return Response.json({ ok: true, installers: rows.map(toInstaller) })
+    const list = rows.map(toInstaller)
+    return Response.json({ ok: true, installers: session.role === "admin" ? list : list.map(forSeller) })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -144,6 +147,11 @@ export async function DELETE(request) {
     return Response.json({ ok: false }, { status: 500 })
   }
 }
+
+// What a seller sees of an installer: who they are and how to reach them.
+const forSeller = i => ({
+  id: i.id, name: i.name, email: i.email, phone: i.phone, active: i.active, whatsappNumber: i.whatsappNumber,
+})
 
 function toInstaller(row) {
   return {

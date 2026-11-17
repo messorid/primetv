@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isAdminRequest, getSession, unauthorized, forbidden } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
 import { getTransport, mailFrom, canSendMail } from "../../lib/mailer.js"
 import { buildInstallerJobEmail, buildCancellationEmail, fullAddressOf } from "../../lib/installerEmails.js"
@@ -74,10 +74,23 @@ function computeFinancials({ charged, materials, profitType, profitValue }) {
 }
 
 // This route exposes every customer's name, address, phone and the company's
-// financials, so all four methods require an admin session. The public booking
-// form posts to /api/booking (singular), which stays open.
+// financials, so every method needs a session. The owner can do everything; a
+// seller can list, create and manage bookings and assign crews, but gets no
+// money figures and can't record money, complete a job or delete one. The
+// public booking form posts to /api/booking (singular), which stays open.
+
+// What a seller never receives about a booking or its crew.
+const MONEY_FIELDS = ["amountCharged", "amountPaidWorkers", "materialsCost", "companyProfit", "profitType", "profitValue", "closeoutTip", "closeoutTipMethod"]
+function forSeller(b) {
+  const out = { ...b }
+  for (const k of MONEY_FIELDS) delete out[k]
+  out.crew = (b.crew || []).map(m => ({ ...m, amount: undefined }))
+  return out
+}
+
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  const session = await getSession(request)
+  if (!session) return unauthorized()
   try {
     const sql = db()
     await ensureTable(sql)
@@ -99,13 +112,14 @@ export async function GET(request) {
       ok: true,
       bookings: rows.map(r => {
         const c = signedBy.get(r.id)
-        return {
+        const b = {
           ...toBooking(r),
           crew: crewOrLegacy(crewByBooking.get(r.id), r),
           closeoutSignedAt:  c?.signed_at ?? null,
           closeoutTip:       c ? Number(c.tip_amount) || 0 : null,
           closeoutTipMethod: c?.tip_method ?? null,
         }
+        return session.role === "admin" ? b : forSeller(b)
       }),
     })
   } catch (err) {
@@ -115,14 +129,17 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  const session = await getSession(request)
+  if (!session) return unauthorized()
   try {
     const body = await request.json()
     const {
       firstName, lastName, email, phone, date, timePref,
       address, promo, tvs, moreTvs, moreTvsComment,
-      payment, referral, notes, status,
+      payment, referral, notes,
     } = body
+    // Only the owner closes jobs, with the money recorded.
+    const status = session.role !== "admin" && body.status === "completed" ? "pending" : body.status
     const sql = db()
     await ensureTable(sql)
     const [row] = await sql`
@@ -150,9 +167,15 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  const session = await getSession(request)
+  if (!session) return unauthorized()
   try {
     const body = await request.json()
+    // Money and closing a job are the owner's.
+    if (session.role !== "admin") {
+      if (body.updateMaterials || body.updateProfit) return forbidden("Changing the job's money")
+      if (body.status === "completed") return forbidden("Marking a job completed")
+    }
     const { id, status, notes, installerId, installerName, installerEmail } = body
     const sql = db()
 

@@ -4,6 +4,7 @@ import { installationQuoteEmail } from "../../lib/leadEmails.js"
 import { notifyWhatsApp } from "../../lib/whatsapp.js"
 import { quoteAlert } from "../../lib/whatsappAlerts.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
+import { teamToNotify } from "../../lib/staff.js"
 
 const SERVICE_LABELS = {
   furniture:     "Furniture Assembly",
@@ -42,7 +43,9 @@ export async function POST(request) {
     const saved = await captureQuoteLead(lead)
 
     // Aviso por WhatsApp al dueno, despues de responder.
-    runAfterResponse(() => notifyWhatsApp(quoteAlert(lead)))
+    // Staff marked to hear about quotes get the same alert and email.
+    const team = await teamToNotify("quote")
+    runAfterResponse(() => notifyWhatsApp(quoteAlert(lead), team.whatsapp))
 
     const html = installationQuoteEmail({ serviceLabel, answers, contact })
 
@@ -53,6 +56,7 @@ export async function POST(request) {
       await transporter.sendMail({
         from: mailFrom("PrimeTV Nashville"),
         to: notifyTo(),
+        cc: team.emails.length ? team.emails : undefined,
         replyTo: contact.email,
         subject: `[Installation Quote] ${serviceLabel} — ${String(contact.name).replace(/[\r\n]+/g, " ").trim()}`,
         html,

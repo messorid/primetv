@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic"
 // A conversation is everything with one number: texts both ways and calls.
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, smsMode, recentOptOutNotice } from "@/app/lib/sms.js"
 import { toE164, sendingHours, customerPhoneOf, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { ensureCallTables, forwardNumber } from "@/app/lib/voice.js"
@@ -39,7 +39,7 @@ async function bookingsByPhone(sql) {
 }
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   const q = new URL(request.url).searchParams
   const tests = q.get("tests") === "1" || smsMode() !== "live"
   try {
@@ -104,7 +104,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   let input
   try { input = await request.json() } catch { return Response.json({ ok: false, error: "Bad request" }, { status: 400 }) }
   const phone = toE164(input?.phone) || String(input?.phone || "")

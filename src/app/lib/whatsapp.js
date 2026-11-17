@@ -145,11 +145,13 @@ async function sendTemplate(to, { name, lang, params, label }) {
   }
 }
 
-// `alert` is { kind, customer, details } — see whatsappAlerts.js. Resolves to
-// true only when every owner number got it; never throws.
-export async function notifyWhatsApp(alert) {
+// `alert` is { kind, customer, details } — see whatsappAlerts.js. `extra` are
+// more numbers to send the same alert to (staff, from staff_users). Resolves to
+// true only when every number got it; never throws.
+export async function notifyWhatsApp(alert, extra = []) {
   const label = `alert "${alert?.kind}"`
-  const missing = missingSettings()
+  const to = [...new Set([...recipients(), ...extra.map(n => String(n).replace(/\D/g, "")).filter(Boolean)])]
+  const missing = missingSettings({ owner: to.length === 0 })
   if (missing.length) {
     console.warn(`WhatsApp ${label} not sent: ${missing.join(", ")} not set`)
     return false
@@ -161,7 +163,7 @@ export async function notifyWhatsApp(alert) {
     params: [alert?.kind, alert?.customer, alert?.details],
     label,
   }
-  const results = await Promise.all(recipients().map(to => sendTemplate(to, template)))
+  const results = await Promise.all(to.map(n => sendTemplate(n, template)))
   return results.every(Boolean)
 }
 

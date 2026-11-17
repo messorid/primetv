@@ -7,13 +7,13 @@ export const dynamic = "force-dynamic"
 // reminder can't be sent yet.
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
 import { toE164, arrivalWindow, buildReminder, serviceLabel, sendingHours, nashvilleDate, startMinutes } from "@/app/lib/smsRules.js"
 import { getCrewFor, crewOrLegacy, ensureCrewTable } from "@/app/lib/crew.js"
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   try {
     const q = new URL(request.url).searchParams.get("date")
     const date = /^\d{4}-\d{2}-\d{2}$/.test(q || "") ? q : nashvilleDate(new Date(), 1)

@@ -5,6 +5,7 @@
 // with the one action it needs.
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useMe } from "../useMe"
 
 const pad = n => String(n).padStart(2, "0")
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -36,6 +37,8 @@ const open = (id, extra = "") => `/admin/bookings?open=${id}${extra}`
 const active = b => b.status === "pending" || b.status === "confirmed"
 
 export default function TodayPage() {
+  // Closing a signed-off job records the money, so it's the owner's.
+  const owner = useMe()?.role === "admin"
   const [bookings, setBookings] = useState([])
   const [texts, setTexts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -74,7 +77,7 @@ export default function TodayPage() {
       {
         key: "signed", title: "Signed off — mark as completed", tone: "emerald",
         hint: "The customer signed. Record the amounts to close the job.",
-        items: live.filter(b => b.closeoutSignedAt && b.status !== "completed"),
+        items: owner ? live.filter(b => b.closeoutSignedAt && b.status !== "completed") : [],
         action: b => ({ href: open(b._id, "&complete=1"), label: "Complete" }),
       },
       {
@@ -120,7 +123,7 @@ export default function TodayPage() {
       todo,
       unreadTexts: texts,
     }
-  }, [bookings, texts, today, tomorrow, sent])
+  }, [bookings, texts, today, tomorrow, sent, owner])
 
   const todoCount = view.todo.reduce((n, g) => n + g.items.length, 0) + view.unreadTexts.length
 

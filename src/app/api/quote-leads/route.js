@@ -2,7 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isAdminRequest, isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureQuoteLeadsTable, mapQuoteLead } from "../../lib/quoteLeads.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
@@ -10,7 +10,7 @@ function db() { return neon(process.env.DATABASE_URL) }
 const STATUSES = ["new", "contacted", "quoted", "won", "lost"]
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
 
   try {
     const sql = db()
@@ -24,7 +24,7 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
 
   try {
     const { id, status, notes } = await request.json()

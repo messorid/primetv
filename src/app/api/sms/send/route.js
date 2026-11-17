@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"
 //             30 days; otherwise it gets the start and ending too.
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, recentOptOutNotice, UNSUBSCRIBED } from "@/app/lib/sms.js"
 import { toE164, finalizeBody, replyBody, sendingHours, segments, partsLimit, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
@@ -25,7 +25,7 @@ const KINDS = { reminder: "A reminder", review: "A review request", reply: "A re
 const bad = (error, status = 400, extra = {}) => Response.json({ ok: false, error, ...extra }, { status })
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   let input
   try { input = await request.json() } catch { return bad("Bad request") }
   const { kind = "reminder", resend = false } = input || {}

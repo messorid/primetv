@@ -1,10 +1,10 @@
 // Server-side proxy to edit a lead's name on the Sistema Leads PrimeTV CRM.
 // Keeps CRM_API_KEY out of the browser — the admin dashboard calls this
 // route, which calls the CRM with the secret attached server-side.
-import { isAdminRequest } from "@/lib/adminSession";
+import { isStaffRequest } from "@/lib/adminSession";
 
 export async function PATCH(request, { params }) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isStaffRequest(request))) {
     return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 

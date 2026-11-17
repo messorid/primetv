@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { forgetMe } from "../useMe"
 
 export default function LoginPage() {
   const [email,    setEmail]    = useState("")
@@ -26,6 +27,7 @@ export default function LoginPage() {
         // The session cookie is set by the server (httpOnly + signed). This flag
         // only drives the sidebar UI; it grants no access on its own.
         localStorage.setItem("admin-auth", "true")
+        forgetMe() // whoever was signed in before on this tab
         router.push("/admin/today")
       } else {
         setError("Email or password incorrect")

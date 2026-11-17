@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { MiniCalendar, TimeSlots } from "@/app/components/DateTimePicker"
 import ReviewSmsDialog from "../ReviewSmsDialog"
+import { useMe } from "../useMe"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const MONTHS_LONG  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -99,6 +100,10 @@ function periodLabel(range) {
 }
 
 export default function BookingsPage() {
+  // The owner sees money and can complete or delete; a seller can't (the
+  // server refuses those too).
+  const me = useMe()
+  const owner = me?.role === "admin"
   const [bookings,       setBookings]       = useState([])
   const [loading,        setLoading]        = useState(true)
   const [search,         setSearch]         = useState("")
@@ -168,7 +173,7 @@ export default function BookingsPage() {
     setShowPast(true)
     setExpanded(b._id)
     setOpenTab(searchParams.get("tab"))
-    if (searchParams.get("complete") === "1" && b.status !== "completed") {
+    if (searchParams.get("complete") === "1" && b.status !== "completed" && owner) {
       openCompleteModal(b._id, `${b.firstName} ${b.lastName}`)
     }
     setTimeout(() => document.getElementById(`booking-${b._id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
@@ -557,7 +562,8 @@ export default function BookingsPage() {
         expanded={expanded === b._id}
         noteValue={noteEdit[b._id] ?? b.notes ?? ""}
         onToggle={() => setExpanded(e => e === b._id ? null : b._id)}
-        onStatus={s => s === "completed" ? openCompleteModal(b._id, `${b.firstName} ${b.lastName}`) : updateStatus(b._id, s)}
+        owner={owner}
+        onStatus={s => s === "completed" ? (owner && openCompleteModal(b._id, `${b.firstName} ${b.lastName}`)) : updateStatus(b._id, s)}
         onNoteChange={v => setNoteEdit(prev => ({ ...prev, [b._id]: v }))}
         onNoteSave={() => saveNote(b._id)}
         onDelete={() => deleteBooking(b._id)}
@@ -1002,7 +1008,7 @@ export default function BookingsPage() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Status & Notes</p>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  {STATUS_FLOW.map(s => (
+                  {STATUS_FLOW.filter(s => owner || s !== "completed").map(s => (
                     <button key={s} type="button" onClick={() => setNewForm(f => ({ ...f, status: s }))}
                       className={`rounded-xl border py-2 text-xs font-semibold transition ${
                         newForm.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
@@ -1235,7 +1241,7 @@ export default function BookingsPage() {
 
 /* ── BookingCard ──────────────────────────────────────────────────────────────── */
 
-function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onReviewSms, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
+function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValue, onToggle, onStatus, onNoteChange, onNoteSave, onDelete, installers, onAssign, onEditSchedule, onResend, onResendClient, onReviewRequest, onReviewSms, onCloseoutChange, onSaveCustomer, onAssignCrew, onMaterialsUpdate, onProfitUpdate }) {
   const [selectedInstaller, setSelectedInstaller] = useState("")
   const [crewPick,          setCrewPick]          = useState([])
   const [savingCrew,        setSavingCrew]        = useState(false)
@@ -1406,7 +1412,9 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
           <span className="sr-only">Status for {b.firstName} {b.lastName}</span>
           <select value={b.status} onChange={e => onStatus(e.target.value)}
             className={`appearance-none cursor-pointer text-xs font-semibold pl-2 sm:pl-2.5 pr-5 py-1 rounded-full border focus:outline-none focus:ring-2 focus:ring-red-300 ${sc.color}`}>
-            {STATUS_FLOW.map(st => <option key={st} value={st}>{STATUS_CONFIG[st].label}</option>)}
+            {STATUS_FLOW.map(st => (
+              <option key={st} value={st} disabled={!owner && st === "completed" && b.status !== "completed"}>{STATUS_CONFIG[st].label}</option>
+            ))}
           </select>
           <span aria-hidden="true" className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] opacity-70">▾</span>
         </label>
@@ -1423,7 +1431,7 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
       {expanded && (
         <div className="border-t border-gray-100 px-4 sm:px-5 pb-5 pt-4">
           {/* Signed off but not closed in the books yet: one tap to finish it */}
-          {b.closeoutSignedAt && b.status !== "completed" && b.status !== "cancelled" && (
+          {owner && b.closeoutSignedAt && b.status !== "completed" && b.status !== "cancelled" && (
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
               <p className="flex-1 min-w-[12rem] text-sm text-emerald-900">
                 <strong>✍️ Customer signed off</strong> on {new Date(b.closeoutSignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -1440,6 +1448,8 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4" role="group" aria-label="Status">
             {STATUS_FLOW.map(s => (
               <button key={s} onClick={() => onStatus(s)} aria-pressed={b.status === s}
+                disabled={!owner && s === "completed" && b.status !== "completed"}
+                title={!owner && s === "completed" ? "The owner marks jobs completed" : undefined}
                 className={`rounded-xl border py-2 text-xs font-semibold transition ${
                   b.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
                 }`}>
@@ -1781,15 +1791,17 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
                             {on ? "✓" : ""}
                           </span>
                           <span className="text-xs font-semibold flex-1 truncate">{i.name}</span>
-                          <span className={`text-[10px] flex-none ${on ? "text-white/70" : "text-gray-400"}`}>
-                            weight {i.crewShare ?? 50}
-                          </span>
+                          {owner && (
+                            <span className={`text-[10px] flex-none ${on ? "text-white/70" : "text-gray-400"}`}>
+                              weight {i.crewShare ?? 50}
+                            </span>
+                          )}
                         </button>
                       )
                     })}
                   </div>
 
-                  {crewPick.length > 1 && (
+                  {owner && crewPick.length > 1 && (
                     <p className="text-[11px] text-gray-500 mb-2">
                       Split:{" "}
                       {(() => {
@@ -1842,6 +1854,7 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
                 </div>
               )}
               </div>
+              {owner && (
               <div>
                 <SectionTitle>Money</SectionTitle>
               {b.status === "completed" && b.amountCharged != null && (
@@ -1947,6 +1960,7 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
                   </p>
                 )}
               </div>
+              )}
             </section>
           )}
 
@@ -1969,9 +1983,11 @@ function BookingCard({ booking: b, initialTab, expanded, noteValue, onToggle, on
                 <button onClick={onNoteSave} className="flex-1 rounded-xl bg-gray-900 text-white text-xs font-semibold py-2 hover:bg-black transition">
                   Save Note
                 </button>
-                <button onClick={onDelete} className="rounded-xl border border-red-200 text-red-500 text-xs font-semibold px-4 py-2 hover:bg-red-50 transition">
-                  Delete
-                </button>
+                {owner && (
+                  <button onClick={onDelete} className="rounded-xl border border-red-200 text-red-500 text-xs font-semibold px-4 py-2 hover:bg-red-50 transition">
+                    Delete
+                  </button>
+                )}
               </div>
             </section>
           )}

@@ -9,6 +9,7 @@ import { forwardLeadToCrm } from "../../lib/crmForward.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
 import { notifyWhatsApp } from "../../lib/whatsapp.js"
 import { quoteAlert } from "../../lib/whatsappAlerts.js"
+import { teamToNotify } from "../../lib/staff.js"
 
 export async function POST(request) {
   let body
@@ -35,7 +36,9 @@ export async function POST(request) {
   }
 
   // Aviso por WhatsApp al dueno, tambien despues de responder.
-  runAfterResponse(() => notifyWhatsApp(quoteAlert(lead)))
+  // Staff marked to hear about quotes get the same alert and email.
+  const team = await teamToNotify("quote")
+  runAfterResponse(() => notifyWhatsApp(quoteAlert(lead), team.whatsapp))
 
   let notified = false
   try {
@@ -66,6 +69,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from,
       to,
+      cc: team.emails.length ? team.emails : undefined,
       replyTo,
       subject,
       html: isWizard ? wizardQuoteEmail(body) : quickQuoteEmail(body),

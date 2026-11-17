@@ -2,7 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, getSession, unauthorized } from "@/lib/adminSession"
 
 function db() { return neon(process.env.DATABASE_URL) }
 
@@ -26,7 +26,9 @@ function titleCity(v) {
 }
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  const session = await getSession(request)
+  if (!session) return unauthorized()
+  const seesMoney = session.role === "admin"
 
   try {
     const sql = db()
@@ -91,7 +93,9 @@ export async function GET(request) {
       })
     }
 
+    // A seller gets the same list without what anyone paid.
     const customers = [...byKey.values()]
+      .map(c => seesMoney ? c : { ...c, totalSpent: undefined, bookings: c.bookings.map(b => ({ ...b, amountCharged: undefined })) })
       .map(c => ({ ...c, name: `${c.firstName} ${c.lastName}`.trim() }))
       .sort((a, b) => new Date(b.lastBookingAt) - new Date(a.lastBookingAt))
 
@@ -114,7 +118,7 @@ export async function GET(request) {
 // the customer record *is* those bookings — there is no separate row to update.
 // The key is resolved here rather than trusting a list of ids from the client.
 export async function PATCH(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
 
   try {
     const { key, firstName, lastName, email, phone } = await request.json()

@@ -3,15 +3,18 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import AdminSearch from "./AdminSearch"
+import { useMe, forgetMe } from "./useMe"
+import { isOwnerOnlyPage } from "@/lib/adminSession"
 
 // Today, Bookings and the report stand alone; the rest sit in small groups so
 // the mobile bar stays at six readable entries instead of nine squeezed ones.
-const MENU = [
+const FULL_MENU = [
   { href: "/admin/today",    label: "Today",    icon: "☀️" },
   { href: "/admin/bookings", label: "Bookings", icon: "📅" },
   { key: "people", label: "People", icon: "👥", items: [
     { href: "/admin/customers",  label: "Customers",  icon: "👥", desc: "Everyone who has booked" },
     { href: "/admin/installers", label: "Installers", icon: "🔧", desc: "Your crew and their jobs" },
+    { href: "/admin/team",       label: "Team",       icon: "🔑", desc: "Who can sign in, and who gets alerts" },
   ] },
   { key: "money", label: "Money", icon: "💵", items: [
     { href: "/admin/earnings", label: "Earnings", icon: "💵", desc: "What each job paid and who got what" },
@@ -31,6 +34,14 @@ export default function AdminLayout({ children }) {
   const path    = usePathname()
   const [ready, setReady] = useState(false)
   const [openGroup, setOpenGroup] = useState(null) // a group's key, or null
+
+  // A seller's menu leaves out the owner-only pages (money, reports, pay,
+  // team); a group left empty disappears. Until we know who it is, the menu
+  // shows only what everyone can open.
+  const me = useMe()
+  const MENU = FULL_MENU
+    .map(m => (m.items ? { ...m, items: m.items.filter(n => me?.role === "admin" || !isOwnerOnlyPage(n.href)) } : m))
+    .filter(m => (m.items ? m.items.length > 0 : me?.role === "admin" || !isOwnerOnlyPage(m.href)))
 
   const isOn    = href => path.startsWith(href)
   const toggle  = key => setOpenGroup(k => (k === key ? null : key))
@@ -85,6 +96,7 @@ export default function AdminLayout({ children }) {
 
   async function logout() {
     localStorage.removeItem("admin-auth")
+    forgetMe()
     // The cookie is httpOnly, so only the server can clear it.
     await fetch("/api/logout", { method: "POST" }).catch(() => {})
     router.push("/admin/login")
@@ -157,6 +169,10 @@ export default function AdminLayout({ children }) {
         <div className="flex-1 md:flex-none" />
 
         <AdminSearch />
+
+        {me?.role === "seller" && me.name && (
+          <span className="hidden text-xs text-white/60 sm:inline flex-none">{me.name}</span>
+        )}
 
         <button
           onClick={logout}

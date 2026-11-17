@@ -6,13 +6,13 @@ export const dynamic = "force-dynamic"
 // reasons it can't be sent. Sending goes through /api/sms/send with kind "review".
 
 import { neon } from "@neondatabase/serverless"
-import { isAdminRequest, unauthorized } from "@/lib/adminSession"
+import { isStaffRequest, unauthorized } from "@/lib/adminSession"
 import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
 import { toE164, buildReviewRequest, sendingHours } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
 export async function GET(request) {
-  if (!(await isAdminRequest(request))) return unauthorized()
+  if (!(await isStaffRequest(request))) return unauthorized()
   const bookingId = new URL(request.url).searchParams.get("bookingId")
   if (!bookingId) return Response.json({ ok: false, error: "bookingId required" }, { status: 400 })
   try {
