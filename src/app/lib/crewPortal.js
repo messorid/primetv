@@ -11,6 +11,7 @@
 import { BRAND } from "./emailLayout.js"
 import { newToken, isToken, closeoutTokenFor, workItemsOf, ensureCloseoutTables } from "./closeout.js"
 import { ensureCrewTable, getCrewFor, crewOrLegacy } from "./crew.js"
+import { money } from "./installerEmails.js"
 
 export const PAST_DAYS = 7
 export const AHEAD_DAYS = 30
@@ -101,6 +102,7 @@ export async function loadCrewPage(sql, token, today = businessToday()) {
       work: workItemsOf(b),
       partners: crew.filter(n => n !== inst.name),
       notes: b.notes || "",
+      total: money(b.job_total),
       customerNotes: [b.combo_details, b.more_tvs_comment].filter(Boolean).join("\n"),
       closeoutPath: `/job/${await closeoutTokenFor(sql, b.id)}`,
       signed: !!signedBy.get(b.id),

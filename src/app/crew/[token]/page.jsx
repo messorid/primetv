@@ -105,6 +105,7 @@ function Job({ j, dayLabel, past }) {
       </ul>
       {j.customerNotes && <p className="mt-2 whitespace-pre-line rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">📋 {j.customerNotes}</p>}
       {j.notes && <p className="mt-2 whitespace-pre-line rounded-xl bg-purple-50 px-3 py-2 text-sm text-purple-900">🗒️ {j.notes}</p>}
+      {j.total && <p className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">💵 Collect {j.total}</p>}
       {j.partners.length > 0 && <p className="mt-2 text-sm text-black/60">👷 With {j.partners.join(", ")}</p>}
 
       <div className="mt-4 grid grid-cols-2 gap-2">

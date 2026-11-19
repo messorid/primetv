@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { PROMO_PRICES, HOME_INSTALL_LABELS } from "./clientEmail.js"
-import { fullAddressOf } from "./installerEmails.js"
+import { fullAddressOf, money } from "./installerEmails.js"
 
 const line = (parts, sep = " · ") =>
   parts.filter(Boolean).map(p => String(p).trim()).filter(Boolean).join(sep)
@@ -80,6 +80,7 @@ export function bookingAlert(body = {}, { saved = true } = {}) {
         couponCode: body.couponCode,
       })),
       tagged("📍", fullAddressOf(body)),
+      tagged("💵", money(body.jobTotal) && `Total ${money(body.jobTotal)}`),
     ]),
   }
 }
@@ -130,7 +131,7 @@ export function installerJobAlert(b = {}, crewmates = []) {
     when(b.date, b.time_pref, "en-US"),
     line([`${b.first_name || ""} ${b.last_name || ""}`, b.phone]),
     fullAddressOf(b),
-    line([job, others.length && `👷 With ${others.join(", ")}`]),
+    line([job, others.length && `👷 With ${others.join(", ")}`, money(b.job_total) && `💵 Collect ${money(b.job_total)}`]),
   ]
 }
 

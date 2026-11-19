@@ -26,6 +26,12 @@ export const fullAddressOf = b =>
 
 const plain = v => String(v ?? "").replace(/[\r\n]+/g, " ").trim()
 
+// "$350.00", or "" when no total was agreed.
+export const money = v => {
+  const n = v == null || v === "" ? NaN : Number(v)
+  return Number.isFinite(n) ? `$${n.toFixed(2)}` : ""
+}
+
 export function buildServiceDetail(b) {
   const parts = []
 
@@ -110,9 +116,10 @@ export function buildInstallerJobEmail({ b, installerName, crew = null, photoAtt
       ${details([
         ["Service", serviceDetail],
         ["Payment", b.payment ? esc(b.payment) : ""],
+        ["Total to collect", money(b.job_total) ? `<strong>${money(b.job_total)}</strong>` : ""],
       ])}
       ${customerNotes}
-      ${b.notes ? panel({ tone: "purple", title: "🗒️ Office notes", html: escLines(b.notes) }) : ""}
+      ${b.notes ? panel({ tone: "purple", title: "🗒️ Instructions from the office", html: escLines(b.notes) }) : ""}
       ${photoHtml}
       ${customerCard({ name: `${b.first_name || ""} ${b.last_name || ""}`.trim(), phone: b.phone })}
       ${closeoutUrl ? `${closeoutSteps()}${buttons([{ href: closeoutUrl, label: "✍️ Open job closeout" }], { top: 14 })}` : ""}

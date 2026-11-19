@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation"
 import { MiniCalendar, TimeSlots } from "@/app/components/DateTimePicker"
 import ReviewSmsDialog from "../ReviewSmsDialog"
 import { useMe } from "../useMe"
+import { BF_PROMOS } from "@/app/lib/blackFriday"
+import { HOME_INSTALL_LABELS, CABLE_RUN_PRICE } from "@/app/lib/clientEmail"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const MONTHS_LONG  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -16,14 +18,26 @@ const PAYMENTS   = ["Cash", "Zelle", "PayPal", "Venmo", "Other"] // no cards, no
 const BLANK_FORM = {
   firstName: "", lastName: "", email: "", phone: "",
   date: "", timePref: "Flexible",
-  street: "", city: "Nashville", state: "TN", zip: "",
+  street: "", apt: "", city: "Nashville", state: "TN", zip: "",
   payment: "Cash", referral: "",
   serviceType: "tvs",
   tvs: [{ size: '43" – 55"', wallType: "Drywall (standard)", exactSize: "", comments: "" }],
   moreTvsComment: "",
+  promo: BF_PROMOS[0].label,
+  homeInstallService: "furniture",
+  jobDescription: "",
+  cableConcealment: 0,
+  jobTotal: "",
   notes: "",
   status: "pending",
 }
+
+// The customer's details a booking can't be created without; the server checks
+// the same list (lib/adminBooking.js).
+const REQUIRED_NEW = [
+  ["firstName", "First name"], ["lastName", "Last name"], ["phone", "Phone"], ["email", "Email"],
+  ["street", "Street"], ["city", "City"], ["state", "State"], ["zip", "ZIP"],
+]
 
 const STATUS_CONFIG = {
   pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200",     dot: "bg-amber-400"   },
@@ -40,15 +54,6 @@ const PROMO_PRICES = {
   '2 TVs up to 55"':                  "From $199",
   '2 TVs up to 70"':                  "From $260",
   '1 TV up to 55" + 1 TV up to 70"': "From $230",
-}
-
-const HOME_INSTALL_LABELS = {
-  furniture:      "Furniture Assembly",
-  mirror_picture: "Picture / Mirror Hanging",
-  shelves_wall:   "Shelves & Wall Installation",
-  gazebo:         "Gazebo / Pergola Assembly",
-  playset:        "Playground / Playset Installation",
-  other:          "Other Installation",
 }
 
 function pad(n) { return String(n).padStart(2, "0") }
@@ -129,6 +134,8 @@ export default function BookingsPage() {
   const [newModal,       setNewModal]       = useState(false)
   const [newForm,        setNewForm]        = useState(BLANK_FORM)
   const [newErr,         setNewErr]         = useState("")
+  const [newDone,        setNewDone]        = useState("")   // what happened after a create
+  const [newPhotos,      setNewPhotos]      = useState([])   // File[] for the crew only
   const [creating,       setCreating]       = useState(false)
 
   const [schedModal,     setSchedModal]     = useState(null) // { id, name }
@@ -147,12 +154,13 @@ export default function BookingsPage() {
       ...BLANK_FORM,
       firstName: g("firstName"), lastName: g("lastName"),
       email:     g("email"),     phone:    g("phone"),
-      street:    g("street"),    city:     g("city") || "Nashville",
+      street:    g("street"),    apt:      g("apt"),
+      city:      g("city") || "Nashville",
       state:     g("state") || "TN", zip:   g("zip"),
       referral:  g("referral"),
       payment:   g("payment") || BLANK_FORM.payment,
     }))
-    setNewErr("")
+    setNewErr(""); setNewDone(""); setNewPhotos([])
     setNewModal(true)
     window.history.replaceState(null, "", "/admin/bookings")
   }, [searchParams])
@@ -204,27 +212,59 @@ export default function BookingsPage() {
     setNewForm(f => ({ ...f, tvs: f.tvs.map((tv, i) => i === idx ? { ...tv, [field]: val } : tv) }))
   }
 
+  // Creates the booking, which emails the customer their confirmation, then
+  // uploads the crew-only photos to it. The photos go up after the booking
+  // exists, so they can never be part of the customer's email.
   async function handleCreate() {
-    if (!newForm.firstName.trim() || !newForm.lastName.trim()) { setNewErr("First and last name are required"); return }
-    setNewErr(""); setCreating(true)
-    const promo =
-      newForm.serviceType === "promo199" ? '2 TVs Up To 55" — $199 Package' :
-      newForm.serviceType === "promo260" ? '2 TVs Up To 65" — $260 Package' : null
+    const missing = REQUIRED_NEW.filter(([k]) => !String(newForm[k] || "").trim()).map(([, l]) => l)
+    if (missing.length) { setNewErr(`Required: ${missing.join(", ")}`); return }
+    setNewErr(""); setNewDone(""); setCreating(true)
+    const t = newForm.serviceType
     const body = {
       firstName: newForm.firstName, lastName: newForm.lastName,
       email: newForm.email, phone: newForm.phone,
       date: newForm.date, timePref: newForm.timePref,
-      address: { street: newForm.street, city: newForm.city, state: newForm.state, zip: newForm.zip },
-      payment: newForm.payment, referral: newForm.referral, promo,
-      tvs: newForm.serviceType === "tvs" ? newForm.tvs : [],
-      moreTvs: newForm.serviceType === "moreTvs", moreTvsComment: newForm.moreTvsComment,
+      address: { street: newForm.street, apt: newForm.apt, city: newForm.city, state: newForm.state, zip: newForm.zip },
+      payment: newForm.payment, referral: newForm.referral,
+      bookingMode: t === "promo" ? "promo" : t === "homeinstall" ? "homeinstall" : "standard",
+      promo: t === "promo" ? newForm.promo : null,
+      homeInstallService: newForm.homeInstallService, jobDescription: newForm.jobDescription,
+      tvs: t === "tvs" ? newForm.tvs : [],
+      moreTvs: t === "moreTvs", moreTvsComment: newForm.moreTvsComment,
+      cableConcealment: t === "homeinstall" ? 0 : newForm.cableConcealment,
+      jobTotal: newForm.jobTotal,
       notes: newForm.notes, status: newForm.status,
     }
-    const res  = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-    const data = await res.json()
-    if (data.ok) { setBookings(prev => [data.booking, ...prev]); setNewModal(false); setNewForm(BLANK_FORM) }
-    else setNewErr("Error creating booking — try again")
-    setCreating(false)
+    try {
+      const res  = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (!data.ok) { setNewErr(data.error || "Error creating booking — try again"); return }
+      setBookings(prev => [data.booking, ...prev])
+
+      let photoNote = ""
+      if (newPhotos.length) {
+        try {
+          const photos = []
+          for (const f of newPhotos) photos.push({ filename: f.name, mime: "image/jpeg", dataUrl: await compressImage(f) })
+          const up = await fetch("/api/bookings/photos", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bookingId: data.booking._id, photos }),
+          }).then(r => r.json())
+          photoNote = up.ok ? ` ${up.photos.length} photo${up.photos.length > 1 ? "s" : ""} saved for the crew.`
+                            : ` Photos not saved (${up.error}) — add them from the booking.`
+        } catch {
+          photoNote = " Photos not saved — add them from the booking."
+        }
+      }
+      setNewForm(BLANK_FORM); setNewPhotos([])
+      setNewDone((data.clientNotified
+        ? `✓ Booking created and the confirmation emailed to ${data.booking.email}.`
+        : "✓ Booking created, but the confirmation email could not be sent — resend it from the booking.") + photoNote)
+    } catch {
+      setNewErr("Could not reach the server — try again")
+    } finally {
+      setCreating(false)
+    }
   }
 
   // ── Status / notes ───────────────────────────────────────────────────────────
@@ -602,7 +642,7 @@ export default function BookingsPage() {
             className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm transition">
             ↻ Refresh
           </button>
-          <button onClick={() => { setNewForm(BLANK_FORM); setNewErr(""); setNewModal(true) }}
+          <button onClick={() => { setNewForm(BLANK_FORM); setNewErr(""); setNewDone(""); setNewPhotos([]); setNewModal(true) }}
             className="flex items-center gap-2 text-sm font-bold text-white bg-[#E50914] hover:bg-red-700 rounded-xl px-4 py-2 shadow-sm transition">
             + New
           </button>
@@ -887,6 +927,21 @@ export default function BookingsPage() {
               <button onClick={() => setNewModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
             </div>
 
+            {newDone ? (
+              <div className="px-5 sm:px-6 py-8 text-center">
+                <p className="text-sm font-semibold text-gray-800">{newDone}</p>
+                <div className="mt-6 flex gap-3">
+                  <button onClick={() => setNewModal(false)}
+                    className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
+                    Close
+                  </button>
+                  <button onClick={() => setNewDone("")}
+                    className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-3 hover:bg-red-700 transition">
+                    Another booking
+                  </button>
+                </div>
+              </div>
+            ) : (<>
             <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto max-h-[75vh] sm:max-h-none">
               {/* Customer */}
               <div>
@@ -894,8 +949,8 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
                   <Field label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
-                  <Field label="Phone"        value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: v }))}     placeholder="(615) 000-0000" />
-                  <Field label="Email"        value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" />
+                  <Field label="Phone *"      value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: v }))}     placeholder="(615) 000-0000" />
+                  <Field label="Email *"      value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" type="email" />
                   <Field label="Referral"     value={newForm.referral}  onChange={v => setNewForm(f => ({ ...f, referral: v }))}  placeholder="Google, friend…" />
                   <div>
                     <label className="text-xs font-semibold text-gray-500">Payment</label>
@@ -929,13 +984,14 @@ export default function BookingsPage() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Address</p>
                 <div className="space-y-2">
-                  <Field label="Street" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
+                  <Field label="Street *" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
+                  <Field label="Apt / Unit" value={newForm.apt} onChange={v => setNewForm(f => ({ ...f, apt: v }))} placeholder="Apt 4B" />
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <div className="col-span-2 sm:col-span-1">
-                      <Field label="City"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
+                      <Field label="City *"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
                     </div>
-                    <Field label="State" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
-                    <Field label="ZIP"   value={newForm.zip}   onChange={v => setNewForm(f => ({ ...f, zip: v }))}   placeholder="37201" />
+                    <Field label="State *" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
+                    <Field label="ZIP *"   value={newForm.zip}   onChange={v => setNewForm(f => ({ ...f, zip: v }))}   placeholder="37201" />
                   </div>
                 </div>
               </div>
@@ -945,10 +1001,10 @@ export default function BookingsPage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Service</p>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {[
-                    { val: "tvs",      label: "Individual TVs" },
-                    { val: "promo199", label: "$199 Promo"     },
-                    { val: "promo260", label: "$260 Promo"     },
-                    { val: "moreTvs",  label: "3+ TVs"         },
+                    { val: "tvs",         label: "Individual TVs"    },
+                    { val: "promo",       label: "Package / Promo"   },
+                    { val: "moreTvs",     label: "3+ TVs"            },
+                    { val: "homeinstall", label: "Home Installation" },
                   ].map(opt => (
                     <button key={opt.val} type="button" onClick={() => setNewForm(f => ({ ...f, serviceType: opt.val }))}
                       className={`rounded-xl border py-2 text-xs font-semibold transition ${
@@ -1002,11 +1058,67 @@ export default function BookingsPage() {
                     placeholder="Details (e.g. 4 TVs, pricing TBD)…"
                     className="w-full rounded-xl border border-gray-200 bg-amber-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
                 )}
+                {newForm.serviceType === "promo" && (
+                  <select value={newForm.promo} onChange={e => setNewForm(f => ({ ...f, promo: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                    {BF_PROMOS.map(p => <option key={p.id} value={p.label}>{p.label} — from ${p.amount}</option>)}
+                  </select>
+                )}
+                {newForm.serviceType === "homeinstall" && (
+                  <div className="space-y-2">
+                    <select value={newForm.homeInstallService} onChange={e => setNewForm(f => ({ ...f, homeInstallService: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                      {Object.entries(HOME_INSTALL_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+                    </select>
+                    <textarea rows={2} value={newForm.jobDescription} onChange={e => setNewForm(f => ({ ...f, jobDescription: e.target.value }))}
+                      placeholder="What the customer asked for (the customer sees this)…"
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
+                  </div>
+                )}
+                {newForm.serviceType !== "homeinstall" && (
+                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2.5">
+                    <span className="text-xs font-semibold text-gray-600">🔌 Hidden cable runs <span className="text-gray-400">(${CABLE_RUN_PRICE} each)</span></span>
+                    <div className="flex items-center gap-2">
+                      <button type="button" aria-label="One less cable run" disabled={newForm.cableConcealment === 0}
+                        onClick={() => setNewForm(f => ({ ...f, cableConcealment: Math.max(0, f.cableConcealment - 1) }))}
+                        className="w-8 h-8 rounded-full border border-gray-300 font-bold disabled:opacity-30">−</button>
+                      <span className="w-6 text-center text-sm font-extrabold">{newForm.cableConcealment}</span>
+                      <button type="button" aria-label="One more cable run"
+                        onClick={() => setNewForm(f => ({ ...f, cableConcealment: Math.min(10, f.cableConcealment + 1) }))}
+                        className="w-8 h-8 rounded-full border border-[#E50914] text-[#E50914] font-bold">+</button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Status + Notes */}
+              {/* Total — the customer sees it too */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Status & Notes</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Total</p>
+                <AmountField label="Total to charge the customer" value={newForm.jobTotal}
+                  onChange={v => setNewForm(f => ({ ...f, jobTotal: v }))} />
+                <p className="mt-1 text-[11px] text-gray-400">Shown in the customer&apos;s confirmation email and to the installers.</p>
+              </div>
+
+              {/* Crew only */}
+              <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/60 p-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-purple-700 mb-1">🔒 Installers only</p>
+                <p className="text-[11px] text-purple-700/80 mb-3">Never sent to the customer. The crew sees it in their job email and jobs page.</p>
+                <label className="text-xs font-semibold text-gray-600">Instructions for the installer</label>
+                <textarea rows={4} value={newForm.notes} onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Everything they need to do: take down the old mount, move the dresser, bring the tall ladder…"
+                  className="mt-1 w-full rounded-xl border border-purple-200 bg-white px-3 py-2.5 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                <label className="mt-3 block text-xs font-semibold text-gray-600">Photos</label>
+                <input type="file" accept="image/*" multiple
+                  onChange={e => setNewPhotos(Array.from(e.target.files || []).slice(0, 12))}
+                  className="mt-1 block w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white" />
+                {newPhotos.length > 0 && (
+                  <p className="mt-1 text-[11px] text-purple-700">{newPhotos.length} photo{newPhotos.length > 1 ? "s" : ""} selected (max 12)</p>
+                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Status</p>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {STATUS_FLOW.filter(s => owner || s !== "completed").map(s => (
                     <button key={s} type="button" onClick={() => setNewForm(f => ({ ...f, status: s }))}
@@ -1017,12 +1129,9 @@ export default function BookingsPage() {
                     </button>
                   ))}
                 </div>
-                <textarea rows={2} value={newForm.notes} onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Internal notes…"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
               </div>
 
-              {newErr && <p className="text-xs text-red-500 font-medium">{newErr}</p>}
+              {newErr && <p role="alert" className="text-xs text-red-500 font-medium">{newErr}</p>}
             </div>
 
             <div className="flex gap-3 px-5 sm:px-6 pb-6 pt-2">
@@ -1032,9 +1141,10 @@ export default function BookingsPage() {
               </button>
               <button onClick={handleCreate} disabled={creating}
                 className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-3 hover:bg-red-700 transition disabled:opacity-50">
-                {creating ? "Creating…" : "Create Booking"}
+                {creating ? "Creating…" : "Create & email customer"}
               </button>
             </div>
+            </>)}
           </div>
         </div>
       )}
@@ -1713,6 +1823,12 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   {b.customMode === "sized" && b.customTvSize && (
                     <p className="text-sm text-gray-800 mt-1">{b.customTvSize}{b.customTvQty ? ` × ${b.customTvQty}` : ""}</p>
                   )}
+                </div>
+              )}
+              {b.jobTotal != null && (
+                <div className="mt-2 flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Total to charge</p>
+                  <p className="text-lg font-extrabold text-emerald-700">${Number(b.jobTotal).toFixed(2)}</p>
                 </div>
               )}
             </section>

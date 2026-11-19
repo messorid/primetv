@@ -5,15 +5,16 @@ import { neon } from "@neondatabase/serverless"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, getSession, unauthorized, forbidden } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
-import { getTransport, mailFrom, canSendMail } from "../../lib/mailer.js"
+import { getTransport, mailFrom, canSendMail, notifyTo } from "../../lib/mailer.js"
+import { adminBookingFrom } from "../../lib/adminBooking.js"
 import { buildInstallerJobEmail, buildCancellationEmail, fullAddressOf } from "../../lib/installerEmails.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
 import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
 import { portalTokenForEmail, crewPageUrl } from "../../lib/crewPortal.js"
-import { notifyInstaller } from "../../lib/whatsapp.js"
-import { installerJobAlert } from "../../lib/whatsappAlerts.js"
+import { notifyInstaller, notifyWhatsApp } from "../../lib/whatsapp.js"
+import { installerJobAlert, bookingAlert } from "../../lib/whatsappAlerts.js"
 import { runAfterResponse } from "../../lib/afterResponse.js"
 
 function db() { return neon(process.env.DATABASE_URL) }
@@ -58,6 +59,9 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS home_install_service TEXT`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_requested_at TIMESTAMPTZ`
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_request_count INT DEFAULT 0`
+  // The total agreed with the customer on a booking made from the admin; shown
+  // to the customer and to the crew.
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS job_total NUMERIC(10,2)`
 
   // ADD COLUMN IF NOT EXISTS cannot correct a column declared with the wrong
   // type. Those corrections live here.
@@ -133,11 +137,9 @@ export async function POST(request) {
   if (!session) return unauthorized()
   try {
     const body = await request.json()
-    const {
-      firstName, lastName, email, phone, date, timePref,
-      address, promo, tvs, moreTvs, moreTvsComment,
-      payment, referral, notes,
-    } = body
+    const { values: v, error } = adminBookingFrom(body)
+    if (error) return Response.json({ ok: false, error }, { status: 400 })
+
     // Only the owner closes jobs, with the money recorded.
     const status = session.role !== "admin" && body.status === "completed" ? "pending" : body.status
     const sql = db()
@@ -146,20 +148,49 @@ export async function POST(request) {
       INSERT INTO bookings (
         first_name, last_name, email, phone, date, time_pref,
         address, promo, tvs, more_tvs, more_tvs_comment,
-        payment, referral, notes, status
+        payment, referral, notes, status,
+        booking_mode, cable_concealment, home_install_service, combo_details, job_total
       ) VALUES (
-        ${firstName || ""}, ${lastName || ""}, ${email || ""}, ${phone || ""},
-        ${date || ""}, ${timePref || "Flexible"},
-        ${JSON.stringify(address || {})}::jsonb,
-        ${promo || null},
-        ${JSON.stringify(tvs || [])}::jsonb,
-        ${moreTvs || false}, ${moreTvsComment || null},
-        ${payment || ""}, ${referral || null}, ${notes || null},
-        ${status || "pending"}
+        ${v.firstName}, ${v.lastName}, ${v.email}, ${v.phone},
+        ${v.date}, ${v.timePref},
+        ${JSON.stringify(v.address)}::jsonb,
+        ${v.promo},
+        ${JSON.stringify(v.tvs)}::jsonb,
+        ${v.moreTvs}, ${v.moreTvsComment},
+        ${v.payment}, ${v.referral}, ${v.notes},
+        ${status || "pending"},
+        ${v.bookingMode}, ${v.cableConcealment}, ${v.homeInstallService}, ${v.jobDescription}, ${v.jobTotal}
       )
       RETURNING *
     `
-    return Response.json({ ok: true, booking: toBooking(row) })
+    const booking = toBooking(row)
+
+    // The customer always hears about it, with exactly what the public form
+    // would have sent plus the agreed total. buildClientEmail never reads
+    // `notes`, and the photos are uploaded afterwards and never attached to it.
+    let clientNotified = false
+    try {
+      if (canSendMail()) {
+        const mail = buildClientEmail(booking, { organizer: process.env.EMAIL_USER })
+        await getTransport().sendMail({
+          from: mailFrom("PrimeTvNashville"),
+          to: booking.email,
+          bcc: notifyTo(),
+          subject: mail.subject,
+          attachments: mail.attachments,
+          html: mail.html,
+        })
+        clientNotified = true
+      }
+    } catch (mailErr) {
+      console.error("admin booking confirmation email failed", mailErr)
+    }
+
+    runAfterResponse(() => notifyWhatsApp(bookingAlert({
+      ...booking, info: { firstName: booking.firstName, lastName: booking.lastName, phone: booking.phone },
+    })))
+
+    return Response.json({ ok: true, booking, clientNotified })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -723,6 +754,7 @@ function toBooking(row) {
     customTvSize:       row.custom_tv_size,
     customTvQty:        row.custom_tv_qty,
     customPrice:        row.custom_price,
+    jobTotal:           row.job_total ?? null,
     moreTvs:            row.more_tvs,
     moreTvsComment:     row.more_tvs_comment,
     tvs:                row.tvs || [],

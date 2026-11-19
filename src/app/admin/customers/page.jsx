@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { customersCsv } from "@/app/lib/customersCsv"
 
 const STATUS_DOT = {
   pending:   "bg-amber-400",
@@ -143,6 +144,17 @@ export default function CustomersPage() {
     router.push(`/admin/bookings?new=1&${params.toString()}`)
   }
 
+  // Every customer, not just the ones the search is showing.
+  function downloadCsv() {
+    const blob = new Blob([customersCsv(customers)], { type: "text/csv;charset=utf-8" })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement("a")
+    a.href     = url
+    a.download = `primetv-customers-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -154,6 +166,13 @@ export default function CustomersPage() {
         </div>
         {totals && (
           <div className="flex gap-3">
+            <button
+              onClick={downloadCsv}
+              disabled={!customers.length}
+              className="rounded-2xl bg-white border border-gray-200 px-4 py-2.5 shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 transition disabled:opacity-40"
+            >
+              ⬇️ Download CSV
+            </button>
             <div className="rounded-2xl bg-white border border-gray-200 px-4 py-2.5 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Customers</p>
               <p className="text-xl font-extrabold text-gray-900">{totals.customers}</p>

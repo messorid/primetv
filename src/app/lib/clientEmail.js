@@ -137,7 +137,7 @@ export function buildClientEmail(b, { organizer } = {}) {
       : null
 
   const serviceRow = isHomeInst
-    ? ["Service", `${safe(homeInstLbl)} — quote based`]
+    ? ["Service", b.jobTotal != null ? safe(homeInstLbl) : `${safe(homeInstLbl)} — quote based`]
     : isCombo
     ? ["Service", "Custom Installation"]
     : hasPromo
@@ -162,6 +162,14 @@ export function buildClientEmail(b, { organizer } = {}) {
     note: b.couponComment ? `&ldquo;${safe(b.couponComment)}&rdquo;` : "",
   }) : ""
 
+  // The total agreed with the office, on bookings made from the admin panel.
+  const jobTotalNum = b.jobTotal != null && b.jobTotal !== "" ? Number(b.jobTotal) : NaN
+  const jobTotalBlock = Number.isFinite(jobTotalNum) ? priceBox({
+    label: "Total",
+    sub: "Your installation, as agreed with our office",
+    amount: `$${jobTotalNum.toFixed(2)}`,
+  }) : ""
+
   const couponBlock = (b.couponCode && b.appliedCouponLabel && !b.customQuote) ? panel({
     tone: "success",
     title: couponHidden ? "Offer applied" : `Coupon Applied — ${safe(b.couponCode)}`,
@@ -183,10 +191,10 @@ export function buildClientEmail(b, { organizer } = {}) {
 
   const homeInstallBlock = isHomeInst ? panel({
     tone: "info",
-    title: "🔧 Home Installation — Quote Based",
+    title: b.jobTotal != null ? "🔧 Home Installation" : "🔧 Home Installation — Quote Based",
     html: `<strong style="font-size:15px;">${safe(homeInstLbl)}</strong>${
       b.comboDetails ? `<br>${safe(b.comboDetails).replace(/\n/g, "<br>")}` : ""
-    }<br><span style="font-size:13px;">We will review this request and contact you with pricing before the appointment.</span>`,
+    }${b.jobTotal != null ? "" : `<br><span style="font-size:13px;">We will review this request and contact you with pricing before the appointment.</span>`}`,
   }) : ""
 
   const frameTvBlock = anyFrameTv ? panel({
@@ -229,6 +237,7 @@ export function buildClientEmail(b, { organizer } = {}) {
 
     ${promoPriceBlock}
     ${customQuoteBlock}
+    ${jobTotalBlock}
     ${couponBlock}
     ${moreTvsBlock}
     ${bundleBlock}
