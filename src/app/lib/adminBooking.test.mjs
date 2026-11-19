@@ -92,6 +92,13 @@ test("the installer gets the instructions and the total to collect", () => {
   assert.match(installerJobAlert(row)[3], /💵 Collect \$350\.00$/)
 })
 
+test("every confirmation warns that a return visit for something else is charged", () => {
+  const { camel } = stored(adminBookingFrom(FORM).values)
+  const { html } = buildClientEmail(camel)
+  assert.match(html, /Return Visits/)
+  assert.match(html, /additional return-visit fee will be charged/)
+})
+
 test("a booking without an agreed total reads as before", () => {
   const { camel } = stored(adminBookingFrom({ ...FORM, jobTotal: "" }).values)
   assert.ok(!buildClientEmail(camel).html.includes(">Total<"))

@@ -125,15 +125,26 @@ export default function TermsPage() {
             </p>
           </div>
 
+          {/* The booking confirmation email says the same (RETURN_VISIT_NOTICE in lib/clientEmail.js). */}
           <div>
-            <h2 className="text-base font-bold text-black mb-2">7. Privacy</h2>
+            <h2 className="text-base font-bold text-black mb-2">7. Return Visits</h2>
+            <p>
+              If our team has to return to your home for a reason <strong>not related to our installation</strong>, an <strong>additional return-visit fee will be charged</strong>. This includes, for example, problems with the TV itself, its settings, software or remote; devices, cables or mounts supplied by the customer; a TV or mount moved, removed or adjusted by anyone else after our visit; or an area that was not ready or accessible on the scheduled day.
+            </p>
+            <p className="mt-2">
+              We will confirm the amount of the fee with you before scheduling the return visit. Return visits for issues caused by our workmanship are covered by the warranty in section 6 at no additional cost.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-black mb-2">8. Privacy</h2>
             <p>
               Any personal information collected through our website or booking process is used solely to deliver our services. We do not share customer information with third parties without explicit consent, except where required by law.
             </p>
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-black mb-2">8. SMS Terms</h2>
+            <h2 className="text-base font-bold text-black mb-2">9. SMS Terms</h2>
             <p>
               PrimeTvNashville (&quot;PrimeTV&quot;) sends text messages only to customers who agree to receive them by ticking the optional box on our booking form: appointment reminders, a request for a review after the job, and replies when you answer our texts. Agreeing is optional and is not a condition of booking. Message frequency varies. Message and data rates may apply. Reply STOP at any time to opt out, or HELP for help. Carriers are not liable for delayed or undelivered messages. See our{" "}
               <a href="/sms-terms" className="text-[#E50914] font-semibold">SMS Terms</a> and{" "}
@@ -142,7 +153,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-black mb-2">9. Changes to These Terms</h2>
+            <h2 className="text-base font-bold text-black mb-2">10. Changes to These Terms</h2>
             <p>
               PrimeTvNashville reserves the right to update these Terms and Conditions at any time. Changes will be posted on this page. Continued use of our services constitutes acceptance of the updated terms.
             </p>

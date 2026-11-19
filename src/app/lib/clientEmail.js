@@ -27,6 +27,11 @@ export const PROMO_PRICES = {
 // in BookingFormSection.jsx), so change both together.
 export const CABLE_RUN_PRICE = 70
 
+// A second trip for something that isn't our work is charged. Section 7 of the
+// Terms (app/terms/page.jsx) says the same, so change both together.
+export const RETURN_VISIT_NOTICE =
+  "If we need to come back for something <strong>not related to our installation</strong> &mdash; for example a problem with the TV itself, its settings or remote, a device or cable you supplied, or a TV or mount moved or adjusted after we leave &mdash; <strong>an additional return-visit fee will be charged</strong>. We will confirm the amount with you before scheduling the visit. Issues caused by our workmanship are covered by our 30-day warranty at no cost. See our <a href=\"https://www.primetvnashville.com/terms\" style=\"color:#E50914;font-weight:700;\">Terms &amp; Conditions</a>."
+
 export const HOME_INSTALL_LABELS = {
   furniture:      "Furniture Assembly",
   mirror_picture: "Picture / Mirror Hanging",
@@ -252,8 +257,15 @@ export function buildClientEmail(b, { organizer } = {}) {
     ], { top: 14 })}
 
     ${panel({
-      tone: "danger",
+      tone: "warn",
       top: 24,
+      title: "🔁 Return Visits",
+      html: RETURN_VISIT_NOTICE,
+    })}
+
+    ${panel({
+      tone: "danger",
+      top: 16,
       title: "⚠️ Important — Wall Liability Notice",
       html: `<strong>For all TV mounting and hidden cable concealment services:</strong> The customer is solely responsible for verifying that there are no electrical wires, water pipes, gas lines, or any other obstructions inside the wall before installation. PrimeTvNashville cannot see inside walls and is <strong>not responsible</strong> for any damage to electrical wiring, plumbing, gas lines, or any other in-wall infrastructure during the installation process.<br><br>By booking this service, you acknowledge and accept these conditions. Please read our full <a href="https://www.primetvnashville.com/terms" style="color:#E50914;font-weight:700;">Terms &amp; Conditions</a> for complete details.`,
     })}
