@@ -9,6 +9,7 @@ import { buildClientEmail } from "./clientEmail.js"
 import { buildInstallerJobEmail } from "./installerEmails.js"
 import { installerJobAlert } from "./whatsappAlerts.js"
 import { customersCsv } from "./customersCsv.js"
+import { formatUsPhone } from "./usPhone.js"
 
 const FORM = {
   firstName: "Ada", lastName: "Lovelace", phone: "615-555-0100", email: "ada@example.com",
@@ -43,6 +44,18 @@ test("the customer's details are all required, and named when missing", () => {
   const { error } = adminBookingFrom({ ...FORM, phone: "", email: " ", address: { street: "1 Main St" } })
   assert.equal(error, "Required: Phone, Email, City, State, ZIP")
   assert.match(adminBookingFrom({ ...FORM, email: "ada@" }).error, /email/)
+})
+
+test("phones are US numbers of ten digits, shown as (615) 555-0100", () => {
+  assert.equal(formatUsPhone("6155550100"), "(615) 555-0100")
+  assert.equal(formatUsPhone("+1 615-555-0100"), "(615) 555-0100")
+  assert.equal(formatUsPhone("61555501009999"), "(615) 555-0100", "no more than ten digits")
+  assert.equal(formatUsPhone("615"), "(615")
+  assert.equal(formatUsPhone("6155"), "(615) 5")
+  assert.equal(formatUsPhone(""), "")
+
+  assert.equal(adminBookingFrom(FORM).values.phone, "(615) 555-0100")
+  assert.match(adminBookingFrom({ ...FORM, phone: "615-555" }).error, /10-digit/)
 })
 
 test("the total is read as dollars and refused when it isn't one", () => {

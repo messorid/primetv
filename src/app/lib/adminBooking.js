@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { isValidEmail } from "./formValidation.js"
+import { formatUsPhone, isUsPhone } from "./usPhone.js"
 
 const MODES = ["standard", "promo", "homeinstall"]
 
@@ -30,6 +31,7 @@ export function adminBookingFrom(body = {}) {
     ["Street", address.street], ["City", address.city], ["State", address.state], ["ZIP", address.zip],
   ].filter(([, v]) => !text(v)).map(([label]) => label)
   if (missing.length) return { error: `Required: ${missing.join(", ")}` }
+  if (!isUsPhone(body.phone)) return { error: "The phone must be a 10-digit US number" }
   if (!isValidEmail(text(body.email))) return { error: "That email address doesn't look right" }
 
   let jobTotal = null
@@ -45,7 +47,7 @@ export function adminBookingFrom(body = {}) {
   return {
     values: {
       firstName: text(body.firstName), lastName: text(body.lastName),
-      email: text(body.email), phone: text(body.phone),
+      email: text(body.email), phone: formatUsPhone(body.phone),
       date: text(body.date), timePref: text(body.timePref) || "Flexible",
       address,
       payment: text(body.payment), referral: text(body.referral) || null,

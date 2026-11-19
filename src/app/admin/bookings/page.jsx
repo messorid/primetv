@@ -6,6 +6,7 @@ import ReviewSmsDialog from "../ReviewSmsDialog"
 import { useMe } from "../useMe"
 import { BF_PROMOS } from "@/app/lib/blackFriday"
 import { HOME_INSTALL_LABELS, CABLE_RUN_PRICE } from "@/app/lib/clientEmail"
+import { formatUsPhone, isUsPhone } from "@/app/lib/usPhone"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const MONTHS_LONG  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -14,6 +15,15 @@ const DOW          = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 const TV_SIZES   = ['Under 32"', '32" – 42"', '43" – 55"', '56" – 65"', '66" – 75"', '75"+']
 const WALL_TYPES = ["Drywall (standard)", "Concrete / Brick", "Tile", "Above fireplace"]
 const PAYMENTS   = ["Cash", "Zelle", "PayPal", "Venmo", "Other"] // no cards, no checks
+// The public form's list, plus the answer most office bookings have.
+const REFERRALS  = ["Google", "Instagram", "Facebook", "TikTok", "YouTube", "Friend", "Repeat customer", "Other"]
+
+// Flexible, then every half hour from 7:00 AM to 8:00 PM, the same slots as the
+// reschedule picker (TimeSlots).
+const TIME_OPTIONS = ["Flexible", ...Array.from({ length: 27 }, (_, i) => {
+  const h = 7 + Math.floor(i / 2)
+  return `${h > 12 ? h - 12 : h}:${i % 2 ? "30" : "00"} ${h >= 12 ? "PM" : "AM"}`
+})]
 
 const BLANK_FORM = {
   firstName: "", lastName: "", email: "", phone: "",
@@ -153,7 +163,7 @@ export default function BookingsPage() {
     setNewForm(f => ({
       ...BLANK_FORM,
       firstName: g("firstName"), lastName: g("lastName"),
-      email:     g("email"),     phone:    g("phone"),
+      email:     g("email"),     phone:    formatUsPhone(g("phone")),
       street:    g("street"),    apt:      g("apt"),
       city:      g("city") || "Nashville",
       state:     g("state") || "TN", zip:   g("zip"),
@@ -218,6 +228,7 @@ export default function BookingsPage() {
   async function handleCreate() {
     const missing = REQUIRED_NEW.filter(([k]) => !String(newForm[k] || "").trim()).map(([, l]) => l)
     if (missing.length) { setNewErr(`Required: ${missing.join(", ")}`); return }
+    if (!isUsPhone(newForm.phone)) { setNewErr("The phone must be a 10-digit US number"); return }
     setNewErr(""); setNewDone(""); setCreating(true)
     const t = newForm.serviceType
     const body = {
@@ -949,9 +960,18 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
                   <Field label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
-                  <Field label="Phone *"      value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: v }))}     placeholder="(615) 000-0000" />
+                  <Field label="Phone *"      value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: formatUsPhone(v) }))} placeholder="(615) 000-0000" type="tel" />
                   <Field label="Email *"      value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" type="email" />
-                  <Field label="Referral"     value={newForm.referral}  onChange={v => setNewForm(f => ({ ...f, referral: v }))}  placeholder="Google, friend…" />
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">Referral</label>
+                    <select value={newForm.referral} onChange={e => setNewForm(f => ({ ...f, referral: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                      <option value="">—</option>
+                      {/* A repeat customer's old answer may not be on the list; keep it. */}
+                      {[...REFERRALS, ...(newForm.referral && !REFERRALS.includes(newForm.referral) ? [newForm.referral] : [])]
+                        .map(r => <option key={r}>{r}</option>)}
+                    </select>
+                  </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500">Payment</label>
                     <select value={newForm.payment} onChange={e => setNewForm(f => ({ ...f, payment: e.target.value }))}
@@ -973,9 +993,10 @@ export default function BookingsPage() {
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500">Time</label>
-                    <input type="text" value={newForm.timePref} onChange={e => setNewForm(f => ({ ...f, timePref: e.target.value }))}
-                      placeholder="e.g. 10:00 AM"
-                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                    <select value={newForm.timePref} onChange={e => setNewForm(f => ({ ...f, timePref: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                      {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                    </select>
                   </div>
                 </div>
               </div>
