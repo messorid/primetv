@@ -107,8 +107,10 @@ export function quoteAlert(lead = {}) {
 
 // The installer's own heads-up when a job is assigned to them: the four
 // variables of the installer template (see whatsapp.js), in English like the
-// work order email. No prices, since the installer is paid from the split, not
-// from what the customer pays. `crewmates` are the others on the same job.
+// work order email: the job summary, then each TV's details, the description
+// and the office's instructions. No list prices or coupons, since the installer
+// is paid from the split; only the agreed total to collect, when there is one.
+// `crewmates` are the others on the same job.
 export function installerJobAlert(b = {}, crewmates = []) {
   const tvs = Array.isArray(b.tvs) ? b.tvs : []
   const cableQty = parseInt(b.cable_concealment) || 0
@@ -127,11 +129,32 @@ export function installerJobAlert(b = {}, crewmates = []) {
     cableQty > 0 && `Cable concealment ×${cableQty}`,
   ], " + ")
 
+  // The details the work order email has, after the summary so that if Meta's
+  // length limit cuts anything it is the end of the instructions.
+  const tvDetails = tvs
+    .map((tv, i) => {
+      const d = line([
+        tv?.exactSize && `exact ${inches(tv.exactSize)}`,
+        tv?.wallType,
+        tv?.comments && `"${String(tv.comments).trim()}"`,
+      ], ", ")
+      return d && `TV ${i + 1} (${inches(tv?.size) || "?"}): ${d}`
+    })
+    .filter(Boolean)
+
   return [
     when(b.date, b.time_pref, "en-US"),
     line([`${b.first_name || ""} ${b.last_name || ""}`, b.phone]),
     fullAddressOf(b),
-    line([job, others.length && `👷 With ${others.join(", ")}`, money(b.job_total) && `💵 Collect ${money(b.job_total)}`]),
+    line([
+      job,
+      others.length && `👷 With ${others.join(", ")}`,
+      money(b.job_total) && `💵 Collect ${money(b.job_total)}`,
+      tagged("📺", tvDetails.join("; ")),
+      tagged("📋", b.more_tvs && b.more_tvs_comment && `TVs: ${b.more_tvs_comment}`),
+      tagged("📝", b.combo_details),
+      tagged("🗒️", b.notes && `Office: ${b.notes}`),
+    ]),
   ]
 }
 

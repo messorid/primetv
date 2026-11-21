@@ -98,6 +98,7 @@ export function installerNumber(raw) {
 // tab or more than four spaces in a row (error 132018). The whole body is
 // capped at 1024 characters, so each variable is kept well short of that.
 export function templateParam(value, max = 300) {
+  max = max || 300
   const s = String(value ?? "")
     .trim()
     .replace(/\s*[\r\n\t]+\s*/g, " · ")
@@ -109,7 +110,7 @@ export function templateParam(value, max = 300) {
 // One template message to one number. Every outcome is logged, success
 // included: a skipped send used to leave no trace at all, so a missing alert
 // could not be told apart from a lost one. Never throws.
-async function sendTemplate(to, { name, lang, params, label }) {
+async function sendTemplate(to, { name, lang, params, label, maxes = [] }) {
   try {
     const res = await fetch(`https://graph.facebook.com/${apiVersion()}/${phoneNumberId()}/messages`, {
       method: "POST",
@@ -123,7 +124,7 @@ async function sendTemplate(to, { name, lang, params, label }) {
           language: { code: lang },
           components: [{
             type: "body",
-            parameters: params.map(v => ({ type: "text", text: templateParam(v) })),
+            parameters: params.map((v, i) => ({ type: "text", text: templateParam(v, maxes[i]) })),
           }],
         },
       }),
@@ -190,5 +191,17 @@ export async function notifyInstaller({ installerName, phone, params }) {
     lang: setting("WHATSAPP_INSTALLER_TEMPLATE_LANG", "en"),
     params,
     label,
+    maxes: installerMaxes(params),
   })
+}
+
+// The job variable carries the whole job — every TV, the description and the
+// office's instructions — so it gets whatever room the template's 1024
+// characters leave after its own text (~200) and the other three variables.
+const INSTALLER_TEMPLATE_TEXT = 200
+const INSTALLER_HEAD_MAXES = [80, 120, 200]
+export function installerMaxes(params = []) {
+  const head = INSTALLER_HEAD_MAXES.map((max, i) => templateParam(params[i], max).length)
+  const room = 1024 - INSTALLER_TEMPLATE_TEXT - head.reduce((a, n) => a + n, 0)
+  return [...INSTALLER_HEAD_MAXES, Math.max(300, room)]
 }

@@ -5,7 +5,7 @@ import { test, beforeEach, afterEach } from "node:test"
 import assert from "node:assert/strict"
 
 import {
-  notifyWhatsApp, notifyInstaller, canSendWhatsApp, recipients, installerNumber, templateParam,
+  notifyWhatsApp, notifyInstaller, canSendWhatsApp, recipients, installerNumber, templateParam, installerMaxes,
 } from "./whatsapp.js"
 import { bookingAlert, quoteAlert, assignmentAlert, installerJobAlert, when } from "./whatsappAlerts.js"
 
@@ -295,4 +295,33 @@ test("an installer's job alert is in English, names the crewmates and shows no p
 test("a solo home installation names the service and no crew", () => {
   const job = installerJobAlert({ booking_mode: "homeinstall", home_install_service: "gazebo" })[3]
   assert.equal(job, "Gazebo / Pergola Assembly")
+})
+
+test("the installer's alert carries each TV, the description and the office's instructions", () => {
+  const job = installerJobAlert({
+    booking_mode: "homeinstall", home_install_service: "gazebo",
+    combo_details: "10x12 pergola,\nkit in the garage",
+    notes: "Bring the tall ladder\nCustomer has a dog",
+  })[3]
+  assert.equal(job,
+    "Gazebo / Pergola Assembly · 📝 10x12 pergola,\nkit in the garage · 🗒️ Office: Bring the tall ladder\nCustomer has a dog")
+  // Newlines become " · " on the way out, which Meta accepts.
+  assert.equal(templateParam(job, 1000),
+    "Gazebo / Pergola Assembly · 📝 10x12 pergola, · kit in the garage · 🗒️ Office: Bring the tall ladder · Customer has a dog")
+
+  const tvs = installerJobAlert({
+    tvs: [{ size: '56" – 65"', wallType: "Above fireplace", exactSize: "63", comments: "center over mantel" }, { size: "55" }],
+  })[3]
+  assert.equal(tvs, '2 TVs: 56" – 65", 55" · 📺 TV 1 (56" – 65"): exact 63", Above fireplace, "center over mantel"')
+})
+
+test("a long job fills what the template leaves and the message stays under 1024", async () => {
+  const params = ["Sun, Oct 25 (9:00 AM)", "Ada Lovelace · 615-555-0100", "1 Main St, Franklin, TN, 37064", "y".repeat(3000)]
+  const maxes = installerMaxes(params)
+  assert.ok(maxes[3] > 600, "the job gets the spare room")
+
+  await notifyInstaller({ installerName: "Juan", phone: "6155550199", params })
+  const sent = calls[0].body.template.components[0].parameters.map(p => p.text)
+  assert.equal(sent[3].length, maxes[3])
+  assert.ok(200 + sent.join("").length <= 1024)
 })

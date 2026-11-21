@@ -89,7 +89,10 @@ test("the installer gets the instructions and the total to collect", () => {
   assert.ok(html.includes("SECRET-CREW-NOTE"))
   assert.match(html, /Total to collect[\s\S]*\$350\.00/)
 
-  assert.match(installerJobAlert(row)[3], /💵 Collect \$350\.00$/)
+  const job = installerJobAlert(row)[3]
+  assert.match(job, /💵 Collect \$350\.00/)
+  assert.match(job, /📺 TV 1 \(56" – 65"\): Drywall \(standard\)/)
+  assert.match(job, /🗒️ Office: SECRET-CREW-NOTE: take down the old mount, gate code 4321$/)
 })
 
 test("every confirmation warns that a return visit for something else is charged", () => {
