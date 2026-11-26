@@ -39,12 +39,8 @@ export function adminBookingFrom(body = {}) {
   if (!["none", "phone", "declined", "email"].includes(reminderSmsChoice)) {
     return { error: "Choose a valid text reminder preference" }
   }
-  const reminderSmsProof = reminderSmsChoice === "phone" ? text(body.reminderSmsProof) : ""
-  if (reminderSmsChoice === "phone") {
-    if (!toE164(body.phone)) return { error: "Text reminders require a valid US mobile number" }
-    if (!reminderSmsProof || reminderSmsProof.length > 200) {
-      return { error: "Enter a reference for the customer's verbal consent (up to 200 characters)" }
-    }
+  if (reminderSmsChoice === "phone" && !toE164(body.phone)) {
+    return { error: "Text reminders require a valid US mobile number" }
   }
 
   let jobTotal = null
@@ -74,7 +70,6 @@ export function adminBookingFrom(body = {}) {
       jobDescription: mode === "homeinstall" ? text(body.jobDescription) || null : null,
       notes: text(body.notes) || null,
       reminderSmsChoice,
-      reminderSmsProof,
       jobTotal,
     },
   }

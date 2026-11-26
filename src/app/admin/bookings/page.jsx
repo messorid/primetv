@@ -42,7 +42,6 @@ const BLANK_FORM = {
   jobTotal: "",
   notes: "",
   reminderSmsChoice: "none",
-  reminderSmsProof: "",
   status: "pending",
 }
 
@@ -253,7 +252,6 @@ export default function BookingsPage() {
       jobTotal: newForm.jobTotal,
       notes: newForm.notes, status: newForm.status,
       reminderSmsChoice: newForm.reminderSmsChoice,
-      reminderSmsProof: newForm.reminderSmsProof,
     }
     try {
       const res  = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -970,7 +968,7 @@ export default function BookingsPage() {
                   <Field required autoComplete="tel-national" label="Phone *" value={newForm.phone}
                     onChange={value => setNewForm(form => {
                       const phone = formatUsPhone(value)
-                      return phone === form.phone ? form : { ...form, phone, reminderSmsChoice: "none", reminderSmsProof: "" }
+                      return phone === form.phone ? form : { ...form, phone, reminderSmsChoice: "none" }
                     })}
                     placeholder="(615) 000-0000" type="tel" />
                   <Field required autoComplete="email" label="Email *"      value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" type="email" />
@@ -997,7 +995,7 @@ export default function BookingsPage() {
               <div className="rounded-xl border border-gray-300 p-3">
                 <label htmlFor="new-reminder-sms" className="text-sm font-semibold text-gray-900">Appointment reminders by text</label>
                 <select id="new-reminder-sms" value={newForm.reminderSmsChoice}
-                  onChange={event => setNewForm(form => ({ ...form, reminderSmsChoice: event.target.value, reminderSmsProof: "" }))}
+                  onChange={event => setNewForm(form => ({ ...form, reminderSmsChoice: event.target.value }))}
                   className="mt-1 min-h-11 w-full rounded-xl border border-gray-500 px-3 py-2 text-base">
                   <option value="none">Permission not requested</option>
                   <option value="phone">Customer said yes on the call</option>
@@ -1008,16 +1006,6 @@ export default function BookingsPage() {
                   <summary className="cursor-pointer py-1 font-semibold">What to ask on the call</summary>
                   <p className="mt-1">{BOOKING_PHONE_CONSENT_TEXT}</p>
                 </details>
-                {newForm.reminderSmsChoice === "phone" && (
-                  <div className="mt-3">
-                    <label htmlFor="new-sms-proof" className="text-sm font-semibold text-gray-900">Call evidence reference *</label>
-                    <input id="new-sms-proof" value={newForm.reminderSmsProof} maxLength={200} required
-                      onChange={event => setNewForm(form => ({ ...form, reminderSmsProof: event.target.value }))}
-                      aria-describedby="new-sms-proof-hint"
-                      className="mt-1 min-h-11 w-full rounded-xl border border-gray-500 px-3 py-2 text-base" />
-                    <p id="new-sms-proof-hint" className="mt-1 text-sm text-gray-600">Enter the reference for the call recording or other evidence of the customer’s answer.</p>
-                  </div>
-                )}
               </div>
 
               {/* Schedule */}

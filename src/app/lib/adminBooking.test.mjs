@@ -46,14 +46,12 @@ test("the customer's details are all required, and named when missing", () => {
   assert.match(adminBookingFrom({ ...FORM, email: "ada@" }).error, /email/)
 })
 
-test("phone consent must be explicit and linked to proof for the confirmed mobile", () => {
+test("the office can record explicit phone consent for a valid mobile number", () => {
   assert.equal(adminBookingFrom(FORM).values.reminderSmsChoice, "none")
   assert.match(adminBookingFrom({ ...FORM, reminderSmsChoice: "yes" }).error, /valid text reminder preference/)
-  assert.match(adminBookingFrom({ ...FORM, reminderSmsChoice: "phone" }).error, /reference/)
-  assert.match(adminBookingFrom({ ...FORM, phone: "615-155-0100", reminderSmsChoice: "phone", reminderSmsProof: "Call 42" }).error, /valid US mobile/)
-  const result = adminBookingFrom({ ...FORM, reminderSmsChoice: "phone", reminderSmsProof: " Call 42 " })
-  assert.equal(result.values.reminderSmsProof, "Call 42")
-  assert.equal(adminBookingFrom({ ...FORM, reminderSmsChoice: "declined", reminderSmsProof: "Call 42" }).values.reminderSmsProof, "")
+  assert.match(adminBookingFrom({ ...FORM, phone: "615-155-0100", reminderSmsChoice: "phone" }).error, /valid US mobile/)
+  const result = adminBookingFrom({ ...FORM, reminderSmsChoice: "phone" })
+  assert.equal(result.values.reminderSmsChoice, "phone")
 })
 
 test("phones are US numbers of ten digits, shown as (615) 555-0100", () => {

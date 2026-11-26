@@ -180,8 +180,10 @@ realidad. El permiso verbal para recordatorios no cubre publicidad ni
 reactiva un número que dio de baja los mensajes.
 
 En **Admin → Bookings → New booking**, elige **Customer said yes on the call**
-y escribe la referencia de la evidencia. El panel guarda el permiso para esa
-cita. Registra **Customer declined** cuando el cliente rechace los SMS.
+después de escuchar la respuesta afirmativa del cliente. Al guardar la
+reserva, el panel registra la cita, el número, la fecha y hora, quién anotó el
+permiso y la versión del guion. Selecciona **Customer declined** si rechaza
+los SMS.
 Define `SMS_PHONE_CONSENT_LIVE=true` en producción solo después de que el
 registro de Twilio cubra el método telefónico y el equipo tenga listo el
 proceso de confirmación de alta que declaró en la campaña.

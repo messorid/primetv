@@ -181,7 +181,6 @@ export async function POST(request) {
         consentVersion: BOOKING_PHONE_CONSENT_VERSION,
         recordedBy: session.uid || "admin",
         bookingId,
-        note: v.reminderSmsProof,
       })
       const [bookingRows] = await sql.transaction([insertBooking, insertConsent])
       rows = bookingRows
