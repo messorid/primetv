@@ -3,8 +3,7 @@ export const dynamic = "force-dynamic"
 
 // POST /api/sms/consent { bookingId, action: "optout", note, recordedBy }
 //   The customer asked to stop some other way (by phone, in person). Blocks every
-//   text to that number. Consent itself can't be recorded by hand: the only way
-//   in is the box on the booking form, as the registered campaign says.
+//   text to that number. Opt-ins are recorded through the booking flows.
 
 import { neon } from "@neondatabase/serverless"
 import { isStaffRequest, unauthorized } from "@/lib/adminSession"

@@ -1,12 +1,14 @@
 "use client"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { MiniCalendar, TimeSlots } from "@/app/components/DateTimePicker"
 import ReviewSmsDialog from "../ReviewSmsDialog"
+import AdminDialog from "../AdminDialog"
 import { useMe } from "../useMe"
 import { BF_PROMOS } from "@/app/lib/blackFriday"
 import { HOME_INSTALL_LABELS, CABLE_RUN_PRICE } from "@/app/lib/clientEmail"
 import { formatUsPhone, isUsPhone } from "@/app/lib/usPhone"
+import { BOOKING_PHONE_CONSENT_TEXT } from "@/app/lib/smsConfig"
 
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const MONTHS_LONG  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -39,6 +41,8 @@ const BLANK_FORM = {
   cableConcealment: 0,
   jobTotal: "",
   notes: "",
+  reminderSmsChoice: "none",
+  reminderSmsProof: "",
   status: "pending",
 }
 
@@ -53,7 +57,7 @@ const STATUS_CONFIG = {
   pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 border-amber-200",     dot: "bg-amber-400"   },
   confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700 border-blue-200",        dot: "bg-blue-500"    },
   completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
-  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-500 border-gray-200",        dot: "bg-gray-300"    },
+  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-600 border-gray-200",        dot: "bg-gray-300"    },
 }
 
 const STATUS_FLOW = ["pending", "confirmed", "completed", "cancelled"]
@@ -147,6 +151,9 @@ export default function BookingsPage() {
   const [newDone,        setNewDone]        = useState("")   // what happened after a create
   const [newPhotos,      setNewPhotos]      = useState([])   // File[] for the crew only
   const [creating,       setCreating]       = useState(false)
+  const newResult = useRef(null)
+
+  useEffect(() => { if (newDone) newResult.current?.focus() }, [newDone])
 
   const [schedModal,     setSchedModal]     = useState(null) // { id, name }
   const [reviewSmsFor,   setReviewSmsFor]   = useState(null) // booking being texted
@@ -245,6 +252,8 @@ export default function BookingsPage() {
       cableConcealment: t === "homeinstall" ? 0 : newForm.cableConcealment,
       jobTotal: newForm.jobTotal,
       notes: newForm.notes, status: newForm.status,
+      reminderSmsChoice: newForm.reminderSmsChoice,
+      reminderSmsProof: newForm.reminderSmsProof,
     }
     try {
       const res  = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -270,7 +279,9 @@ export default function BookingsPage() {
       setNewForm(BLANK_FORM); setNewPhotos([])
       setNewDone((data.clientNotified
         ? `✓ Booking created and the confirmation emailed to ${data.booking.email}.`
-        : "✓ Booking created, but the confirmation email could not be sent — resend it from the booking.") + photoNote)
+        : "✓ Booking created. Resend the confirmation email from the booking.") +
+        (data.phoneConsentRecorded ? " Phone consent for this appointment's text reminders was recorded."
+          : data.smsConsentInvited ? " The email lets the customer opt in to text reminders." : "") + photoNote)
     } catch {
       setNewErr("Could not reach the server — try again")
     } finally {
@@ -646,7 +657,6 @@ export default function BookingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Bookings</h1>
-          <p className="text-sm text-gray-500 mt-0.5">All customer reservation requests</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadBookings}
@@ -655,7 +665,7 @@ export default function BookingsPage() {
           </button>
           <button onClick={() => { setNewForm(BLANK_FORM); setNewErr(""); setNewDone(""); setNewPhotos([]); setNewModal(true) }}
             className="flex items-center gap-2 text-sm font-bold text-white bg-[#E50914] hover:bg-red-700 rounded-xl px-4 py-2 shadow-sm transition">
-            + New
+            + New booking
           </button>
         </div>
       </div>
@@ -663,7 +673,7 @@ export default function BookingsPage() {
       {/* Period — narrows the stats and the list to a set of dates */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 sm:p-4 mb-4">
         <div className="flex items-center justify-between gap-3 mb-2.5">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Dates</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-600">Dates</p>
           <p className="text-sm font-semibold text-gray-700 truncate" aria-live="polite">{periodLabel(range)}</p>
         </div>
         <div role="group" aria-label="Show bookings for"
@@ -690,13 +700,13 @@ export default function BookingsPage() {
         {period.key === "custom" && (
           <div className="grid grid-cols-2 gap-3 mt-3">
             <label className="block">
-              <span className="block text-xs font-semibold text-gray-500 mb-1">From</span>
+              <span className="block text-xs font-semibold text-gray-600 mb-1">From</span>
               <input type="date" value={period.from} max={period.to || undefined}
                 onChange={e => setPeriod(p => ({ ...p, from: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
             </label>
             <label className="block">
-              <span className="block text-xs font-semibold text-gray-500 mb-1">To</span>
+              <span className="block text-xs font-semibold text-gray-600 mb-1">To</span>
               <input type="date" value={period.to} min={period.from || undefined}
                 onChange={e => setPeriod(p => ({ ...p, to: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
@@ -721,7 +731,7 @@ export default function BookingsPage() {
               className={`${s.bg} ${s.key === "all" ? "col-span-2 md:col-span-1" : ""} text-left rounded-2xl border p-3 sm:p-4 shadow-sm transition hover:shadow-md ${
                 on ? `border-transparent ring-2 ${s.ring}` : "border-gray-200"
               }`}>
-              <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
                 {s.key !== "all" && <span className={`w-2 h-2 rounded-full ${STATUS_CONFIG[s.key].dot}`} />}
                 {s.label}
               </span>
@@ -748,7 +758,7 @@ export default function BookingsPage() {
               ›
             </button>
             <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()) }}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-gray-50 transition">
+              className="text-xs font-semibold text-gray-600 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-gray-50 transition">
               Today
             </button>
           </div>
@@ -760,7 +770,7 @@ export default function BookingsPage() {
                 {" — "}{filtered.length} booking{filtered.length !== 1 ? "s" : ""}
               </span>
               <button onClick={() => choosePeriod("all")}
-                className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-red-50 transition">
+                className="text-xs text-gray-600 hover:text-red-700 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-red-50 transition">
                 Clear ×
               </button>
             </div>
@@ -770,7 +780,7 @@ export default function BookingsPage() {
         {/* Day-of-week headers */}
         <div className="grid grid-cols-7 mb-1 sm:mb-2">
           {DOW.map(d => (
-            <div key={d} className="text-center text-[10px] sm:text-xs font-semibold text-gray-400 py-1">
+            <div key={d} className="text-center text-[10px] sm:text-xs font-semibold text-gray-600 py-1">
               <span className="hidden sm:inline">{d}</span>
               <span className="sm:hidden">{d.charAt(0)}</span>
             </div>
@@ -794,7 +804,7 @@ export default function BookingsPage() {
                 onClick={() => pickDay(iso)}
                 aria-pressed={isSel}
                 aria-label={`${fmtDay(iso, { weekday: "long", month: "long", day: "numeric" })}, ${dayBs.length} booking${dayBs.length !== 1 ? "s" : ""}`}
-                className={`relative flex flex-col p-1 sm:p-1.5 rounded-lg sm:rounded-xl border text-left transition min-h-[36px] sm:min-h-[70px] ${
+                className={`relative flex flex-col p-1 sm:p-1.5 rounded-lg sm:rounded-xl border text-left transition min-h-11 min-w-0 sm:min-h-[70px] ${
                   isSel    ? "bg-[#E50914] border-[#E50914] shadow-md" :
                   isToday  ? "border-[#E50914]/40 bg-red-50" :
                   inRange  ? "border-red-100 bg-red-50/50 hover:border-[#E50914]/40" :
@@ -802,7 +812,7 @@ export default function BookingsPage() {
                              "border-transparent bg-gray-50/50 hover:bg-gray-100"
                 }`}
               >
-                <span className={`text-[10px] sm:text-xs font-bold ${isSel ? "text-white" : isToday ? "text-[#E50914]" : "text-gray-600"}`}>
+                <span className={`text-[10px] sm:text-xs font-bold ${isSel ? "text-white" : isToday ? "text-brand-dark" : "text-gray-600"}`}>
                   {d}
                 </span>
 
@@ -819,7 +829,7 @@ export default function BookingsPage() {
                       }`} />
                     ))}
                     {dayBs.length > 3 && (
-                      <span className={`text-[7px] font-bold leading-tight ${isSel ? "text-white/70" : "text-gray-400"}`}>
+                      <span className={`text-[7px] font-bold leading-tight ${isSel ? "text-white/70" : "text-gray-600"}`}>
                         +{dayBs.length - 3}
                       </span>
                     )}
@@ -832,14 +842,14 @@ export default function BookingsPage() {
                     isSel ? "bg-white/20 text-white" :
                     b.status === "confirmed" ? "bg-blue-100 text-blue-700" :
                     b.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-                    b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
+                    b.status === "cancelled" ? "bg-gray-100 text-gray-600" :
                     "bg-amber-100 text-amber-700"
                   }`}>
                     {b.firstName} {b.lastName?.charAt(0)}.
                   </span>
                 ))}
                 {dayBs.length > 2 && (
-                  <span className={`hidden sm:block text-[10px] font-semibold ${isSel ? "text-white/70" : "text-gray-400"}`}>
+                  <span className={`hidden sm:block text-[10px] font-semibold ${isSel ? "text-white/70" : "text-gray-600"}`}>
                     +{dayBs.length - 2} more
                   </span>
                 )}
@@ -853,7 +863,7 @@ export default function BookingsPage() {
           {STATUS_FLOW.map(s => (
             <div key={s} className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${STATUS_CONFIG[s].dot}`} />
-              <span className="text-xs text-gray-500">{STATUS_CONFIG[s].label}</span>
+              <span className="text-xs text-gray-600">{STATUS_CONFIG[s].label}</span>
             </div>
           ))}
         </div>
@@ -873,9 +883,9 @@ export default function BookingsPage() {
 
       {/* Booking list */}
       {loading ? (
-        <div className="text-center py-20 text-gray-400">Loading bookings…</div>
+        <div className="text-center py-20 text-gray-600">Loading bookings…</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-600">
           {selectedDay
             ? `No ${filter === "all" ? "" : STATUS_CONFIG[filter].label.toLowerCase() + " "}bookings on ${fmtDay(selectedDay, { weekday: "long", month: "long", day: "numeric" })}`
             : range
@@ -890,12 +900,12 @@ export default function BookingsPage() {
           ].filter(g => g.count > 0).map(g => (
             <section key={g.key} aria-label={`${g.title} bookings`}>
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-500">{g.title}</h2>
-                <span className="text-xs font-semibold text-gray-400 bg-white border border-gray-200 rounded-full px-2 py-0.5">{g.count}</span>
+                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-600">{g.title}</h2>
+                <span className="text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-full px-2 py-0.5">{g.count}</span>
                 <div className="flex-1 h-px bg-gray-200" />
                 {g.key === "past" && !range && !search.trim() && filter === "all" && (
                   <button type="button" onClick={() => setShowPast(v => !v)} aria-expanded={pastOpen}
-                    className="text-xs font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 bg-white rounded-lg px-2.5 py-1">
+                    className="text-xs font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 bg-white rounded-lg px-2.5 py-1">
                     {pastOpen ? "Hide" : "Show"}
                   </button>
                 )}
@@ -904,8 +914,8 @@ export default function BookingsPage() {
                 <div className="space-y-4">
                   {g.days.map(d => (
                     <div key={d.date}>
-                      <p className={`mb-2 text-xs font-bold ${d.date === todayISO ? "text-[#E50914]" : "text-gray-500"}`}>
-                        {dayLabel(d.date)} <span className="font-normal text-gray-400">· {d.items.length} job{d.items.length !== 1 ? "s" : ""}</span>
+                      <p className={`mb-2 text-xs font-bold ${d.date === todayISO ? "text-brand-dark" : "text-gray-600"}`}>
+                        {dayLabel(d.date)} <span className="font-normal text-gray-600">· {d.items.length} job{d.items.length !== 1 ? "s" : ""}</span>
                       </p>
                       <div className="space-y-2">
                         {d.items.map(renderCard)}
@@ -919,8 +929,8 @@ export default function BookingsPage() {
           {groups.undated.length > 0 && (
             <section aria-label="Bookings without a date">
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-500">No date</h2>
-                <span className="text-xs font-semibold text-gray-400 bg-white border border-gray-200 rounded-full px-2 py-0.5">{groups.undated.length}</span>
+                <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-600">No date</h2>
+                <span className="text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-full px-2 py-0.5">{groups.undated.length}</span>
                 <div className="flex-1 h-px bg-gray-200" />
               </div>
               <div className="space-y-2">{groups.undated.map(renderCard)}</div>
@@ -931,16 +941,10 @@ export default function BookingsPage() {
 
       {/* ── New Booking Modal ─────────────────────────────────────────────────── */}
       {newModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4 py-0 sm:py-8 overflow-y-auto">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg sm:my-auto">
-            <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100">
-              <h2 className="text-lg font-extrabold text-gray-900">New Booking</h2>
-              <button onClick={() => setNewModal(false)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
-            </div>
-
+        <AdminDialog title="New booking" className="max-w-lg scroll-pb-20" busy={creating} onClose={() => setNewModal(false)}>
             {newDone ? (
               <div className="px-5 sm:px-6 py-8 text-center">
-                <p className="text-sm font-semibold text-gray-800">{newDone}</p>
+                <p ref={newResult} tabIndex={-1} className="text-sm font-semibold text-gray-800">{newDone}</p>
                 <div className="mt-6 flex gap-3">
                   <button onClick={() => setNewModal(false)}
                     className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
@@ -952,20 +956,28 @@ export default function BookingsPage() {
                   </button>
                 </div>
               </div>
-            ) : (<>
-            <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto max-h-[75vh] sm:max-h-none">
+            ) : (
+            <form onSubmit={event => { event.preventDefault(); handleCreate() }} aria-busy={creating}>
+            <fieldset disabled={creating} className="min-w-0 space-y-5 px-5 py-5 sm:px-6">
+              <legend className="sr-only">Booking details</legend>
+              <p className="text-sm text-gray-700">Fields marked * are required.</p>
               {/* Customer */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Customer</p>
+                <h3 className="mb-3 text-base font-bold text-gray-900">Customer</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
-                  <Field label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
-                  <Field label="Phone *"      value={newForm.phone}     onChange={v => setNewForm(f => ({ ...f, phone: formatUsPhone(v) }))} placeholder="(615) 000-0000" type="tel" />
-                  <Field label="Email *"      value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" type="email" />
+                  <Field required autoComplete="given-name" label="First Name *" value={newForm.firstName} onChange={v => setNewForm(f => ({ ...f, firstName: v }))} placeholder="John" />
+                  <Field required autoComplete="family-name" label="Last Name *"  value={newForm.lastName}  onChange={v => setNewForm(f => ({ ...f, lastName: v }))}  placeholder="Smith" />
+                  <Field required autoComplete="tel-national" label="Phone *" value={newForm.phone}
+                    onChange={value => setNewForm(form => {
+                      const phone = formatUsPhone(value)
+                      return phone === form.phone ? form : { ...form, phone, reminderSmsChoice: "none", reminderSmsProof: "" }
+                    })}
+                    placeholder="(615) 000-0000" type="tel" />
+                  <Field required autoComplete="email" label="Email *"      value={newForm.email}     onChange={v => setNewForm(f => ({ ...f, email: v }))}     placeholder="email@example.com" type="email" />
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Referral</label>
-                    <select value={newForm.referral} onChange={e => setNewForm(f => ({ ...f, referral: e.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <label htmlFor="new-referral" className="text-xs font-semibold text-gray-700">Referral</label>
+                    <select id="new-referral" value={newForm.referral} onChange={e => setNewForm(f => ({ ...f, referral: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                       <option value="">—</option>
                       {/* A repeat customer's old answer may not be on the list; keep it. */}
                       {[...REFERRALS, ...(newForm.referral && !REFERRALS.includes(newForm.referral) ? [newForm.referral] : [])]
@@ -973,28 +985,54 @@ export default function BookingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Payment</label>
-                    <select value={newForm.payment} onChange={e => setNewForm(f => ({ ...f, payment: e.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <label htmlFor="new-payment" className="text-xs font-semibold text-gray-700">Payment</label>
+                    <select id="new-payment" value={newForm.payment} onChange={e => setNewForm(f => ({ ...f, payment: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                       {PAYMENTS.map(p => <option key={p}>{p}</option>)}
                     </select>
                   </div>
                 </div>
               </div>
 
+              <div className="rounded-xl border border-gray-300 p-3">
+                <label htmlFor="new-reminder-sms" className="text-sm font-semibold text-gray-900">Appointment reminders by text</label>
+                <select id="new-reminder-sms" value={newForm.reminderSmsChoice}
+                  onChange={event => setNewForm(form => ({ ...form, reminderSmsChoice: event.target.value, reminderSmsProof: "" }))}
+                  className="mt-1 min-h-11 w-full rounded-xl border border-gray-500 px-3 py-2 text-base">
+                  <option value="none">Permission not requested</option>
+                  <option value="phone">Customer said yes on the call</option>
+                  <option value="declined">Customer declined</option>
+                  <option value="email">Ask in the confirmation email</option>
+                </select>
+                <details className="mt-2 text-sm text-gray-700" open={newForm.reminderSmsChoice === "phone" || undefined}>
+                  <summary className="cursor-pointer py-1 font-semibold">What to ask on the call</summary>
+                  <p className="mt-1">{BOOKING_PHONE_CONSENT_TEXT}</p>
+                </details>
+                {newForm.reminderSmsChoice === "phone" && (
+                  <div className="mt-3">
+                    <label htmlFor="new-sms-proof" className="text-sm font-semibold text-gray-900">Call evidence reference *</label>
+                    <input id="new-sms-proof" value={newForm.reminderSmsProof} maxLength={200} required
+                      onChange={event => setNewForm(form => ({ ...form, reminderSmsProof: event.target.value }))}
+                      aria-describedby="new-sms-proof-hint"
+                      className="mt-1 min-h-11 w-full rounded-xl border border-gray-500 px-3 py-2 text-base" />
+                    <p id="new-sms-proof-hint" className="mt-1 text-sm text-gray-600">Enter the reference for the call recording or other evidence of the customer’s answer.</p>
+                  </div>
+                )}
+              </div>
+
               {/* Schedule */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Schedule</p>
+                <h3 className="mb-3 text-base font-bold text-gray-900">Schedule</h3>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Date</label>
-                    <input type="date" value={newForm.date} onChange={e => setNewForm(f => ({ ...f, date: e.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+                    <label htmlFor="new-date" className="text-xs font-semibold text-gray-700">Date</label>
+                    <input id="new-date" type="date" value={newForm.date} onChange={e => setNewForm(f => ({ ...f, date: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-red-300" />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Time</label>
-                    <select value={newForm.timePref} onChange={e => setNewForm(f => ({ ...f, timePref: e.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <label htmlFor="new-time" className="text-xs font-semibold text-gray-700">Time</label>
+                    <select id="new-time" value={newForm.timePref} onChange={e => setNewForm(f => ({ ...f, timePref: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                       {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                     </select>
                   </div>
@@ -1003,32 +1041,32 @@ export default function BookingsPage() {
 
               {/* Address */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Address</p>
+                <h3 className="mb-3 text-base font-bold text-gray-900">Address</h3>
                 <div className="space-y-2">
-                  <Field label="Street *" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
-                  <Field label="Apt / Unit" value={newForm.apt} onChange={v => setNewForm(f => ({ ...f, apt: v }))} placeholder="Apt 4B" />
+                  <Field required autoComplete="address-line1" label="Street *" value={newForm.street} onChange={v => setNewForm(f => ({ ...f, street: v }))} placeholder="123 Main St" />
+                  <Field autoComplete="address-line2" label="Apt / Unit" value={newForm.apt} onChange={v => setNewForm(f => ({ ...f, apt: v }))} placeholder="Apt 4B" />
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <div className="col-span-2 sm:col-span-1">
-                      <Field label="City *"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
+                      <Field required autoComplete="address-level2" label="City *"  value={newForm.city}  onChange={v => setNewForm(f => ({ ...f, city: v }))}  placeholder="Nashville" />
                     </div>
-                    <Field label="State *" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
-                    <Field label="ZIP *"   value={newForm.zip}   onChange={v => setNewForm(f => ({ ...f, zip: v }))}   placeholder="37201" />
+                    <Field required autoComplete="address-level1" label="State *" value={newForm.state} onChange={v => setNewForm(f => ({ ...f, state: v }))} placeholder="TN" />
+                    <Field required autoComplete="postal-code" inputMode="numeric" label="ZIP *"   value={newForm.zip}   onChange={v => setNewForm(f => ({ ...f, zip: v }))}   placeholder="37201" />
                   </div>
                 </div>
               </div>
 
               {/* Service */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Service</p>
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <h3 className="mb-3 text-base font-bold text-gray-900">Service</h3>
+                <div role="group" aria-label="Service type" className="grid grid-cols-2 gap-2 mb-3">
                   {[
                     { val: "tvs",         label: "Individual TVs"    },
                     { val: "promo",       label: "Package / Promo"   },
                     { val: "moreTvs",     label: "3+ TVs"            },
                     { val: "homeinstall", label: "Home Installation" },
                   ].map(opt => (
-                    <button key={opt.val} type="button" onClick={() => setNewForm(f => ({ ...f, serviceType: opt.val }))}
-                      className={`rounded-xl border py-2 text-xs font-semibold transition ${
+                    <button key={opt.val} type="button" aria-pressed={newForm.serviceType === opt.val} onClick={() => setNewForm(f => ({ ...f, serviceType: opt.val }))}
+                      className={`rounded-xl border min-h-11 py-2 text-sm font-semibold transition ${
                         newForm.serviceType === opt.val
                           ? "bg-[#E50914] text-white border-[#E50914]"
                           : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -1043,22 +1081,22 @@ export default function BookingsPage() {
                     {newForm.tvs.map((tv, idx) => (
                       <div key={idx} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-bold text-gray-500">TV #{idx + 1}</p>
+                          <p className="text-xs font-bold text-gray-700">TV #{idx + 1}</p>
                           {newForm.tvs.length > 1 && (
-                            <button type="button" onClick={() => removeTv(idx)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
+                            <button type="button" onClick={() => removeTv(idx)} aria-label={`Remove TV ${idx + 1}`} className="min-h-8 text-xs text-red-700 hover:underline">Remove</button>
                           )}
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-xs font-semibold text-gray-500">Size</label>
-                            <select value={tv.size} onChange={e => updateTv(idx, "size", e.target.value)}
+                            <label htmlFor={`new-tv-${idx}-size`} className="text-xs font-semibold text-gray-700">Size</label>
+                            <select id={`new-tv-${idx}-size`} value={tv.size} onChange={e => updateTv(idx, "size", e.target.value)}
                               className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                               {TV_SIZES.map(s => <option key={s}>{s}</option>)}
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs font-semibold text-gray-500">Wall Type</label>
-                            <select value={tv.wallType} onChange={e => updateTv(idx, "wallType", e.target.value)}
+                            <label htmlFor={`new-tv-${idx}-wallType`} className="text-xs font-semibold text-gray-700">Wall Type</label>
+                            <select id={`new-tv-${idx}-wallType`} value={tv.wallType} onChange={e => updateTv(idx, "wallType", e.target.value)}
                               className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                               {WALL_TYPES.map(w => <option key={w}>{w}</option>)}
                             </select>
@@ -1068,37 +1106,37 @@ export default function BookingsPage() {
                     ))}
                     {newForm.tvs.length < 5 && (
                       <button type="button" onClick={addTv}
-                        className="w-full rounded-xl border border-dashed border-gray-300 text-xs font-semibold text-gray-400 py-2 hover:border-gray-400 hover:text-gray-600 transition">
+                        className="w-full rounded-xl border border-dashed border-gray-300 text-xs font-semibold text-gray-600 py-2 hover:border-gray-400 hover:text-gray-600 transition">
                         + Add TV
                       </button>
                     )}
                   </div>
                 )}
                 {newForm.serviceType === "moreTvs" && (
-                  <textarea rows={2} value={newForm.moreTvsComment} onChange={e => setNewForm(f => ({ ...f, moreTvsComment: e.target.value }))}
+                  <textarea aria-label="TV installation details" rows={2} value={newForm.moreTvsComment} onChange={e => setNewForm(f => ({ ...f, moreTvsComment: e.target.value }))}
                     placeholder="Details (e.g. 4 TVs, pricing TBD)…"
-                    className="w-full rounded-xl border border-gray-200 bg-amber-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
+                    className="w-full rounded-xl border border-gray-200 bg-amber-50 px-3 py-2.5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
                 )}
                 {newForm.serviceType === "promo" && (
-                  <select value={newForm.promo} onChange={e => setNewForm(f => ({ ...f, promo: e.target.value }))}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                  <select aria-label="Package or promotion" value={newForm.promo} onChange={e => setNewForm(f => ({ ...f, promo: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                     {BF_PROMOS.map(p => <option key={p.id} value={p.label}>{p.label} — from ${p.amount}</option>)}
                   </select>
                 )}
                 {newForm.serviceType === "homeinstall" && (
                   <div className="space-y-2">
-                    <select value={newForm.homeInstallService} onChange={e => setNewForm(f => ({ ...f, homeInstallService: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
+                    <select aria-label="Home installation service" value={newForm.homeInstallService} onChange={e => setNewForm(f => ({ ...f, homeInstallService: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                       {Object.entries(HOME_INSTALL_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
                     </select>
-                    <textarea rows={2} value={newForm.jobDescription} onChange={e => setNewForm(f => ({ ...f, jobDescription: e.target.value }))}
+                    <textarea aria-label="Job description" rows={2} value={newForm.jobDescription} onChange={e => setNewForm(f => ({ ...f, jobDescription: e.target.value }))}
                       placeholder="What the customer asked for (the customer sees this)…"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
                   </div>
                 )}
                 {newForm.serviceType !== "homeinstall" && (
                   <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2.5">
-                    <span className="text-xs font-semibold text-gray-600">🔌 Hidden cable runs <span className="text-gray-400">(${CABLE_RUN_PRICE} each)</span></span>
+                    <span className="text-xs font-semibold text-gray-600">🔌 Hidden cable runs <span className="text-gray-600">(${CABLE_RUN_PRICE} each)</span></span>
                     <div className="flex items-center gap-2">
                       <button type="button" aria-label="One less cable run" disabled={newForm.cableConcealment === 0}
                         onClick={() => setNewForm(f => ({ ...f, cableConcealment: Math.max(0, f.cableConcealment - 1) }))}
@@ -1106,7 +1144,7 @@ export default function BookingsPage() {
                       <span className="w-6 text-center text-sm font-extrabold">{newForm.cableConcealment}</span>
                       <button type="button" aria-label="One more cable run"
                         onClick={() => setNewForm(f => ({ ...f, cableConcealment: Math.min(10, f.cableConcealment + 1) }))}
-                        className="w-8 h-8 rounded-full border border-[#E50914] text-[#E50914] font-bold">+</button>
+                        className="w-8 h-8 rounded-full border border-[#E50914] text-brand-dark font-bold">+</button>
                     </div>
                   </div>
                 )}
@@ -1114,22 +1152,22 @@ export default function BookingsPage() {
 
               {/* Total — the customer sees it too */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Total</p>
+                <h3 className="mb-3 text-base font-bold text-gray-900">Total</h3>
                 <AmountField label="Total to charge the customer" value={newForm.jobTotal}
                   onChange={v => setNewForm(f => ({ ...f, jobTotal: v }))} />
-                <p className="mt-1 text-[11px] text-gray-400">Shown in the customer&apos;s confirmation email and to the installers.</p>
+                <p className="mt-1 text-[11px] text-gray-600">Shown in the customer&apos;s confirmation email and to the installers.</p>
               </div>
 
               {/* Crew only */}
               <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/60 p-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-purple-700 mb-1">🔒 Installers only</p>
                 <p className="text-[11px] text-purple-700/80 mb-3">Never sent to the customer. The crew sees it in their job email and jobs page.</p>
-                <label className="text-xs font-semibold text-gray-600">Instructions for the installer</label>
-                <textarea rows={4} value={newForm.notes} onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
+                <label htmlFor="new-installer-notes" className="text-xs font-semibold text-gray-600">Instructions for the installer</label>
+                <textarea id="new-installer-notes" rows={4} value={newForm.notes} onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
                   placeholder="Everything they need to do: take down the old mount, move the dresser, bring the tall ladder…"
-                  className="mt-1 w-full rounded-xl border border-purple-200 bg-white px-3 py-2.5 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-purple-300" />
-                <label className="mt-3 block text-xs font-semibold text-gray-600">Photos</label>
-                <input type="file" accept="image/*" multiple
+                  className="mt-1 w-full rounded-xl border border-purple-200 bg-white px-3 py-2.5 text-base resize-y focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                <label htmlFor="new-photos" className="mt-3 block text-xs font-semibold text-gray-600">Photos</label>
+                <input id="new-photos" type="file" accept="image/*" multiple
                   onChange={e => setNewPhotos(Array.from(e.target.files || []).slice(0, 12))}
                   className="mt-1 block w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white" />
                 {newPhotos.length > 0 && (
@@ -1139,12 +1177,12 @@ export default function BookingsPage() {
 
               {/* Status */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Status</p>
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <h3 className="mb-3 text-base font-bold text-gray-900">Status</h3>
+                <div role="group" aria-label="Booking status" className="grid grid-cols-2 gap-2 mb-3">
                   {STATUS_FLOW.filter(s => owner || s !== "completed").map(s => (
-                    <button key={s} type="button" onClick={() => setNewForm(f => ({ ...f, status: s }))}
-                      className={`rounded-xl border py-2 text-xs font-semibold transition ${
-                        newForm.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                    <button key={s} type="button" aria-pressed={newForm.status === s} onClick={() => setNewForm(f => ({ ...f, status: s }))}
+                      className={`rounded-xl border min-h-11 py-2 text-sm font-semibold transition ${
+                        newForm.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-700 hover:bg-gray-50"
                       }`}>
                       {STATUS_CONFIG[s].label}
                     </button>
@@ -1152,30 +1190,29 @@ export default function BookingsPage() {
                 </div>
               </div>
 
-              {newErr && <p role="alert" className="text-xs text-red-500 font-medium">{newErr}</p>}
-            </div>
+              {newErr && <p role="alert" className="text-sm font-medium text-red-700">{newErr}</p>}
+            </fieldset>
 
-            <div className="flex gap-3 px-5 sm:px-6 pb-6 pt-2">
-              <button onClick={() => setNewModal(false)}
+            <div className="sticky bottom-0 flex gap-3 border-t border-gray-200 bg-white px-5 py-3 sm:px-6">
+              <button type="button" disabled={creating} onClick={() => setNewModal(false)}
                 className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
                 Cancel
               </button>
-              <button onClick={handleCreate} disabled={creating}
+              <button type="submit" disabled={creating}
                 className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-3 hover:bg-red-700 transition disabled:opacity-50">
                 {creating ? "Creating…" : "Create & email customer"}
               </button>
             </div>
-            </>)}
-          </div>
-        </div>
+            </form>
+            )}
+        </AdminDialog>
       )}
 
       {/* ── Complete Modal ────────────────────────────────────────────────────── */}
       {completeModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md p-5 sm:p-6">
-            <h2 className="text-lg font-extrabold text-gray-900 mb-0.5">Complete Booking</h2>
-            <p className="text-sm text-gray-500 mb-5">{completeModal.name}</p>
+        <AdminDialog title="Complete booking" className="max-w-md" busy={completing} onClose={() => setCompleteModal(null)}>
+          <div className="p-5 sm:p-6">
+            <p className="text-sm text-gray-600 mb-5">{completeModal.name}</p>
             {(() => {
               const cb = bookings.find(x => x._id === completeModal.id)
               if (!cb?.closeoutSignedAt) return null
@@ -1195,21 +1232,21 @@ export default function BookingsPage() {
                 hint="Mounts, cables, hardware, etc. — subtracted from the total first" />
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company Profit</label>
-                <p className="text-[10px] text-gray-400 mt-0.5">The rest goes to the worker(s)</p>
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Company Profit</label>
+                <p className="text-[10px] text-gray-600 mt-0.5">The rest goes to the worker(s)</p>
                 <div className="flex gap-2 mt-1.5">
                   <div className="flex rounded-xl border border-gray-200 overflow-hidden flex-none">
                     {["percent", "fixed"].map(t => (
                       <button key={t} type="button" onClick={() => setCompleteForm(f => ({ ...f, profitType: t }))}
                         className={`px-3 py-2.5 text-sm font-bold transition ${
-                          completeForm.profitType === t ? "bg-[#E50914] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                          completeForm.profitType === t ? "bg-[#E50914] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
                         }`}>
                         {t === "percent" ? "%" : "$"}
                       </button>
                     ))}
                   </div>
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 font-semibold">
                       {completeForm.profitType === "fixed" ? "$" : "%"}
                     </span>
                     <input type="number" step="0.01" value={completeForm.profitValue}
@@ -1223,11 +1260,11 @@ export default function BookingsPage() {
               {crewSplit.length > 0 && (
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">
                       Worker pay split
                     </p>
                     <span className={`text-[11px] font-bold ${
-                      Math.abs(crewTotal - 100) < 0.5 ? "text-emerald-600" : "text-red-500"
+                      Math.abs(crewTotal - 100) < 0.5 ? "text-emerald-700" : "text-red-700"
                     }`}>
                       {crewTotal.toFixed(0)}%
                     </span>
@@ -1247,7 +1284,7 @@ export default function BookingsPage() {
                                 i === idx ? { ...x, sharePct: v === "" ? "" : Number(v) } : x))
                             }}
                             className="w-20 rounded-lg border border-gray-200 pl-2 pr-6 py-1.5 text-xs text-right focus:outline-none focus:ring-2 focus:ring-red-300" />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">%</span>
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-600">%</span>
                         </div>
                         <span className="text-xs font-bold text-amber-700 w-20 text-right flex-none">
                           ${((ccWorkerPay * (Number(m.sharePct) || 0)) / 100).toFixed(2)}
@@ -1257,7 +1294,7 @@ export default function BookingsPage() {
                   </div>
 
                   {Math.abs(crewTotal - 100) >= 0.5 && (
-                    <p className="mt-2 text-[11px] font-medium text-red-500">
+                    <p className="mt-2 text-[11px] font-medium text-red-700">
                       The split has to add up to 100%.
                     </p>
                   )}
@@ -1273,7 +1310,7 @@ export default function BookingsPage() {
                             : even,
                         })))
                       }}
-                      className="mt-2 text-[10px] text-gray-400 hover:text-[#E50914] underline underline-offset-2"
+                      className="mt-2 text-[10px] text-gray-600 hover:text-brand-dark underline underline-offset-2"
                     >
                       split evenly
                     </button>
@@ -1283,23 +1320,23 @@ export default function BookingsPage() {
 
               {showPreview && (
                 <div className={`rounded-xl border p-4 space-y-1.5 ${ccProfit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-600">
                     <span>Subtotal (Charged − Materials)</span>
                     <span className="font-semibold text-gray-700">${ccSubtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-600">
                     <span>Worker Pay</span>
                     <span className="font-semibold text-gray-700">${ccWorkerPay.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-baseline border-t border-emerald-200 pt-1.5 mt-0.5">
-                    <p className={`text-xs font-semibold uppercase tracking-wide ${ccProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Company Profit</p>
-                    <p className={`text-2xl font-extrabold ${ccProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>${ccProfit.toFixed(2)}</p>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${ccProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>Company Profit</p>
+                    <p className={`text-2xl font-extrabold ${ccProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>${ccProfit.toFixed(2)}</p>
                   </div>
                 </div>
               )}
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setCompleteModal(null)}
+              <button disabled={completing} onClick={() => setCompleteModal(null)}
                 className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 hover:bg-gray-50 transition">Cancel</button>
               <button onClick={handleComplete} disabled={completing || !crewValid}
                 className="flex-1 rounded-xl bg-emerald-500 text-white text-sm font-bold py-2.5 hover:bg-emerald-600 transition disabled:opacity-50">
@@ -1307,24 +1344,16 @@ export default function BookingsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* ── Edit Schedule Modal ───────────────────────────────────────────────── */}
       {schedModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-0 sm:px-4 py-0 sm:py-8 overflow-y-auto">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg sm:my-auto">
-            <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100">
+        <AdminDialog title="Edit schedule" busy={savingSched} onClose={() => setSchedModal(null)}>
+            <div className="space-y-5 px-5 py-5 sm:px-6">
+              <p className="text-sm text-gray-700">{schedModal.name}</p>
               <div>
-                <h2 className="text-lg font-extrabold text-gray-900">Edit Schedule</h2>
-                <p className="text-sm text-gray-500">{schedModal.name}</p>
-              </div>
-              <button onClick={() => setSchedModal(null)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
-            </div>
-
-            <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto max-h-[75vh] sm:max-h-none">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Select Date</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-600 mb-3">Select Date</p>
                 <MiniCalendar selectedDate={schedDate} onChange={d => { setSchedDate(d); setSchedTime("") }} />
               </div>
 
@@ -1332,7 +1361,7 @@ export default function BookingsPage() {
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-3">
                     {new Date(schedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                    {schedTime && <span className="text-[#E50914] ml-2 font-bold">· {schedTime}</span>}
+                    {schedTime && <span className="text-brand-dark ml-2 font-bold">· {schedTime}</span>}
                   </p>
                   <TimeSlots selected={schedTime} onChange={setSchedTime} />
                 </div>
@@ -1340,7 +1369,7 @@ export default function BookingsPage() {
             </div>
 
             <div className="flex gap-3 px-5 sm:px-6 pb-6 pt-2">
-              <button onClick={() => setSchedModal(null)}
+              <button disabled={savingSched} onClick={() => setSchedModal(null)}
                 className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 transition">
                 Cancel
               </button>
@@ -1349,8 +1378,7 @@ export default function BookingsPage() {
                 {savingSched ? "Saving…" : "Save Changes"}
               </button>
             </div>
-          </div>
-        </div>
+        </AdminDialog>
       )}
 
       {reviewSmsFor && (
@@ -1501,6 +1529,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
     setSelectedInstaller("")
   }
 
+  const detailsId   = useId()
   const sc          = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending
   const fullName    = `${b.firstName} ${b.lastName}`
   const fullAddress = [b.address?.street, b.address?.apt, b.address?.city, b.address?.state, b.address?.zip].filter(Boolean).join(", ")
@@ -1510,21 +1539,22 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
   return (
     <div id={`booking-${b._id}`} className="scroll-mt-20 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 cursor-pointer hover:bg-gray-50 transition" onClick={onToggle}>
-        <div className={`w-2.5 h-2.5 rounded-full flex-none ${sc.dot}`} />
-
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{fullName}</p>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
-            {b.date
-              ? `📅 ${new Date(b.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-              : "No date"}
-            {b.timePreference && ` · ${b.timePreference}`}
-          </p>
-        </div>
+      <div className="flex items-center gap-2 px-3 py-2 transition hover:bg-gray-50 sm:gap-3 sm:px-5">
+        <button type="button" aria-expanded={expanded} aria-controls={expanded ? detailsId : undefined} onClick={onToggle}
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1 text-left sm:px-2">
+          <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${sc.dot}`} />
+          <span className="min-w-0 flex-1">
+            <span className="block break-words text-sm font-bold text-gray-900 sm:text-base">{fullName}</span>
+            <span className="mt-0.5 block text-xs text-gray-600">
+              {b.date ? fmtDay(b.date) : "No date"}
+              {b.timePreference && ` · ${b.timePreference}`}
+            </span>
+          </span>
+          <span aria-hidden="true" className="shrink-0 text-xs text-gray-600">{expanded ? "▲" : "▼"}</span>
+        </button>
 
         {b.status === "completed" && b.companyProfit != null && (
-          <span className="text-xs font-semibold text-emerald-600 flex-none">+${Number(b.companyProfit).toFixed(0)}</span>
+          <span className="text-xs font-semibold text-emerald-700 flex-none">+${Number(b.companyProfit).toFixed(0)}</span>
         )}
 
         {b.closeoutSignedAt && (
@@ -1539,7 +1569,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
 
         {/* Change the status without opening the card. Completed still goes
             through the completion form, as from inside the card. */}
-        <label className="relative flex-none" onClick={e => e.stopPropagation()}>
+        <label className="relative flex-none">
           <span className="sr-only">Status for {b.firstName} {b.lastName}</span>
           <select value={b.status} onChange={e => onStatus(e.target.value)}
             className={`appearance-none cursor-pointer text-xs font-semibold pl-2 sm:pl-2.5 pr-5 py-1 rounded-full border focus:outline-none focus:ring-2 focus:ring-red-300 ${sc.color}`}>
@@ -1551,16 +1581,15 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
         </label>
 
         <div className="text-right flex-none hidden md:block">
-          <p className="text-xs text-gray-400">{createdDate}</p>
-          <p className="text-xs text-gray-400">{createdTime}</p>
+          <p className="text-xs text-gray-600">{createdDate}</p>
+          <p className="text-xs text-gray-600">{createdTime}</p>
         </div>
 
-        <span className="text-gray-400 text-xs flex-none">{expanded ? "▲" : "▼"}</span>
       </div>
 
       {/* Expanded */}
       {expanded && (
-        <div className="border-t border-gray-100 px-4 sm:px-5 pb-5 pt-4">
+        <div id={detailsId} className="border-t border-gray-100 px-4 sm:px-5 pb-5 pt-4">
           {/* Signed off but not closed in the books yet: one tap to finish it */}
           {owner && b.closeoutSignedAt && b.status !== "completed" && b.status !== "cancelled" && (
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
@@ -1582,7 +1611,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                 disabled={!owner && s === "completed" && b.status !== "completed"}
                 title={!owner && s === "completed" ? "The owner marks jobs completed" : undefined}
                 className={`rounded-xl border py-2 text-xs font-semibold transition ${
-                  b.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                  b.status === s ? STATUS_CONFIG[s].color + " shadow-sm" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}>
                 {STATUS_CONFIG[s].label}
               </button>
@@ -1590,8 +1619,8 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
           </div>
 
           {/* Tabs */}
-          <div role="tablist" aria-label="Booking details"
-            className="-mx-4 sm:mx-0 px-4 sm:px-0 mb-4 flex gap-1 overflow-x-auto border-b border-gray-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div role="group" aria-label="Booking details"
+            className="mb-4 flex flex-wrap gap-1 border-b border-gray-200 pb-1">
             {[
               { id: "customer", label: "Customer" },
               { id: "job",      label: "Job" },
@@ -1599,20 +1628,20 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
               { id: "photos",   label: "Photos & closeout", flag: b.closeoutSignedAt ? "✓" : "" },
               { id: "notes",    label: "Notes", flag: (noteValue || "").trim() ? "•" : "" },
             ].map(t => (
-              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
+              <button key={t.id} type="button" aria-pressed={tab === t.id} onClick={() => setTab(t.id)}
                 className={`shrink-0 -mb-px border-b-2 px-3 py-2 text-sm font-semibold transition ${
-                  tab === t.id ? "border-[#E50914] text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
+                  tab === t.id ? "border-[#E50914] text-gray-900" : "border-transparent text-gray-600 hover:text-gray-800"
                 }`}>
                 {t.label}
                 {t.flag && (
-                  <span className={`ml-1.5 text-xs font-bold ${t.flag === "!" ? "text-amber-600" : t.flag === "✓" ? "text-emerald-600" : "text-gray-400"}`}>{t.flag}</span>
+                  <span className={`ml-1.5 text-xs font-bold ${t.flag === "!" ? "text-amber-800" : t.flag === "✓" ? "text-emerald-700" : "text-gray-600"}`}>{t.flag}</span>
                 )}
               </button>
             ))}
           </div>
 
           {tab === "customer" && (
-            <section role="tabpanel" aria-label="Customer" className="max-w-xl">
+            <section aria-label="Customer" className="max-w-xl">
               <div className="flex items-center justify-between mb-3">
                 <SectionTitleRaw>Customer</SectionTitleRaw>
                 {!editCustomer && (
@@ -1625,7 +1654,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       setCustErr("")
                       setEditCustomer(true)
                     }}
-                    className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition"
+                    className="text-[10px] text-gray-600 hover:text-brand-dark border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition"
                   >
                     edit
                   </button>
@@ -1649,7 +1678,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     onChange={e => setCustForm(f => ({ ...f, phone: e.target.value }))}
                     className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
 
-                  {custErr && <p className="text-[11px] font-medium text-red-500">{custErr}</p>}
+                  {custErr && <p className="text-[11px] font-medium text-red-700">{custErr}</p>}
 
                   <div className="flex gap-2">
                     <button onClick={handleSaveCustomer} disabled={savingCust}
@@ -1657,7 +1686,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       {savingCust ? "Saving…" : "Save"}
                     </button>
                     <button onClick={() => { setEditCustomer(false); setCustErr("") }}
-                      className="rounded-lg border border-gray-200 text-gray-500 text-xs px-3 py-2 hover:bg-gray-100 transition">
+                      className="rounded-lg border border-gray-200 text-gray-600 text-xs px-3 py-2 hover:bg-gray-100 transition">
                       Cancel
                     </button>
                   </div>
@@ -1667,10 +1696,10 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   <InfoRow icon="👤" value={fullName} />
                   <InfoRow icon="✉️" value={b.email
                     ? <a href={`mailto:${b.email}`} className="text-blue-600 hover:underline">{b.email}</a>
-                    : <span className="text-gray-400">no email</span>} />
+                    : <span className="text-gray-600">no email</span>} />
                   <InfoRow icon="📞" value={b.phone
                     ? <a href={`tel:${b.phone}`} className="text-blue-600 hover:underline">{b.phone}</a>
-                    : <span className="text-gray-400">no phone</span>} />
+                    : <span className="text-gray-600">no phone</span>} />
                   <InfoRow icon="📍" value={fullAddress || "—"} />
                   <InfoRow icon="💬" value={b.referral || "—"} label="Referral" />
                   <InfoRow icon="💳" value={b.payment || "—"} label="Payment" />
@@ -1685,7 +1714,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                         : clientResendState === "error"
                         ? "border-red-200 bg-red-50 text-red-600"
-                        : "border-gray-200 text-gray-600 hover:border-[#E50914]/40 hover:text-[#E50914]"
+                        : "border-gray-200 text-gray-600 hover:border-[#E50914]/40 hover:text-brand-dark"
                     }`}
                   >
                     {resendingClient
@@ -1697,7 +1726,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       : "✉️ Resend confirmation to customer"}
                   </button>
                   {!b.email && (
-                    <p className="mt-1 text-[10px] text-gray-400">
+                    <p className="mt-1 text-[10px] text-gray-600">
                       Add an email above to enable this.
                     </p>
                   )}
@@ -1729,7 +1758,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     </button>
                   )}
                   {b.reviewRequestedAt && (
-                    <p className="mt-1 text-[10px] text-gray-400">
+                    <p className="mt-1 text-[10px] text-gray-600">
                       Sent {new Date(b.reviewRequestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       {b.reviewRequestCount > 1 ? ` · ${b.reviewRequestCount} times` : ""}
                     </p>
@@ -1740,11 +1769,11 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
           )}
 
           {tab === "job" && (
-            <section role="tabpanel" aria-label="Job" className="max-w-2xl">
+            <section aria-label="Job" className="max-w-2xl">
               <div className="flex items-center justify-between mb-3">
                 <SectionTitleRaw>Service Details</SectionTitleRaw>
                 <button onClick={e => { e.stopPropagation(); onEditSchedule() }}
-                  className="flex items-center gap-1 text-xs font-semibold text-[#E50914] hover:bg-red-50 border border-[#E50914]/30 rounded-lg px-2.5 py-1 transition">
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-dark hover:bg-red-50 border border-[#E50914]/30 rounded-lg px-2.5 py-1 transition">
                   ✏️ Edit Schedule
                 </button>
               </div>
@@ -1753,14 +1782,14 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
               <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 mb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Appointment</p>
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Appointment</p>
                     <p className="text-sm font-semibold text-gray-800">
                       {b.date
                         ? new Date(b.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
-                        : <span className="text-gray-400 italic">No date set</span>}
+                        : <span className="text-gray-600 italic">No date set</span>}
                     </p>
                     {b.timePreference && (
-                      <p className="text-sm text-[#E50914] font-bold mt-0.5">{b.timePreference}</p>
+                      <p className="text-sm text-brand-dark font-bold mt-0.5">{b.timePreference}</p>
                     )}
                   </div>
                 </div>
@@ -1787,9 +1816,9 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
               )}
               {b.selectedPromo && (
                 <div className="mt-2 rounded-xl bg-red-50 border border-red-100 p-3">
-                  <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide mb-1">Promo Package</p>
+                  <p className="text-xs font-bold text-brand-dark uppercase tracking-wide mb-1">Promo Package</p>
                   <p className="text-sm font-semibold text-gray-800">{b.selectedPromo}</p>
-                  <p className="text-lg font-extrabold text-[#E50914] mt-1">{PROMO_PRICES[b.selectedPromo] || "See quote"}</p>
+                  <p className="text-lg font-extrabold text-brand-dark mt-1">{PROMO_PRICES[b.selectedPromo] || "See quote"}</p>
                 </div>
               )}
               {b.moreTvs && (
@@ -1805,9 +1834,9 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       tv.model === "frame" ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-100"
                     }`}>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-xs font-bold text-gray-500">TV #{i + 1}</p>
+                        <p className="text-xs font-bold text-gray-600">TV #{i + 1}</p>
                         {tv.model === "frame" && (
-                          <span className="text-[10px] font-bold uppercase tracking-wide text-[#E50914] bg-white border border-red-200 rounded-full px-2 py-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-brand-dark bg-white border border-red-200 rounded-full px-2 py-0.5">
                             🖼️ Frame TV — quote
                           </span>
                         )}
@@ -1816,10 +1845,10 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                         {tv.size ? `${tv.size}"` : "Size n/a"}{tv.exactSize ? ` (${tv.exactSize}")` : ""}
                       </p>
                       {tv.measurements && (
-                        <p className="text-xs font-medium text-[#E50914] mt-0.5">📐 {tv.measurements}</p>
+                        <p className="text-xs font-medium text-brand-dark mt-0.5">📐 {tv.measurements}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-0.5">{tv.wallType}</p>
-                      {tv.comments && <p className="text-xs text-gray-400 mt-0.5 italic">&quot;{tv.comments}&quot;</p>}
+                      <p className="text-xs text-gray-600 mt-0.5">{tv.wallType}</p>
+                      {tv.comments && <p className="text-xs text-gray-600 mt-0.5 italic">&quot;{tv.comments}&quot;</p>}
                     </div>
                   ))}
                 </div>
@@ -1834,11 +1863,11 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
               {b.customQuote && (
                 <div className="mt-2 rounded-xl bg-red-50 border border-red-200 p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-[#E50914] uppercase tracking-wide">
+                    <p className="text-xs font-bold text-brand-dark uppercase tracking-wide">
                       Custom Quote{b.customMode === "sized" ? " — TV Size & Qty" : " — Comment Only"}
                     </p>
                     {b.customPrice != null && (
-                      <p className="text-lg font-extrabold text-[#E50914]">${Number(b.customPrice).toFixed(2)}</p>
+                      <p className="text-lg font-extrabold text-brand-dark">${Number(b.customPrice).toFixed(2)}</p>
                     )}
                   </div>
                   {b.customMode === "sized" && b.customTvSize && (
@@ -1856,7 +1885,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
           )}
 
           {tab === "crew" && (
-            <section role="tabpanel" aria-label="Crew and pay" className="grid gap-6 md:grid-cols-2">
+            <section aria-label="Crew and pay" className="grid gap-6 md:grid-cols-2">
               <div>
               <SectionTitle>Crew</SectionTitle>
 
@@ -1867,13 +1896,13 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       className="rounded-xl bg-blue-50 border border-blue-100 p-3">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
-                          <span className="text-[#E50914] font-bold text-xs">
+                          <span className="text-brand-dark font-bold text-xs">
                             {(m.installerName || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-gray-800 truncate">{m.installerName}</p>
-                          <p className="text-xs text-gray-500 truncate">{m.installerEmail || ""}</p>
+                          <p className="text-xs text-gray-600 truncate">{m.installerEmail || ""}</p>
                         </div>
                         <div className="text-right flex-none">
                           <p className="text-sm font-extrabold text-blue-700">
@@ -1888,7 +1917,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   ))}
 
                   {crew.length > 1 && (
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-gray-600">
                       Worker pay is divided between them by these percentages.
                     </p>
                   )}
@@ -1898,7 +1927,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     disabled={resending}
                     className={`w-full rounded-xl border text-xs font-semibold py-1.5 transition ${
                       resendOk
-                        ? "border-emerald-300 bg-emerald-50 text-emerald-600"
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                         : "border-blue-200 text-blue-600 hover:bg-blue-100"
                     }`}
                   >
@@ -1906,12 +1935,12 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 mb-3">No crew assigned yet</p>
+                <p className="text-xs text-gray-600 mb-3">No crew assigned yet</p>
               )}
 
               {installers.length > 0 && (
                 <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">
                     Assign crew
                   </p>
                   <div className="space-y-1.5 mb-2">
@@ -1923,13 +1952,13 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                             on ? "bg-[#E50914] text-white border-[#E50914]" : "bg-white border-gray-200 hover:bg-gray-100"
                           }`}>
                           <span className={`size-4 rounded border flex items-center justify-center text-[10px] flex-none ${
-                            on ? "bg-white text-[#E50914] border-white" : "border-gray-300"
+                            on ? "bg-white text-brand-dark border-white" : "border-gray-300"
                           }`}>
                             {on ? "✓" : ""}
                           </span>
                           <span className="text-xs font-semibold flex-1 truncate">{i.name}</span>
                           {owner && (
-                            <span className={`text-[10px] flex-none ${on ? "text-white/70" : "text-gray-400"}`}>
+                            <span className={`text-[10px] flex-none ${on ? "text-white/70" : "text-gray-600"}`}>
                               weight {i.crewShare ?? 50}
                             </span>
                           )}
@@ -1939,7 +1968,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   </div>
 
                   {owner && crewPick.length > 1 && (
-                    <p className="text-[11px] text-gray-500 mb-2">
+                    <p className="text-[11px] text-gray-600 mb-2">
                       Split:{" "}
                       {(() => {
                         const picked = crewPick.map(id => installers.find(i => i.id === id)).filter(Boolean)
@@ -1951,7 +1980,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     </p>
                   )}
 
-                  {crewErr && <p className="text-[11px] font-medium text-red-500 mb-2">{crewErr}</p>}
+                  {crewErr && <p className="text-[11px] font-medium text-red-700 mb-2">{crewErr}</p>}
 
                   {(() => {
                     const saved   = crewIds ? crewIds.split(",") : []
@@ -1963,10 +1992,10 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     return (
                       <>
                         {changed && (added > 0 || removed > 0) && (
-                          <p className="text-[11px] text-gray-500 mb-2">
-                            {added > 0 && <span className="text-emerald-600 font-semibold">+{added} added</span>}
+                          <p className="text-[11px] text-gray-600 mb-2">
+                            {added > 0 && <span className="text-emerald-700 font-semibold">+{added} added</span>}
                             {added > 0 && removed > 0 && " · "}
-                            {removed > 0 && <span className="text-red-500 font-semibold">-{removed} removed</span>}
+                            {removed > 0 && <span className="text-red-700 font-semibold">-{removed} removed</span>}
                           </p>
                         )}
 
@@ -2004,7 +2033,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Paid Workers</span>
-                      <span className="font-semibold text-red-500">−${Number(b.amountPaidWorkers).toFixed(2)}</span>
+                      <span className="font-semibold text-red-700">−${Number(b.amountPaidWorkers).toFixed(2)}</span>
                     </div>
 
                     {/* Materials — inline editable */}
@@ -2012,7 +2041,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                       <span className="text-gray-600">Materials & Tools</span>
                       {editMaterials ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-gray-400 text-xs">$</span>
+                          <span className="text-gray-600 text-xs">$</span>
                           <input
                             type="number" step="0.01" min="0"
                             value={materialsVal}
@@ -2025,18 +2054,18 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                             {savingMat ? "…" : "✓"}
                           </button>
                           <button onClick={() => setEditMaterials(false)}
-                            className="rounded-lg border border-gray-200 text-gray-400 text-xs px-2 py-1 hover:bg-gray-100 transition">
+                            className="rounded-lg border border-gray-200 text-gray-600 text-xs px-2 py-1 hover:bg-gray-100 transition">
                             ✕
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-red-500">
+                          <span className="font-semibold text-red-700">
                             −${Number(b.materialsCost || 0).toFixed(2)}
                           </span>
                           <button
                             onClick={() => { setMaterialsVal(String(b.materialsCost || "")); setEditMaterials(true) }}
-                            className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                            className="text-[10px] text-gray-600 hover:text-brand-dark border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
                             edit
                           </button>
                         </div>
@@ -2055,7 +2084,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                             {["percent", "fixed"].map(t => (
                               <button key={t} onClick={() => setProfitTypeVal(t)}
                                 className={`px-1.5 py-1 text-[10px] font-bold transition ${
-                                  profitTypeVal === t ? "bg-[#E50914] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                                  profitTypeVal === t ? "bg-[#E50914] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
                                 }`}>
                                 {t === "percent" ? "%" : "$"}
                               </button>
@@ -2073,7 +2102,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                             {savingProfit ? "…" : "✓"}
                           </button>
                           <button onClick={() => setEditProfit(false)}
-                            className="rounded-lg border border-gray-200 text-gray-400 text-xs px-2 py-1 hover:bg-gray-100 transition">
+                            className="rounded-lg border border-gray-200 text-gray-600 text-xs px-2 py-1 hover:bg-gray-100 transition">
                             ✕
                           </button>
                         </div>
@@ -2082,7 +2111,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                           <span className="font-extrabold text-emerald-700">${Number(b.companyProfit).toFixed(2)}</span>
                           <button
                             onClick={() => { setProfitTypeVal(b.profitType || "percent"); setProfitValueVal(String(b.profitValue ?? "")); setEditProfit(true) }}
-                            className="text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                            className="text-[10px] text-gray-600 hover:text-brand-dark border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
                             edit
                           </button>
                         </div>
@@ -2092,7 +2121,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                 </div>
               )}
                 {!(b.status === "completed" && b.amountCharged != null) && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-600">
                     The amounts are recorded when the job is marked <strong>Completed</strong>.
                   </p>
                 )}
@@ -2102,7 +2131,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
           )}
 
           {tab === "photos" && (
-            <section role="tabpanel" aria-label="Photos and closeout" className="grid gap-6 md:grid-cols-2">
+            <section aria-label="Photos and closeout" className="grid gap-6 md:grid-cols-2">
               <div><JobCloseout bookingId={b._id} active={expanded} hasCrew={crew.some(m => m.installerEmail)}
                 onChange={onCloseoutChange} /></div>
 
@@ -2111,8 +2140,8 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
           )}
 
           {tab === "notes" && (
-            <section role="tabpanel" aria-label="Notes" className="max-w-xl">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Internal Notes</label>
+            <section aria-label="Notes" className="max-w-xl">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Internal Notes</label>
               <textarea rows={3} value={noteValue} onChange={e => onNoteChange(e.target.value)}
                 placeholder="Add notes about this booking…"
                 className="mt-1.5 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
@@ -2121,7 +2150,7 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
                   Save Note
                 </button>
                 {owner && (
-                  <button onClick={onDelete} className="rounded-xl border border-red-200 text-red-500 text-xs font-semibold px-4 py-2 hover:bg-red-50 transition">
+                  <button onClick={onDelete} className="rounded-xl border border-red-200 text-red-700 text-xs font-semibold px-4 py-2 hover:bg-red-50 transition">
                     Delete
                   </button>
                 )}
@@ -2137,39 +2166,42 @@ function BookingCard({ booking: b, owner = false, initialTab, expanded, noteValu
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
 
 function SectionTitle({ children }) {
-  return <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">{children}</p>
+  return <p className="text-xs font-bold uppercase tracking-widest text-gray-600 mb-3">{children}</p>
 }
 function SectionTitleRaw({ children }) {
-  return <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{children}</p>
+  return <p className="text-xs font-bold uppercase tracking-widest text-gray-600">{children}</p>
 }
 function InfoRow({ icon, value, label }) {
   return (
     <div className="flex items-start gap-2 mb-2">
       <span className="text-sm flex-none w-5">{icon}</span>
       <div className="min-w-0">
-        {label && <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">{label}</p>}
+        {label && <p className="text-[10px] uppercase tracking-wide text-gray-600 font-semibold">{label}</p>}
         <p className="text-sm text-gray-700 break-words">{value}</p>
       </div>
     </div>
   )
 }
-function Field({ label, value, onChange, placeholder, type = "text" }) {
+function Field({ label, value, onChange, placeholder, type = "text", required, autoComplete, inputMode }) {
+  const id = useId()
   return (
     <div>
-      <label className="text-xs font-semibold text-gray-500">{label}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
+      <label htmlFor={id} className="text-sm font-semibold text-gray-700">{label}</label>
+      <input id={id} type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        required={required} autoComplete={autoComplete} inputMode={inputMode}
+        className="mt-1 min-h-11 w-full rounded-xl border border-gray-500 px-3 py-2.5 text-base" />
     </div>
   )
 }
 function AmountField({ label, value, onChange, hint }) {
+  const id = useId()
   return (
     <div>
-      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</label>
-      {hint && <p className="text-[10px] text-gray-400 mt-0.5">{hint}</p>}
+      <label htmlFor={id} className="text-sm font-semibold text-gray-700">{label}</label>
+      {hint && <p id={`${id}-hint`} className="mt-0.5 text-xs text-gray-600">{hint}</p>}
       <div className="relative mt-1.5">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
-        <input type="number" step="0.01" value={value} onChange={e => onChange(e.target.value)} placeholder="0.00"
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 font-semibold">$</span>
+        <input id={id} aria-describedby={hint ? `${id}-hint` : undefined} type="number" step="0.01" value={value} onChange={e => onChange(e.target.value)} placeholder="0.00"
           className="w-full rounded-xl border border-gray-200 pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300" />
       </div>
     </div>
@@ -2282,20 +2314,20 @@ function JobCloseout({ bookingId, active, hasCrew, onChange }) {
   return (
     <div className="mb-5 rounded-xl border border-gray-200 p-3">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">✍️ Job closeout</p>
-        {loading ? <span className="text-[10px] text-gray-400">Loading…</span>
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">✍️ Job closeout</p>
+        {loading ? <span className="text-[10px] text-gray-600">Loading…</span>
           : v && (s
             ? <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">Signed</span>
-            : <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">Not signed</span>)}
+            : <span className="text-[10px] font-bold uppercase tracking-wide text-gray-600 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">Not signed</span>)}
       </div>
 
       {v && s && (
         <div className="mb-3 space-y-1 text-xs text-gray-700">
-          <p><span className="text-gray-400">Signed by</span> <strong>{s.name}</strong>
+          <p><span className="text-gray-600">Signed by</span> <strong>{s.name}</strong>
             {" · "}{new Date(s.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
-          <p><span className="text-gray-400">Tip</span> <strong className={s.tip > 0 ? "text-emerald-700" : ""}>
+          <p><span className="text-gray-600">Tip</span> <strong className={s.tip > 0 ? "text-emerald-700" : ""}>
             {s.tip > 0 ? `$${Number(s.tip).toFixed(2)}${s.tipMethod ? ` · ${s.tipMethod}` : ""}` : "No tip"}</strong></p>
-          {s.notes && <p className="whitespace-pre-line"><span className="text-gray-400">Notes</span> {s.notes}</p>}
+          {s.notes && <p className="whitespace-pre-line"><span className="text-gray-600">Notes</span> {s.notes}</p>}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`${s.signatureUrl}?t=${encodeURIComponent(s.at)}`} alt={`Signature of ${s.name}`}
             className="mt-1.5 h-16 w-auto rounded-lg border border-gray-200 bg-white" />
@@ -2314,7 +2346,7 @@ function JobCloseout({ bookingId, active, hasCrew, onChange }) {
         </div>
       )}
       {v && !s && v.photos.length === 0 && (
-        <p className="mb-3 text-[11px] text-gray-400">The installer opens this at the end of the job, adds photos, and the customer tips and signs.</p>
+        <p className="mb-3 text-[11px] text-gray-600">The installer opens this at the end of the job, adds photos, and the customer tips and signs.</p>
       )}
 
       {v && (
@@ -2334,7 +2366,7 @@ function JobCloseout({ bookingId, active, hasCrew, onChange }) {
           </button>
           {canShare && (
             <button type="button" onClick={copy}
-              className="col-span-2 text-[11px] font-semibold text-gray-400 hover:text-gray-700">
+              className="col-span-2 text-[11px] font-semibold text-gray-600 hover:text-gray-700">
               Copy link
             </button>
           )}
@@ -2346,15 +2378,15 @@ function JobCloseout({ bookingId, active, hasCrew, onChange }) {
           )}
           {s && (
             <button type="button" onClick={reopen} disabled={!!busy}
-              className="col-span-2 text-[11px] font-semibold text-gray-400 hover:text-red-500 disabled:opacity-40">
+              className="col-span-2 text-[11px] font-semibold text-gray-600 hover:text-red-700 disabled:opacity-40">
               {busy === "reopen" ? "Reopening…" : "Reopen for a new signature"}
             </button>
           )}
         </div>
       )}
 
-      {flash && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-600">{flash}</p>}
-      {err && <p role="alert" className="mt-2 text-[11px] font-medium text-red-500">{err}</p>}
+      {flash && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-700">{flash}</p>}
+      {err && <p role="alert" className="mt-2 text-[11px] font-medium text-red-700">{err}</p>}
     </div>
   )
 }
@@ -2416,13 +2448,13 @@ function JobPhotos({ bookingId, active }) {
   return (
     <div className="mb-5">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Job Photos {photos.length > 0 && <span className="text-gray-400">({photos.length})</span>}
+        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          Job Photos {photos.length > 0 && <span className="text-gray-600">({photos.length})</span>}
         </label>
-        {loading && <span className="text-[10px] text-gray-400">Loading…</span>}
+        {loading && <span className="text-[10px] text-gray-600">Loading…</span>}
       </div>
 
-      <p className="text-[11px] text-gray-400 mb-2 leading-snug">
+      <p className="text-[11px] text-gray-600 mb-2 leading-snug">
         Photos are attached to the installer&apos;s job email. Upload before assigning, or
         re-send the email after adding them.
       </p>
@@ -2451,8 +2483,8 @@ function JobPhotos({ bookingId, active }) {
 
       <label className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-3 py-3 text-xs font-semibold transition cursor-pointer ${
         uploading
-          ? "border-gray-200 text-gray-400 cursor-wait"
-          : "border-gray-300 text-gray-600 hover:border-[#E50914] hover:text-[#E50914]"
+          ? "border-gray-200 text-gray-600 cursor-wait"
+          : "border-gray-300 text-gray-600 hover:border-[#E50914] hover:text-brand-dark"
       }`}>
         <input
           type="file"
@@ -2465,7 +2497,7 @@ function JobPhotos({ bookingId, active }) {
         {uploading ? "Uploading…" : "📷 Add Photos"}
       </label>
 
-      {err && <p className="mt-1.5 text-[11px] font-medium text-red-500">{err}</p>}
+      {err && <p className="mt-1.5 text-[11px] font-medium text-red-700">{err}</p>}
 
       {preview && (
         <div

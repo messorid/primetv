@@ -194,13 +194,13 @@ export default function InsightsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900">Insights</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Revenue, expenses & profit overview</p>
+            <p className="text-sm text-gray-600 mt-0.5">Revenue, expenses & profit overview</p>
           </div>
           <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm self-start sm:self-auto overflow-x-auto max-w-full">
             {PERIODS.map(p => (
               <button key={p} onClick={() => selectPeriod(p)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-none ${
-                  !usingCustomRange && period === p ? "bg-[#E50914] text-white" : "text-gray-500 hover:text-gray-900"
+                  !usingCustomRange && period === p ? "bg-[#E50914] text-white" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {p}
@@ -212,18 +212,18 @@ export default function InsightsPage() {
         {/* Filters row: custom date range + installer */}
         <div className="flex flex-wrap items-end gap-3 bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">From</label>
-            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+            <label htmlFor="insights-from" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">From</label>
+            <input id="insights-from" type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">To</label>
-            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+            <label htmlFor="insights-to" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">To</label>
+            <input id="insights-to" type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
           {usingCustomRange && (
             <button onClick={() => { setCustomFrom(""); setCustomTo("") }}
-              className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 transition">
+              className="text-xs text-gray-600 hover:text-red-700 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 transition">
               Clear range ×
             </button>
           )}
@@ -231,8 +231,8 @@ export default function InsightsPage() {
           <div className="ml-auto flex items-end gap-3">
             {installerNames.length > 0 && (
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Installer</label>
-                <select value={installerFilter} onChange={e => setInstallerFilter(e.target.value)}
+                <label htmlFor="insights-installer" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">Installer</label>
+                <select id="insights-installer" value={installerFilter} onChange={e => setInstallerFilter(e.target.value)}
                   className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                   <option value="all">All installers</option>
                   {installerNames.map(n => <option key={n} value={n}>{n}</option>)}
@@ -240,8 +240,8 @@ export default function InsightsPage() {
               </div>
             )}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Sort</label>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+              <label htmlFor="insights-sort" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">Sort</label>
+              <select id="insights-sort" value={sortBy} onChange={e => setSortBy(e.target.value)}
                 className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300">
                 {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
@@ -251,7 +251,7 @@ export default function InsightsPage() {
       </div>
 
       {loading ? (
-        <p className="text-center py-20 text-gray-400">Loading…</p>
+        <p className="text-center py-20 text-gray-600">Loading…</p>
       ) : (
         <>
           {/* Stat Cards */}
@@ -270,7 +270,7 @@ export default function InsightsPage() {
               label="Net Profit"
               value={`$${netProfit.toFixed(2)}`}
               bg={netProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}
-              color={netProfit >= 0 ? "text-emerald-600" : "text-red-500"}
+              color={netProfit >= 0 ? "text-emerald-700" : "text-red-700"}
               hint="After workers, materials & expenses"
             />
           </div>
@@ -280,16 +280,16 @@ export default function InsightsPage() {
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-gray-800">Lead Sources</h2>
-                <p className="text-xs text-gray-400 mt-0.5">All bookings in period — where customers found you</p>
+                <p className="text-xs text-gray-600 mt-0.5">All bookings in period — where customers found you</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-gray-700">{filteredAllBookings.length} total</span>
-                <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
+                <span className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
               </div>
             </div>
 
             {filteredAllBookings.length === 0 ? (
-              <p className="text-center py-10 text-gray-400 text-sm">No bookings for this period.</p>
+              <p className="text-center py-10 text-gray-600 text-sm">No bookings for this period.</p>
             ) : (
               <div className="p-6">
                 {/* Bar chart rows */}
@@ -308,7 +308,7 @@ export default function InsightsPage() {
                       </div>
                       <div className="flex-none flex items-center gap-2 w-20 justify-end">
                         <span className="text-xs font-bold text-gray-700">{src.count}</span>
-                        <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5 font-medium">{src.pct}%</span>
+                        <span className="text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-0.5 font-medium">{src.pct}%</span>
                       </div>
                     </div>
                   ))}
@@ -321,7 +321,7 @@ export default function InsightsPage() {
                       style={{ backgroundColor: src.color }}>
                       <span>{src.icon}</span>
                       <span>{src.name}</span>
-                      <span className="opacity-75">· {src.count}</span>
+                      <span>· {src.count}</span>
                     </div>
                   ))}
                 </div>
@@ -333,43 +333,43 @@ export default function InsightsPage() {
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-bold text-gray-800">
-                Completed Jobs <span className="text-gray-400 font-normal">({sortedBookings.length})</span>
+                Completed Jobs <span className="text-gray-600 font-normal">({sortedBookings.length})</span>
               </h2>
-              <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
+              <span className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
             </div>
             {sortedBookings.length === 0 ? (
-              <p className="text-center py-10 text-gray-400 text-sm">No completed jobs for this period.</p>
+              <p className="text-center py-10 text-gray-600 text-sm">No completed jobs for this period.</p>
             ) : (
               <div className="divide-y divide-gray-100">
                 {sortedBookings.map(b => (
                   <div key={b._id} className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 text-sm truncate">{b.firstName} {b.lastName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                      <p className="text-xs text-gray-600 mt-0.5 truncate">
                         {fmtDate(b.completedAt || b.createdAt)}
                         {b.installerName ? ` · ${b.installerName}` : ""}
                       </p>
                     </div>
                     <div className="text-right hidden sm:block flex-none">
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600">
                         Charged <span className="font-semibold text-gray-700 ml-1">${Number(b.amountCharged).toFixed(2)}</span>
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600">
                         Workers <span className="font-semibold text-gray-700 ml-1">${Number(b.amountPaidWorkers).toFixed(2)}</span>
                       </p>
                       {Number(b.materialsCost) > 0 && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600">
                           Materials <span className="font-semibold text-orange-600 ml-1">${Number(b.materialsCost).toFixed(2)}</span>
                         </p>
                       )}
                     </div>
                     <div className="text-right flex-none">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-0.5">
                         Profit{b.profitType && b.profitValue != null
                           ? ` · ${b.profitType === "fixed" ? `$${Number(b.profitValue).toFixed(0)}` : `${Number(b.profitValue).toFixed(0)}%`}`
                           : ""}
                       </p>
-                      <p className={`text-base sm:text-lg font-extrabold ${Number(b.companyProfit) >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      <p className={`text-base sm:text-lg font-extrabold ${Number(b.companyProfit) >= 0 ? "text-emerald-700" : "text-red-700"}`}>
                         ${Number(b.companyProfit).toFixed(2)}
                       </p>
                     </div>
@@ -385,12 +385,12 @@ export default function InsightsPage() {
             {/* Add Expense Form */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
               <h2 className="font-bold text-gray-800 mb-1">Add Expense</h2>
-              <p className="text-xs text-gray-400 mb-4">Marketing, fuel, tools, supplies…</p>
+              <p className="text-xs text-gray-600 mb-4">Marketing, fuel, tools, supplies…</p>
               <form onSubmit={addExpense} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Category</label>
-                    <select
+                    <label htmlFor="expense-category" className="text-xs font-semibold text-gray-600">Category</label>
+                    <select id="expense-category"
                       value={expForm.category}
                       onChange={e => setExpForm(f => ({ ...f, category: e.target.value }))}
                       className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
@@ -401,8 +401,8 @@ export default function InsightsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500">Date</label>
-                    <input
+                    <label htmlFor="expense-date" className="text-xs font-semibold text-gray-600">Date</label>
+                    <input id="expense-date"
                       type="date"
                       value={expForm.date}
                       onChange={e => setExpForm(f => ({ ...f, date: e.target.value }))}
@@ -412,8 +412,8 @@ export default function InsightsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Description</label>
-                  <input
+                  <label htmlFor="expense-description" className="text-xs font-semibold text-gray-600">Description</label>
+                  <input id="expense-description"
                     value={expForm.description}
                     onChange={e => setExpForm(f => ({ ...f, description: e.target.value }))}
                     placeholder="Facebook Ads, gas refill, etc."
@@ -422,10 +422,10 @@ export default function InsightsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-500">Amount</label>
+                  <label htmlFor="expense-amount" className="text-xs font-semibold text-gray-600">Amount</label>
                   <div className="relative mt-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">$</span>
-                    <input
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 font-semibold text-sm">$</span>
+                    <input id="expense-amount"
                       type="number"
                       step="0.01"
                       min="0"
@@ -437,7 +437,7 @@ export default function InsightsPage() {
                   </div>
                 </div>
 
-                {expErr && <p className="text-xs text-red-500 font-medium">{expErr}</p>}
+                {expErr && <p className="text-xs text-red-700 font-medium">{expErr}</p>}
 
                 <button
                   type="submit"
@@ -453,7 +453,7 @@ export default function InsightsPage() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="font-bold text-gray-800">
-                  Expenses <span className="text-gray-400 font-normal">({filteredExpenses.length})</span>
+                  Expenses <span className="text-gray-600 font-normal">({filteredExpenses.length})</span>
                 </h2>
                 <div className="flex items-center gap-2">
                   {filteredExpenses.length > 0 && (
@@ -461,12 +461,12 @@ export default function InsightsPage() {
                       -${totalExpenses.toFixed(2)}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
+                  <span className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">{rangeLabel}</span>
                 </div>
               </div>
 
               {filteredExpenses.length === 0 ? (
-                <p className="text-center py-10 text-gray-400 text-sm">No expenses for this period.</p>
+                <p className="text-center py-10 text-gray-600 text-sm">No expenses for this period.</p>
               ) : (
                 <ul className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                   {filteredExpenses.map(e => (
@@ -483,7 +483,7 @@ export default function InsightsPage() {
                         <p className="text-sm font-semibold text-gray-800 truncate">
                           {e.description || (e.category.charAt(0).toUpperCase() + e.category.slice(1))}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-gray-600 mt-0.5">
                           <span className="capitalize">{e.category}</span>
                           {" · "}
                           {fmtDate(e.date)}
@@ -494,7 +494,7 @@ export default function InsightsPage() {
                       </p>
                       <button
                         onClick={() => deleteExpense(e.id)}
-                        className="text-gray-300 hover:text-red-500 transition flex-none text-lg leading-none"
+                        className="text-gray-300 hover:text-red-700 transition flex-none text-lg leading-none"
                       >
                         ×
                       </button>
@@ -514,11 +514,11 @@ export default function InsightsPage() {
 function StatCard({ label, value, bg, color, large, hint }) {
   return (
     <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm h-full`}>
-      <p className="text-xs text-gray-500 font-medium">{label}</p>
+      <p className="text-xs text-gray-600 font-medium">{label}</p>
       <p className={`font-extrabold mt-1 ${color || "text-gray-900"} ${large ? "text-2xl sm:text-3xl" : "text-xl sm:text-2xl"}`}>
         {value}
       </p>
-      {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
+      {hint && <p className="text-[10px] text-gray-600 mt-1 leading-tight">{hint}</p>}
     </div>
   )
 }

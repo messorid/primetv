@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { finalizeBody, segments, displayPhone, partsLimit } from "@/app/lib/smsRules"
 import { SMS_PREFIX, SMS_SUFFIX } from "@/app/lib/smsConfig"
+import AdminDialog from "./AdminDialog"
 
 export const SENDER_KEY = "primetv-sms-sender"
 
@@ -17,21 +18,10 @@ export const SMS_MODES = {
 }
 
 export function Dialog({ title, onClose, children }) {
-  useEffect(() => {
-    const onKey = e => { if (e.key === "Escape") onClose() }
-    document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 p-0 sm:items-center sm:p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div role="dialog" aria-modal="true" aria-label={title} className="w-full max-w-lg rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h2 className="text-lg font-extrabold text-gray-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-2xl leading-none text-gray-500 hover:text-gray-900">×</button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <AdminDialog title={title} onClose={onClose}>
+      <div className="p-5 sm:p-6">{children}</div>
+    </AdminDialog>
   )
 }
 

@@ -47,9 +47,10 @@
   
             <h2 className="font-semibold text-lg">5. Text Messages (SMS)</h2>
             <p>
-              If you agree to receive texts by ticking the optional box when you book,
-              we use your mobile number to send appointment reminders, a review request after your job, and replies to
-              your replies. We keep a record of when and how you agreed. Message frequency varies; message and data
+              If you check the optional box when booking online, we use your mobile number to send appointment reminders,
+              a review request after your job, and replies to your texts. If you opt in during a booking call or through
+              a booking confirmation email, we use it to send appointment reminders. We keep a record of when and how you agreed.
+              Message frequency varies. Message and data
               rates may apply. Reply STOP to stop at any time, or HELP for help. See our{" "}
               <a href="/sms-terms" className="font-semibold underline">SMS Terms</a>.
             </p>
@@ -69,4 +70,3 @@
       </section>
     )
   }
-  

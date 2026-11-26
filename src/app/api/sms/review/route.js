@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isStaffRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
+import { ensureSmsTables, smsStatusFor, smsConsentBlocker, smsMode } from "@/app/lib/sms.js"
 import { toE164, buildReviewRequest, sendingHours } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
@@ -29,7 +29,10 @@ export async function GET(request) {
     const blockers = []
     if (b.status !== "completed") blockers.push("The job has to be marked completed first.")
     if (!phone) blockers.push("No valid US mobile number on this booking.")
-    else if (!st.allowed) blockers.push(st.reason)
+    else {
+      const blocker = smsConsentBlocker(st, "review")
+      if (blocker) blockers.push(blocker)
+    }
 
     const [last] = await sql`
       SELECT created_at, sent_by, mode, status, error_message

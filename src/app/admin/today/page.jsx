@@ -17,7 +17,7 @@ const STATUS = {
   pending:   { label: "Pending",   cls: "bg-amber-100 text-amber-700 border-amber-200" },
   confirmed: { label: "Confirmed", cls: "bg-blue-100 text-blue-700 border-blue-200" },
   completed: { label: "Completed", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  cancelled: { label: "Cancelled", cls: "bg-gray-100 text-gray-500 border-gray-200" },
+  cancelled: { label: "Cancelled", cls: "bg-gray-100 text-gray-600 border-gray-200" },
 }
 
 // "9:00 AM", "Morning (8am – 12pm)", "Flexible" → minutes, for ordering a day.
@@ -150,7 +150,7 @@ export default function TodayPage() {
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Today</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{fmtDay(today, { weekday: "long", month: "long", day: "numeric" })}</p>
+          <p className="text-sm text-gray-600 mt-0.5">{fmtDay(today, { weekday: "long", month: "long", day: "numeric" })}</p>
         </div>
         <button onClick={load}
           className="text-sm font-medium text-gray-600 hover:text-black bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm transition">
@@ -159,7 +159,7 @@ export default function TodayPage() {
       </div>
 
       {loading ? (
-        <p className="text-center py-20 text-gray-400">Loading…</p>
+        <p className="text-center py-20 text-gray-600">Loading…</p>
       ) : error ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       ) : (
@@ -175,8 +175,8 @@ export default function TodayPage() {
             {/* Jobs */}
             <div className="min-w-0 lg:col-span-3 space-y-6">
               <section aria-labelledby="today-jobs">
-                <h2 id="today-jobs" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-[#E50914]">
-                  Today&apos;s jobs <span className="text-gray-400">({view.todays.length})</span>
+                <h2 id="today-jobs" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-brand-dark">
+                  Today&apos;s jobs <span className="text-gray-600">({view.todays.length})</span>
                 </h2>
                 {view.todays.length === 0 ? (
                   <Empty>No jobs today.</Empty>
@@ -187,8 +187,8 @@ export default function TodayPage() {
 
               <section aria-labelledby="tomorrow-jobs">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h2 id="tomorrow-jobs" className="text-sm font-extrabold uppercase tracking-widest text-gray-500">
-                    Tomorrow · {fmtDay(tomorrow)} <span className="text-gray-400">({view.tomorrows.length})</span>
+                  <h2 id="tomorrow-jobs" className="text-sm font-extrabold uppercase tracking-widest text-gray-600">
+                    Tomorrow · {fmtDay(tomorrow)} <span className="text-gray-600">({view.tomorrows.length})</span>
                   </h2>
                   <Link href="/admin/reminders" className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-800 hover:border-[#E50914]/50">
                     📱 Send reminders
@@ -204,8 +204,8 @@ export default function TodayPage() {
 
             {/* To do */}
             <section aria-labelledby="todo" className="min-w-0 lg:col-span-2">
-              <h2 id="todo" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-gray-500">
-                To do <span className="text-gray-400">({todoCount})</span>
+              <h2 id="todo" className="mb-3 text-sm font-extrabold uppercase tracking-widest text-gray-600">
+                To do <span className="text-gray-600">({todoCount})</span>
               </h2>
               {todoCount === 0 ? (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center">
@@ -255,19 +255,19 @@ export default function TodayPage() {
   )
 }
 
-const btn = "inline-flex flex-none items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-800 hover:border-[#E50914]/50 hover:text-[#E50914] transition disabled:opacity-40"
+const btn = "inline-flex flex-none items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-800 hover:border-[#E50914]/50 hover:text-brand-dark transition disabled:opacity-40"
 
 function Tile({ label, value, tone }) {
   return (
     <div className={`${tone} rounded-2xl border border-gray-200 p-4 shadow-sm`}>
-      <p className="text-xs font-medium text-gray-500">{label}</p>
+      <p className="text-xs font-medium text-gray-600">{label}</p>
       <p className="mt-1 text-3xl font-extrabold text-gray-900">{value}</p>
     </div>
   )
 }
 
 function Empty({ children }) {
-  return <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-400">{children}</p>
+  return <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-600">{children}</p>
 }
 
 function JobCard({ b, compact = false }) {
@@ -283,16 +283,16 @@ function JobCard({ b, compact = false }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={open(b._id)} className="font-bold text-gray-900 hover:text-[#E50914] truncate">
+            <Link href={open(b._id)} className="font-bold text-gray-900 hover:text-brand-dark truncate">
               {`${b.firstName || ""} ${b.lastName || ""}`.trim() || "Customer"}
             </Link>
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
             {b.closeoutSignedAt
               ? <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">✍️ Signed</span>
-              : !compact && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-gray-50 text-gray-500 border-gray-200">Not signed</span>}
+              : !compact && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200">Not signed</span>}
           </div>
           {addr && <p className="mt-1 text-sm text-gray-600">{addr}</p>}
-          <p className={`mt-1 text-xs ${crew.length ? "text-gray-500" : "font-bold text-amber-700"}`}>
+          <p className={`mt-1 text-xs ${crew.length ? "text-gray-600" : "font-bold text-amber-700"}`}>
             {crew.length ? `👷 ${crew.join(", ")}` : "⚠️ No crew assigned"}
           </p>
         </div>
@@ -321,9 +321,9 @@ function TodoGroup({ title, hint, tone, count, children }) {
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="flex-1 text-sm font-bold text-gray-900">{title}</span>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-600">{count}</span>
-        <span aria-hidden="true" className="text-xs text-gray-400 transition group-open:rotate-180">▾</span>
+        <span aria-hidden="true" className="text-xs text-gray-600 transition group-open:rotate-180">▾</span>
       </summary>
-      <p className="-mt-1 px-4 pb-2 text-[11px] text-gray-400">{hint}</p>
+      <p className="-mt-1 px-4 pb-2 text-[11px] text-gray-600">{hint}</p>
       <ul className="divide-y divide-gray-100 border-t border-gray-100">{children}</ul>
     </details>
   )
@@ -334,9 +334,9 @@ function Row({ title, sub, href, action }) {
     <li className="flex items-center gap-3 px-4 py-2.5">
       <div className="min-w-0 flex-1">
         {href
-          ? <Link href={href} className="block truncate text-sm font-semibold text-gray-800 hover:text-[#E50914]">{title}</Link>
+          ? <Link href={href} className="block truncate text-sm font-semibold text-gray-800 hover:text-brand-dark">{title}</Link>
           : <p className="truncate text-sm font-semibold text-gray-800">{title}</p>}
-        {sub && <p className="truncate text-xs text-gray-400">{sub}</p>}
+        {sub && <p className="truncate text-xs text-gray-600">{sub}</p>}
       </div>
       {action}
     </li>
@@ -346,7 +346,7 @@ function Row({ title, sub, href, action }) {
 function MoreLink({ href, n }) {
   return (
     <li className="px-4 py-2 text-right">
-      <Link href={href} className="text-xs font-semibold text-gray-500 hover:text-[#E50914]">+{n} more →</Link>
+      <Link href={href} className="text-xs font-semibold text-gray-600 hover:text-brand-dark">+{n} more →</Link>
     </li>
   )
 }

@@ -147,7 +147,7 @@ export default function EarningsPage() {
     <div>
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-gray-900">Earnings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className="text-sm text-gray-600 mt-0.5">
           What each installer earned and what the company kept, from completed jobs.
         </p>
       </div>
@@ -158,7 +158,7 @@ export default function EarningsPage() {
           {PRESETS.map(p => (
             <button key={p.id} onClick={() => applyPreset(p.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
-                preset === p.id ? "bg-[#E50914] text-white" : "bg-gray-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                preset === p.id ? "bg-[#E50914] text-white" : "bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}>
               {p.label}
             </button>
@@ -166,28 +166,28 @@ export default function EarningsPage() {
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">From</label>
-            <input type="date" value={from} onChange={e => onCustom("from", e.target.value)}
+            <label htmlFor="earnings-from" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">From</label>
+            <input id="earnings-from" type="date" value={from} onChange={e => onCustom("from", e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">To</label>
-            <input type="date" value={to} onChange={e => onCustom("to", e.target.value)}
+            <label htmlFor="earnings-to" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">To</label>
+            <input id="earnings-to" type="date" value={to} onChange={e => onCustom("to", e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
-          <span className="ml-auto text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5">
+          <span className="ml-auto text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5">
             {rangeLabel}
           </span>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-center py-20 text-gray-400">Loading…</p>
+        <p className="text-center py-20 text-gray-600">Loading…</p>
       ) : error ? (
         <p className="text-red-600">{error}</p>
       ) : !t || t.jobs === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-          <p className="text-gray-400 text-sm">No completed jobs in this range.</p>
+          <p className="text-gray-600 text-sm">No completed jobs in this range.</p>
         </div>
       ) : (
         <>
@@ -196,7 +196,7 @@ export default function EarningsPage() {
             <Stat label="Revenue"        value={money(t.revenue)}       bg="bg-blue-50"    color="text-blue-700" hint={`${t.jobs} job${t.jobs !== 1 ? "s" : ""}`} />
             <Stat label="Materials"      value={money(t.materials)}     bg="bg-orange-50"  color="text-orange-600" />
             <Stat label="Installer pay"  value={money(t.installerPay)}  bg="bg-amber-50"   color="text-amber-700" hint="Paid to workers" />
-            <Stat label="Company profit" value={money(t.companyProfit)} bg="bg-emerald-50" color="text-emerald-600" />
+            <Stat label="Company profit" value={money(t.companyProfit)} bg="bg-emerald-50" color="text-emerald-700" />
             <Stat label="Margin"         value={t.margin == null ? "—" : `${t.margin.toFixed(1)}%`} bg="bg-purple-50" color="text-purple-700" hint="Profit ÷ revenue" />
             <Stat label="Tips"           value={money(t.tips)}          bg="bg-yellow-50"  color="text-yellow-700" hint="For the crew · from closeouts" />
           </div>
@@ -205,7 +205,7 @@ export default function EarningsPage() {
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm mb-6 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100">
               <h2 className="font-bold text-gray-800">Where the money went</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-600 mt-0.5">
                 Each installer and the company side by side, for the selected range.
               </p>
             </div>
@@ -222,19 +222,19 @@ export default function EarningsPage() {
 
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-900">PrimeTvNashville</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-gray-600 mt-0.5">
                       {t.jobs} job{t.jobs !== 1 ? "s" : ""} · {money(t.revenue)} revenue
                       {t.materials > 0 ? ` · ${money(t.materials)} materials` : ""}
                     </p>
                   </div>
 
                   <div className="text-right flex-none">
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Company kept</p>
-                    <p className="text-lg font-extrabold text-emerald-600">{money(t.companyProfit)}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-gray-600 font-semibold">Company kept</p>
+                    <p className="text-lg font-extrabold text-emerald-700">{money(t.companyProfit)}</p>
                   </div>
 
                   <div className="text-right flex-none hidden sm:block">
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Margin</p>
+                    <p className="text-[10px] uppercase tracking-wide text-gray-600 font-semibold">Margin</p>
                     <p className="text-sm font-bold text-purple-700">
                       {t.margin == null ? "—" : `${t.margin.toFixed(1)}%`}
                     </p>
@@ -247,7 +247,7 @@ export default function EarningsPage() {
                   <div className="h-full bg-orange-300"  style={{ width: `${pct(t.materials,     t.revenue)}%` }} title="Materials" />
                   <div className="h-full bg-emerald-500" style={{ width: `${pct(t.companyProfit, t.revenue)}%` }} title="Company" />
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-400">
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-600">
                   <span><span className="inline-block size-2 rounded-sm bg-amber-400 mr-1 align-middle" />Installers {pct(t.installerPay, t.revenue).toFixed(0)}%</span>
                   {t.materials > 0 && (
                     <span><span className="inline-block size-2 rounded-sm bg-orange-300 mr-1 align-middle" />Materials {pct(t.materials, t.revenue).toFixed(0)}%</span>
@@ -263,19 +263,19 @@ export default function EarningsPage() {
                 return (
                   <div key={i.key} className="px-5 py-4">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center justify-center size-9 rounded-full bg-gray-100 text-xs font-extrabold text-gray-500 flex-none">
+                      <div className="flex items-center justify-center size-9 rounded-full bg-gray-100 text-xs font-extrabold text-gray-600 flex-none">
                         {i.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-gray-900 truncate">{i.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-gray-600 mt-0.5">
                           {i.jobs} job{i.jobs !== 1 ? "s" : ""} · {money(i.revenue)} revenue · avg {money2(i.avgPerJob)}/job
                         </p>
                       </div>
 
                       <div className="text-right flex-none">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Earned</p>
+                        <p className="text-[10px] uppercase tracking-wide text-gray-600 font-semibold">Earned</p>
                         <p className="text-lg font-extrabold text-amber-700">{money(i.installerPay)}</p>
                         {i.tips > 0 && (
                           <p className="text-[11px] font-semibold text-yellow-700">+ {money2(i.tips)} tips</p>
@@ -283,8 +283,8 @@ export default function EarningsPage() {
                       </div>
 
                       <div className="text-right flex-none">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Company</p>
-                        <p className="text-sm font-bold text-emerald-600">{money(i.companyProfit)}</p>
+                        <p className="text-[10px] uppercase tracking-wide text-gray-600 font-semibold">Company</p>
+                        <p className="text-sm font-bold text-emerald-700">{money(i.companyProfit)}</p>
                       </div>
                     </div>
 
@@ -292,7 +292,7 @@ export default function EarningsPage() {
                     <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden flex">
                       <div className="h-full bg-amber-400" style={{ width: `${Math.max(0, Math.min(100, share))}%` }} />
                     </div>
-                    <p className="mt-1 text-[10px] text-gray-400">{share.toFixed(0)}% of all installer pay in this range</p>
+                    <p className="mt-1 text-[10px] text-gray-600">{share.toFixed(0)}% of all installer pay in this range</p>
 
                     {/* Default split */}
                     {i.installerId && (
@@ -307,7 +307,7 @@ export default function EarningsPage() {
                             <input type="number" min="0" step="0.01" value={cValue}
                               onChange={e => setCValue(e.target.value)}
                               className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-600">
                               {cType === "percent"
                                 ? `installer ${cValue || 0}% · company ${(100 - (Number(cValue) || 0)).toFixed(0)}%`
                                 : "per job, company keeps the rest"}
@@ -317,14 +317,14 @@ export default function EarningsPage() {
                               {savingC ? "…" : "Save"}
                             </button>
                             <button onClick={() => { setEditId(null); setCErr("") }}
-                              className="rounded-lg border border-gray-200 text-gray-500 text-xs px-2.5 py-1.5 hover:bg-gray-100 transition">
+                              className="rounded-lg border border-gray-200 text-gray-600 text-xs px-2.5 py-1.5 hover:bg-gray-100 transition">
                               Cancel
                             </button>
-                            {cErr && <p className="w-full text-[11px] font-medium text-red-500">{cErr}</p>}
+                            {cErr && <p className="w-full text-[11px] font-medium text-red-700">{cErr}</p>}
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Default split</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Default split</span>
                             {inst ? (
                               <span className="text-xs font-semibold text-gray-700">
                                 {inst.commissionType === "fixed"
@@ -332,7 +332,7 @@ export default function EarningsPage() {
                                   : `Installer ${inst.commissionValue}% · Company ${(100 - Number(inst.commissionValue)).toFixed(0)}%`}
                               </span>
                             ) : (
-                              <span className="text-xs text-gray-400">not set</span>
+                              <span className="text-xs text-gray-600">not set</span>
                             )}
                             <button
                               onClick={() => {
@@ -341,7 +341,7 @@ export default function EarningsPage() {
                                 setCValue(String(inst?.commissionValue ?? 65))
                                 setCErr("")
                               }}
-                              className="ml-auto text-[10px] text-gray-400 hover:text-[#E50914] border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
+                              className="ml-auto text-[10px] text-gray-600 hover:text-brand-dark border border-gray-200 rounded px-1.5 py-0.5 hover:border-[#E50914]/30 transition">
                               edit
                             </button>
                           </div>
@@ -359,9 +359,9 @@ export default function EarningsPage() {
             <div className="rounded-2xl border border-gray-200 bg-white shadow-sm mb-6 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-800">
-                  Weekly payouts <span className="text-gray-400 font-normal">({data.weeks.length})</span>
+                  Weekly payouts <span className="text-gray-600 font-normal">({data.weeks.length})</span>
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-600 mt-0.5">
                   What each person earned per week (Sunday–Saturday): their pay plus tips. Tips are split evenly
                   between the crew on a job. If a cash tip was handed to the installer at the job, don&apos;t pay it twice.
                 </p>
@@ -373,14 +373,14 @@ export default function EarningsPage() {
                       <span className="flex-1 text-sm font-bold text-gray-800">
                         {fmtDay(w.start)} – {fmtDay(w.end)}
                       </span>
-                      <span className="text-xs text-gray-500">{money2(w.pay)} pay{w.tips > 0 ? ` + ${money2(w.tips)} tips` : ""}</span>
+                      <span className="text-xs text-gray-600">{money2(w.pay)} pay{w.tips > 0 ? ` + ${money2(w.tips)} tips` : ""}</span>
                       <span className="text-sm font-extrabold text-gray-900">{money2(w.total)}</span>
-                      <span aria-hidden="true" className="text-xs text-gray-400 transition group-open:rotate-180">▾</span>
+                      <span aria-hidden="true" className="text-xs text-gray-600 transition group-open:rotate-180">▾</span>
                     </summary>
                     <div className="overflow-x-auto px-5 pb-4">
                       <table className="w-full min-w-[480px] text-sm">
                         <thead>
-                          <tr className="text-left text-[10px] uppercase tracking-wide text-gray-400">
+                          <tr className="text-left text-[10px] uppercase tracking-wide text-gray-600">
                             <th className="py-2 font-semibold">Installer</th>
                             <th className="py-2 font-semibold text-right">Jobs</th>
                             <th className="py-2 font-semibold text-right">Pay</th>
@@ -397,7 +397,7 @@ export default function EarningsPage() {
                               <td className="py-2 text-right text-yellow-700">
                                 {p.tips > 0 ? money2(p.tips) : "—"}
                                 {p.tips > 0 && (
-                                  <span className="block text-[10px] text-gray-400">
+                                  <span className="block text-[10px] text-gray-600">
                                     {[p.tipsCash > 0 && `${money2(p.tipsCash)} cash`, p.tipsZelle > 0 && `${money2(p.tipsZelle)} Zelle`, p.tipsOther > 0 && `${money2(p.tipsOther)} other`].filter(Boolean).join(" · ")}
                                   </span>
                                 )}
@@ -418,15 +418,15 @@ export default function EarningsPage() {
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-bold text-gray-800">
-                Day by day <span className="text-gray-400 font-normal">({data.days.length})</span>
+                Day by day <span className="text-gray-600 font-normal">({data.days.length})</span>
               </h2>
-              <span className="text-xs text-gray-400">Tap a day for its jobs</span>
+              <span className="text-xs text-gray-600">Tap a day for its jobs</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-500">
+                  <tr className="bg-gray-50 text-gray-600">
                     <th className="text-left font-semibold px-5 py-2.5">Day</th>
                     <th className="text-right font-semibold px-3 py-2.5">Jobs</th>
                     <th className="text-right font-semibold px-3 py-2.5">Revenue</th>
@@ -449,7 +449,7 @@ export default function EarningsPage() {
                         <td className="px-3 py-2.5 text-right text-gray-700">{money(d.revenue)}</td>
                         <td className="px-3 py-2.5 text-right text-orange-600">{d.materials ? money(d.materials) : "—"}</td>
                         <td className="px-3 py-2.5 text-right font-semibold text-amber-700">{money(d.installerPay)}</td>
-                        <td className="px-5 py-2.5 text-right font-extrabold text-emerald-600">{money(d.companyProfit)}</td>
+                        <td className="px-5 py-2.5 text-right font-extrabold text-emerald-700">{money(d.companyProfit)}</td>
                       </tr>
 
                       {openDay === d.date && (
@@ -460,12 +460,12 @@ export default function EarningsPage() {
                                 <div key={j.id} className="flex items-center gap-3 text-xs">
                                   <span className="font-semibold text-gray-700 min-w-0 truncate flex-1">
                                     {j.customer || "—"}
-                                    {j.city ? <span className="text-gray-400"> · {j.city}</span> : null}
+                                    {j.city ? <span className="text-gray-600"> · {j.city}</span> : null}
                                   </span>
-                                  <span className="text-gray-500 flex-none">{j.installerName}</span>
+                                  <span className="text-gray-600 flex-none">{j.installerName}</span>
                                   <span className="text-gray-600 flex-none w-16 text-right">{money2(j.revenue)}</span>
                                   <span className="text-amber-700 font-semibold flex-none w-16 text-right">{money2(j.installerPay)}</span>
-                                  <span className="text-emerald-600 font-bold flex-none w-16 text-right">{money2(j.companyProfit)}</span>
+                                  <span className="text-emerald-700 font-bold flex-none w-16 text-right">{money2(j.companyProfit)}</span>
                                 </div>
                               ))}
                             </div>
@@ -482,7 +482,7 @@ export default function EarningsPage() {
                     <td className="px-3 py-3 text-right">{money(t.revenue)}</td>
                     <td className="px-3 py-3 text-right text-orange-600">{money(t.materials)}</td>
                     <td className="px-3 py-3 text-right text-amber-700">{money(t.installerPay)}</td>
-                    <td className="px-5 py-3 text-right text-emerald-600">{money(t.companyProfit)}</td>
+                    <td className="px-5 py-3 text-right text-emerald-700">{money(t.companyProfit)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -497,9 +497,9 @@ export default function EarningsPage() {
 function Stat({ label, value, bg, color, hint }) {
   return (
     <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm`}>
-      <p className="text-xs text-gray-500 font-medium">{label}</p>
+      <p className="text-xs text-gray-600 font-medium">{label}</p>
       <p className={`text-xl sm:text-2xl font-extrabold mt-1 ${color}`}>{value}</p>
-      {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
+      {hint && <p className="text-[10px] text-gray-600 mt-1 leading-tight">{hint}</p>}
     </div>
   )
 }

@@ -131,7 +131,7 @@ export default function CrmLeadsPage() {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-1">Leads del CRM</h1>
-      <p className="text-gray-500 mb-4 text-sm">
+      <p className="text-gray-600 mb-4 text-sm">
         Leads de Meta Lead Ads, Messenger, Instagram DM y entradas manuales, sincronizados
         desde el Sistema Leads PrimeTV.
       </p>
@@ -139,24 +139,24 @@ export default function CrmLeadsPage() {
       {/* Contact Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-green-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">📞 Phone Calls</p>
+          <p className="text-xs text-gray-600 font-medium">📞 Phone Calls</p>
           <p className="text-2xl font-extrabold text-green-700 mt-1">{phoneCalls}</p>
-          <p className="text-[10px] text-gray-400 mt-1">Call button clicks (all time)</p>
+          <p className="text-[10px] text-gray-600 mt-1">Call button clicks (all time)</p>
         </div>
         <div className="bg-blue-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">💬 Text Messages</p>
+          <p className="text-xs text-gray-600 font-medium">💬 Text Messages</p>
           <p className="text-2xl font-extrabold text-blue-700 mt-1">{textClicks}</p>
-          <p className="text-[10px] text-gray-400 mt-1">SMS button clicks (all time)</p>
+          <p className="text-[10px] text-gray-600 mt-1">SMS button clicks (all time)</p>
         </div>
         <div className="bg-violet-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">📲 Total Contact</p>
+          <p className="text-xs text-gray-600 font-medium">📲 Total Contact</p>
           <p className="text-2xl font-extrabold text-violet-700 mt-1">{phoneCalls + textClicks}</p>
-          <p className="text-[10px] text-gray-400 mt-1">Calls + texts combined</p>
+          <p className="text-[10px] text-gray-600 mt-1">Calls + texts combined</p>
         </div>
         <div className="bg-amber-50 rounded-2xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">📋 Total Leads</p>
+          <p className="text-xs text-gray-600 font-medium">📋 Total Leads</p>
           <p className="text-2xl font-extrabold text-amber-700 mt-1">{leads.length}</p>
-          <p className="text-[10px] text-gray-400 mt-1">All CRM leads</p>
+          <p className="text-[10px] text-gray-600 mt-1">All CRM leads</p>
         </div>
       </div>
 
@@ -169,11 +169,11 @@ export default function CrmLeadsPage() {
       />
 
       {loading ? (
-        <p className="text-gray-500">Cargando leads...</p>
+        <p className="text-gray-600">Cargando leads...</p>
       ) : error ? (
         <p className="text-red-600">{error}</p>
       ) : filteredLeads.length === 0 ? (
-        <p className="text-gray-500">No hay leads para mostrar.</p>
+        <p className="text-gray-600">No hay leads para mostrar.</p>
       ) : (
         <div className="overflow-auto">
           <table className="min-w-full border-collapse text-sm">
@@ -215,7 +215,7 @@ export default function CrmLeadsPage() {
                         </button>
                         <button
                           onClick={cancelEditing}
-                          className="text-gray-400 hover:text-gray-600 text-xs font-medium"
+                          className="text-gray-600 hover:text-gray-600 text-xs font-medium"
                         >
                           ✕
                         </button>
@@ -225,7 +225,7 @@ export default function CrmLeadsPage() {
                         <span>{lead.fullName}</span>
                         <button
                           onClick={() => startEditing(lead)}
-                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-700 text-xs transition"
+                          className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-700 text-xs transition"
                           title="Editar nombre"
                         >
                           ✏️
@@ -233,14 +233,14 @@ export default function CrmLeadsPage() {
                       </div>
                     )}
                     {lead.lastMessagePreview && (
-                      <div className="text-xs text-gray-400 truncate max-w-[200px]">
+                      <div className="text-xs text-gray-600 truncate max-w-[200px]">
                         {lead.lastMessagePreview}
                       </div>
                     )}
                   </td>
                   <td className="border p-2">
                     {lead.phone && <div>{lead.phone}</div>}
-                    {lead.email && <div className="text-gray-500">{lead.email}</div>}
+                    {lead.email && <div className="text-gray-600">{lead.email}</div>}
                   </td>
                   <td className="border p-2">
                     <span

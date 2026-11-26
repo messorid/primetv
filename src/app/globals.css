@@ -45,12 +45,18 @@ body {
     color: black;
     font-family: sans-serif;
     /* Anchored sections land below the sticky header, not under it. */
-    scroll-padding-top: 5.5rem;
+    scroll-padding-top: 6.5rem;
   }
 
   body {
     background-color: white;
     color: black;
+  }
+
+  @media (width < 64rem) {
+    html {
+      scroll-padding-bottom: 5rem;
+    }
   }
 
   input, select, textarea {

@@ -255,7 +255,7 @@ export default function GazeboInstallationPage() {
               Call (615) 669-0251
             </a>
           </div>
-          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">
+          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/75">
             <Link href="/" className="hover:text-white/70 transition">TV Mounting Nashville</Link>
             <span>·</span>
             <Link href="/home-installation-services-nashville" className="hover:text-white/70 transition">All Installation Services</Link>

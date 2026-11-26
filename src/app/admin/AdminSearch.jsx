@@ -1,10 +1,11 @@
 "use client"
 // Search everything at once — bookings, customers, website leads and CRM
-// leads — from any admin page. Opens with Ctrl+K / ⌘K or "/", or the 🔍
+// leads — from any admin page. Opens with Ctrl+K / ⌘K or the search
 // button. Each result opens the record (a booking opens on its own card; the
 // others open their page with the search filled in).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import AdminDialog from "./AdminDialog"
 
 const digits = v => String(v || "").replace(/\D/g, "")
 const fmtDay = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso || "")
@@ -44,9 +45,8 @@ export default function AdminSearch() {
 
   useEffect(() => {
     const onKey = e => {
-      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName) || e.target?.isContentEditable
+      if (document.querySelector("dialog[open]")) return
       if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); show() }
-      else if (e.key === "/" && !typing) { e.preventDefault(); show() }
     }
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
@@ -116,9 +116,9 @@ export default function AdminSearch() {
   }
 
   function onKeyDown(e) {
-    if (e.key === "Escape") { e.preventDefault(); close() }
-    else if (e.key === "ArrowDown") { e.preventDefault(); setActive(a => Math.min(a + 1, results.length - 1)) }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(a => Math.max(a - 1, 0)) }
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close() }
+    else if (e.key === "ArrowDown" && results.length) { e.preventDefault(); setActive(a => Math.min(a + 1, results.length - 1)) }
+    else if (e.key === "ArrowUp" && results.length) { e.preventDefault(); setActive(a => Math.max(a - 1, 0)) }
     else if (e.key === "Enter" && results[active]) { e.preventDefault(); go(results[active]) }
   }
 
@@ -129,56 +129,51 @@ export default function AdminSearch() {
   return (
     <>
       <button type="button" onClick={show} aria-label="Search everything (Ctrl+K)"
-        className="flex flex-none items-center gap-2 rounded-full border border-white/15 px-3 py-1.5 text-sm text-white/60 hover:text-white hover:bg-white/10 transition">
+        className="flex min-h-11 flex-none items-center gap-2 rounded-full border border-white/25 px-3 text-sm text-white/75 transition hover:bg-white/10 hover:text-white">
         <span aria-hidden="true">🔍</span>
         <span className="hidden lg:inline">Search</span>
         <kbd className="hidden lg:inline rounded border border-white/20 px-1.5 text-[10px] font-semibold text-white/50">Ctrl K</kbd>
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/50 backdrop-blur-sm px-3 pt-[10vh]"
-          onMouseDown={e => { if (e.target === e.currentTarget) close() }}>
-          <div role="dialog" aria-modal="true" aria-label="Search"
-            className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <AdminDialog title="Search everything" onClose={close} className="max-w-xl">
             <div className="flex items-center gap-3 border-b border-gray-100 px-4">
               <span aria-hidden="true" className="text-lg">🔍</span>
               <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} onKeyDown={onKeyDown}
                 type="search" placeholder="Name, phone, email, city…" autoComplete="off" spellCheck={false}
+                aria-label="Search by name, phone, email or city"
                 role="combobox" aria-expanded={results.length > 0} aria-controls="search-results"
                 aria-activedescendant={results[active] ? `search-opt-${active}` : undefined}
-                className="min-w-0 flex-1 bg-transparent py-4 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none" />
-              <button type="button" onClick={close} className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50">
-                Esc
-              </button>
+                className="min-w-0 flex-1 rounded-lg bg-transparent px-2 py-4 text-base text-gray-900 placeholder:text-gray-600" />
             </div>
 
-            <div id="search-results" role="listbox" aria-label="Results" className="max-h-[60vh] overflow-y-auto py-2">
-              {!data ? (
-                <p className="px-4 py-6 text-center text-sm text-gray-400">Loading…</p>
-              ) : q.trim().length < 2 ? (
-                <p className="px-4 py-6 text-center text-sm text-gray-400">Type at least 2 letters or 3 digits of a phone number.</p>
-              ) : results.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-gray-400">Nothing matches “{q.trim()}”.</p>
-              ) : results.map((r, i) => (
-                <div key={r.id}>
+            {results.length === 0 && (
+              <p role="status" className="px-4 py-6 text-center text-sm text-gray-600">
+                {!data ? "Loading…" : q.trim().length < 2
+                  ? "Type at least 2 letters or 3 digits of a phone number."
+                  : `Nothing matches “${q.trim()}”.`}
+              </p>
+            )}
+            <div id="search-results" role="listbox" hidden={!results.length} aria-label="Results" className="max-h-[55dvh] overflow-y-auto py-2">
+              {results.map((r, i) => (
+                <div key={r.id} role="presentation">
                   {(i === 0 || results[i - 1].group !== r.group) && (
-                    <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">{r.group}</p>
+                    <p aria-hidden="true" className="px-4 pt-3 pb-1 text-xs font-bold uppercase tracking-widest text-gray-600">{r.group}</p>
                   )}
                   <div id={`search-opt-${i}`} role="option" aria-selected={i === active}
                     onMouseEnter={() => setActive(i)} onClick={() => go(r)}
                     className={`mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 ${i === active ? "bg-red-50" : ""}`}>
                     <span aria-hidden="true" className="text-base">{r.icon}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-gray-900">{r.title}</span>
-                      {r.sub && <span className="block truncate text-xs text-gray-500">{r.sub}</span>}
+                      <span className="block truncate text-sm font-semibold text-gray-900"><span className="sr-only">{r.group}: </span>{r.title}</span>
+                      {r.sub && <span className="block truncate text-xs text-gray-600">{r.sub}</span>}
                     </span>
                     {i === active && <span aria-hidden="true" className="text-xs text-gray-400">↵</span>}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+        </AdminDialog>
       )}
     </>
   )

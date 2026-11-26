@@ -86,6 +86,7 @@ export default function ReviewsCarousel({ reviews }) {
         onTouchStart={() => setPlaying(false)}
         onWheel={() => { if (!auto.current) setPlaying(false) }}
         aria-label="Customer reviews"
+        tabIndex={0}
         className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4"
       >
         {reviews.map((r, i) => (

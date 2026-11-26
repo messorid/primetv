@@ -40,23 +40,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#111]">
+    <main className="flex min-h-screen items-center justify-center bg-[#111] p-4">
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-white">
-            <span className="text-[#E50914]">Prime</span>TV
+            <span className="text-brand-bright">Prime</span>TV
           </h1>
-          <p className="text-white/40 text-sm mt-1">Admin Console</p>
+          <p className="mt-1 text-sm text-white/70">Admin Console</p>
         </div>
 
-        <form onSubmit={handleSubmit}
+        <form onSubmit={handleSubmit} aria-busy={loading}
           className="bg-white rounded-2xl shadow-2xl p-8 space-y-4">
 
           <div>
-            <label className="text-sm font-semibold text-gray-700">Email</label>
+            <label htmlFor="admin-email" className="text-sm font-semibold text-gray-700">Email</label>
             <input
+              id="admin-email"
               type="email"
+              autoComplete="username"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
@@ -66,9 +68,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-gray-700">Password</label>
+            <label htmlFor="admin-password" className="text-sm font-semibold text-gray-700">Password</label>
             <input
+              id="admin-password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -78,7 +82,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-[#E50914] font-medium">{error}</p>
+            <p role="alert" className="text-sm font-medium text-red-700">{error}</p>
           )}
 
           <button
@@ -91,6 +95,6 @@ export default function LoginPage() {
         </form>
 
       </div>
-    </div>
+    </main>
   )
 }

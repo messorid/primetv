@@ -163,13 +163,13 @@ export default function ReportePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900">Reporte</h1>
-            <p className="text-sm text-gray-500 mt-0.5">TV sizes, busiest days & job composition</p>
+            <p className="text-sm text-gray-600 mt-0.5">TV sizes, busiest days & job composition</p>
           </div>
           <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm self-start sm:self-auto overflow-x-auto max-w-full">
             {PERIODS.map(p => (
               <button key={p} onClick={() => selectPeriod(p)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex-none ${
-                  !usingCustomRange && period === p ? "bg-[#E50914] text-white" : "text-gray-500 hover:text-gray-900"
+                  !usingCustomRange && period === p ? "bg-[#E50914] text-white" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {p}
@@ -180,18 +180,18 @@ export default function ReportePage() {
 
         <div className="flex flex-wrap items-end gap-3 bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">From</label>
-            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+            <label htmlFor="report-from" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">From</label>
+            <input id="report-from" type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-gray-400">To</label>
-            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+            <label htmlFor="report-to" className="text-[10px] font-bold uppercase tracking-wide text-gray-600">To</label>
+            <input id="report-to" type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
               className="mt-1 block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-300" />
           </div>
           {usingCustomRange && (
             <button onClick={() => { setCustomFrom(""); setCustomTo("") }}
-              className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 transition">
+              className="text-xs text-gray-600 hover:text-red-700 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 transition">
               Clear range ×
             </button>
           )}
@@ -199,7 +199,7 @@ export default function ReportePage() {
       </div>
 
       {loading ? (
-        <p className="text-center py-20 text-gray-400">Loading…</p>
+        <p className="text-center py-20 text-gray-600">Loading…</p>
       ) : (
         <>
           {/* Stat cards */}
@@ -207,7 +207,7 @@ export default function ReportePage() {
             <StatCard label="Bookings"        value={filtered.length} bg="bg-blue-50"   color="text-blue-700" />
             <StatCard label="TVs Mounted"     value={totalTvs}        bg="bg-orange-50" color="text-orange-600"
               hint={uncountedJobs > 0 ? `+${uncountedJobs} bundle/3+ TV job${uncountedJobs !== 1 ? "s" : ""} not counted` : undefined} />
-            <StatCard label="Top TV Size"     value={topSize}         bg="bg-red-50"    color="text-[#E50914]" />
+            <StatCard label="Top TV Size"     value={topSize}         bg="bg-red-50"    color="text-brand-dark" />
             <StatCard label="Busiest Day"     value={topDay}          bg="bg-purple-50" color="text-purple-700" />
           </div>
 
@@ -244,9 +244,9 @@ export default function ReportePage() {
 function StatCard({ label, value, bg, color, hint }) {
   return (
     <div className={`${bg} rounded-2xl border border-gray-200 p-4 shadow-sm h-full`}>
-      <p className="text-xs text-gray-500 font-medium">{label}</p>
+      <p className="text-xs text-gray-600 font-medium">{label}</p>
       <p className={`font-extrabold mt-1 text-xl sm:text-2xl break-words leading-tight ${color || "text-gray-900"}`}>{value}</p>
-      {hint && <p className="text-[10px] text-gray-400 mt-1 leading-tight">{hint}</p>}
+      {hint && <p className="text-[10px] text-gray-600 mt-1 leading-tight">{hint}</p>}
     </div>
   )
 }
@@ -257,16 +257,16 @@ function RankedBarChart({ title, subtitle, data, hue, sorted = true, emptyText }
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
       <h2 className="font-bold text-gray-800">{title}</h2>
-      {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-gray-600 mt-0.5">{subtitle}</p>}
       {rows.length === 0 ? (
-        <p className="text-center py-8 text-gray-400 text-sm">{emptyText}</p>
+        <p className="text-center py-8 text-gray-600 text-sm">{emptyText}</p>
       ) : (
         <div className="space-y-2.5 mt-4">
           {rows.map(d => (
             <div key={d.label}>
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-semibold text-gray-700">{d.label}</span>
-                <span className="text-gray-400 font-medium tabular-nums">{d.value}</span>
+                <span className="text-gray-600 font-medium tabular-nums">{d.value}</span>
               </div>
               <div className="h-3 rounded-md bg-gray-100 overflow-hidden" title={`${d.label}: ${d.value}`}>
                 <div

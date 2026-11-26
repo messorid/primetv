@@ -178,7 +178,7 @@ export default function HomeInstallationPage() {
         <div className="max-w-5xl mx-auto px-5 md:px-6">
           <div className="rounded-2xl bg-black text-white p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="flex-1">
-              <p className="text-[10px] font-bold tracking-widest text-white/40 uppercase mb-2">Our Primary Specialty</p>
+              <p className="text-[10px] font-bold tracking-widest text-white/75 uppercase mb-2">Our Primary Specialty</p>
               <h3 className="text-xl md:text-2xl font-extrabold mb-2">Professional TV Mounting in Nashville</h3>
               <p className="text-white/60 text-sm leading-relaxed max-w-xl">
                 PrimeTvNashville&rsquo;s core business is professional TV mounting — same-day service, upfront pricing,
@@ -251,7 +251,7 @@ export default function HomeInstallationPage() {
               Call (615) 669-0251
             </a>
           </div>
-          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">
+          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/75">
             <Link href="/" className="hover:text-white/70 transition">TV Mounting Nashville</Link>
             <span>·</span>
             <Link href="/furniture-assembly-nashville" className="hover:text-white/70 transition">Furniture Assembly</Link>

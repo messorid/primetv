@@ -10,7 +10,6 @@
 
 import Link from "next/link"
 import { useId, useMemo, useState } from "react"
-import { motion } from "framer-motion"
 import {
   TextField, PhoneField, EmailField, TextAreaField, ChoiceGroup,
   ErrorSummary, FormAlert, PrimaryButton, focusField,
@@ -68,7 +67,7 @@ function installErrors(service, f) {
   ])
 }
 
-export default function QuickQuoteForm({ onSubmitted }) {
+export default function QuickQuoteForm({ onSubmitted, titleAs: Title = "h2" }) {
   const uid = useId()
   const fid = name => `${uid}-${name}`
 
@@ -170,9 +169,9 @@ export default function QuickQuoteForm({ onSubmitted }) {
         {/* What happens when you send it, beside the form on wide screens. */}
         <div className="lg:pt-6">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-dark">Free quote</p>
-          <h2 id="quick-quote-title" className="mt-2 text-[1.85rem] leading-tight sm:text-4xl font-extrabold tracking-tight text-ink">
+          <Title id="quick-quote-title" className="mt-2 text-[1.85rem] leading-tight sm:text-4xl font-extrabold tracking-tight text-ink">
             Get your price in a minute
-          </h2>
+          </Title>
           <p className="mt-3 text-lg leading-relaxed text-body">
             Answer a few quick questions and we reply with your price and the times we have available. We usually reply within 5 minutes during business hours.
             No payment is needed to ask.
@@ -186,11 +185,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
         </div>
 
         <div className="w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+        <div
           className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg"
           onFocus={() => {
             if (!formStarted) {
@@ -203,7 +198,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
           <div role="tablist" aria-label="Type of quote" className="grid grid-cols-2 border-b border-black/10">
             <button
               type="button" role="tab" id={fid("tab-tv")}
-              aria-selected={quoteType === "tv"} aria-controls={fid("panel-tv")}
+              aria-selected={quoteType === "tv"} aria-controls={quoteType === "tv" && status !== "ok" ? fid("panel-tv") : undefined}
               tabIndex={quoteType === "tv" ? 0 : -1}
               onClick={() => switchTab("tv")} onKeyDown={onTabKey}
               className={tabClass(quoteType === "tv")}
@@ -212,7 +207,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
             </button>
             <button
               type="button" role="tab" id={fid("tab-installation")}
-              aria-selected={quoteType === "installation"} aria-controls={fid("panel-installation")}
+              aria-selected={quoteType === "installation"} aria-controls={quoteType === "installation" && status !== "ok" ? fid("panel-installation") : undefined}
               tabIndex={quoteType === "installation" ? 0 : -1}
               onClick={() => switchTab("installation")} onKeyDown={onTabKey}
               className={`${tabClass(quoteType === "installation")} border-l border-black/10`}
@@ -366,7 +361,7 @@ export default function QuickQuoteForm({ onSubmitted }) {
               </div>
             </form>
           )}
-        </motion.div>
+        </div>
         </div>
       </div>
     </section>

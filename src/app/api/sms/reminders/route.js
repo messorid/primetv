@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isStaffRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, smsMode } from "@/app/lib/sms.js"
+import { ensureSmsTables, smsReminderStatuses, smsMode } from "@/app/lib/sms.js"
 import { toE164, arrivalWindow, buildReminder, serviceLabel, sendingHours, nashvilleDate, startMinutes } from "@/app/lib/smsRules.js"
 import { getCrewFor, crewOrLegacy, ensureCrewTable } from "@/app/lib/crew.js"
 
@@ -22,12 +22,15 @@ export async function GET(request) {
     await ensureCrewTable(sql)
 
     const rows = await sql`
-      SELECT id, first_name, last_name, phone, date, time_pref, status, booking_mode, address, installer_id, installer_name
-      FROM bookings WHERE date = ${date} AND status IN ('pending', 'confirmed')
+      SELECT id, first_name, last_name, phone, date, time_pref, status, booking_mode, address, installer_id, installer_name,
+             to_jsonb(b)->>'reminder_sms_choice' AS reminder_sms_choice
+      FROM bookings b WHERE date = ${date} AND status IN ('pending', 'confirmed')
     `
     const crewBy = await getCrewFor(sql, rows.map(r => r.id))
     const phones = rows.map(r => toE164(r.phone))
-    const status = await smsStatusFor(sql, phones)
+    const status = await smsReminderStatuses(sql, rows.map((row, i) => ({
+      id: row.id, phone: phones[i], choice: row.reminder_sms_choice,
+    })))
     const msgs = rows.length ? await sql`
       SELECT booking_id, body, sent_by, mode, status, error_code, error_message, created_at, to_phone
       FROM sms_messages WHERE kind = 'reminder' AND booking_id = ANY(${rows.map(r => r.id)}::uuid[])
@@ -36,7 +39,7 @@ export async function GET(request) {
 
     const appointments = rows.map((r, i) => {
       const phone = phones[i]
-      const st = phone ? status.get(phone) : null
+      const st = phone ? status.get(r.id) : null
       const window = arrivalWindow(r.time_pref)
       const blockers = []
       if (!phone) blockers.push("No valid US mobile number on this booking.")
@@ -54,7 +57,7 @@ export async function GET(request) {
         city: r.address?.city || "",
         crew: crewOrLegacy(crewBy.get(r.id), r).map(m => m.installerName).filter(Boolean),
         consent: st?.consent ? { method: st.consent.method, givenAt: st.consent.given_at, by: st.consent.recorded_by } : null,
-        optedOut: !!st?.optout && (!st.consent || new Date(st.optout.opted_out_at) >= new Date(st.consent.given_at)),
+        optedOut: !!st?.optout && !st.allowed,
         sent: msgs.filter(m => m.booking_id === r.id).map(m => ({
           at: m.created_at, by: m.sent_by, mode: m.mode, status: m.status, errorCode: m.error_code, errorMessage: m.error_message, body: m.body,
         })),

@@ -2,6 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
+import { randomUUID } from "node:crypto"
 import { ensurePhotoTable, photoToAttachment } from "./photos/shared"
 import { isAdminRequest, getSession, unauthorized, forbidden } from "@/lib/adminSession"
 import { applySchemaFixes } from "../../lib/schemaFixes.js"
@@ -9,6 +10,10 @@ import { getTransport, mailFrom, canSendMail, notifyTo } from "../../lib/mailer.
 import { adminBookingFrom } from "../../lib/adminBooking.js"
 import { buildInstallerJobEmail, buildCancellationEmail, fullAddressOf } from "../../lib/installerEmails.js"
 import { buildClientEmail } from "../../lib/clientEmail.js"
+import { bookingSmsConsentUrl } from "../../lib/bookingSmsConsent.js"
+import { ensureSmsTables, recordConsent } from "../../lib/sms.js"
+import { BOOKING_PHONE_CONSENT_TEXT, BOOKING_PHONE_CONSENT_VERSION } from "../../lib/smsConfig.js"
+import { toE164 } from "../../lib/smsRules.js"
 import { ensureCrewTable, normaliseShares, splitAmount, getCrewFor, crewOrLegacy } from "../../lib/crew.js"
 import { ensureCloseoutTables, closeoutTokenFor, closeoutUrl } from "../../lib/closeout.js"
 import { buildReviewRequestEmail } from "../../lib/closeoutEmails.js"
@@ -62,6 +67,8 @@ async function ensureTable(sql) {
   // The total agreed with the customer on a booking made from the admin; shown
   // to the customer and to the crew.
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS job_total NUMERIC(10,2)`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS created_by_staff BOOLEAN NOT NULL DEFAULT FALSE`
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reminder_sms_choice TEXT`
 
   // ADD COLUMN IF NOT EXISTS cannot correct a column declared with the wrong
   // type. Those corrections live here.
@@ -144,14 +151,15 @@ export async function POST(request) {
     const status = session.role !== "admin" && body.status === "completed" ? "pending" : body.status
     const sql = db()
     await ensureTable(sql)
-    const [row] = await sql`
+    const bookingId = randomUUID()
+    const insertBooking = sql`
       INSERT INTO bookings (
-        first_name, last_name, email, phone, date, time_pref,
+        id, first_name, last_name, email, phone, date, time_pref,
         address, promo, tvs, more_tvs, more_tvs_comment,
         payment, referral, notes, status,
-        booking_mode, cable_concealment, home_install_service, combo_details, job_total
+        booking_mode, cable_concealment, home_install_service, combo_details, job_total, created_by_staff, reminder_sms_choice
       ) VALUES (
-        ${v.firstName}, ${v.lastName}, ${v.email}, ${v.phone},
+        ${bookingId}, ${v.firstName}, ${v.lastName}, ${v.email}, ${v.phone},
         ${v.date}, ${v.timePref},
         ${JSON.stringify(v.address)}::jsonb,
         ${v.promo},
@@ -159,28 +167,61 @@ export async function POST(request) {
         ${v.moreTvs}, ${v.moreTvsComment},
         ${v.payment}, ${v.referral}, ${v.notes},
         ${status || "pending"},
-        ${v.bookingMode}, ${v.cableConcealment}, ${v.homeInstallService}, ${v.jobDescription}, ${v.jobTotal}
+        ${v.bookingMode}, ${v.cableConcealment}, ${v.homeInstallService}, ${v.jobDescription}, ${v.jobTotal}, TRUE, ${v.reminderSmsChoice}
       )
       RETURNING *
     `
+    let rows
+    if (v.reminderSmsChoice === "phone") {
+      await ensureSmsTables(sql)
+      const insertConsent = recordConsent(sql, {
+        phone: toE164(v.phone),
+        method: "booking_phone",
+        consentText: BOOKING_PHONE_CONSENT_TEXT,
+        consentVersion: BOOKING_PHONE_CONSENT_VERSION,
+        recordedBy: session.uid || "admin",
+        bookingId,
+        note: v.reminderSmsProof,
+      })
+      const [bookingRows] = await sql.transaction([insertBooking, insertConsent])
+      rows = bookingRows
+    } else {
+      rows = await insertBooking
+    }
+    const [row] = rows
     const booking = toBooking(row)
 
     // The customer always hears about it, with exactly what the public form
     // would have sent plus the agreed total. buildClientEmail never reads
     // `notes`, and the photos are uploaded afterwards and never attached to it.
     let clientNotified = false
+    let smsConsentInvited = false
     try {
       if (canSendMail()) {
-        const mail = buildClientEmail(booking, { organizer: process.env.EMAIL_USER })
+        const smsConsentUrl = v.reminderSmsChoice === "email" ? bookingSmsConsentUrl(booking) : null
+        const mail = buildClientEmail(booking, { organizer: process.env.EMAIL_USER, smsConsentUrl })
         await getTransport().sendMail({
           from: mailFrom("PrimeTvNashville"),
           to: booking.email,
-          bcc: notifyTo(),
+          ...(smsConsentUrl ? {} : { bcc: notifyTo() }),
           subject: mail.subject,
           attachments: mail.attachments,
           html: mail.html,
         })
         clientNotified = true
+        smsConsentInvited = Boolean(smsConsentUrl)
+        if (smsConsentUrl) {
+          runAfterResponse(async () => {
+            const officeCopy = buildClientEmail(booking, { organizer: process.env.EMAIL_USER })
+            await getTransport().sendMail({
+              from: mailFrom("PrimeTvNashville"),
+              to: notifyTo(),
+              subject: officeCopy.subject,
+              html: officeCopy.html,
+              attachments: officeCopy.attachments,
+            })
+          })
+        }
       }
     } catch (mailErr) {
       console.error("admin booking confirmation email failed", mailErr)
@@ -190,7 +231,7 @@ export async function POST(request) {
       ...booking, info: { firstName: booking.firstName, lastName: booking.lastName, phone: booking.phone },
     })))
 
-    return Response.json({ ok: true, booking, clientNotified })
+    return Response.json({ ok: true, booking, clientNotified, smsConsentInvited, phoneConsentRecorded: v.reminderSmsChoice === "phone" })
   } catch (err) {
     console.error(err)
     return Response.json({ ok: false, error: err.message }, { status: 500 })
@@ -393,7 +434,9 @@ export async function PATCH(request) {
       }
 
       try {
-        const mail = buildClientEmail(booking, { organizer: user })
+        const smsConsentUrl = row.created_by_staff && (!row.reminder_sms_choice || row.reminder_sms_choice === "email")
+          ? bookingSmsConsentUrl(booking) : null
+        const mail = buildClientEmail(booking, { organizer: user, smsConsentUrl })
         const transporter = getTransport()
         await transporter.sendMail({
           from: mailFrom("PrimeTvNashville"),

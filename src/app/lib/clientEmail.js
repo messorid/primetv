@@ -109,7 +109,7 @@ export function formatAddress(address) {
 // sits beside its label in every client instead of wrapping under it in
 // Outlook and the Gmail app; a real date ("Thursday, October 1") instead of
 // "2026-10-01"; and a phone number the customer can tap.
-export function buildClientEmail(b, { organizer } = {}) {
+export function buildClientEmail(b, { organizer, smsConsentUrl } = {}) {
   const firstName      = b.firstName || ""
   const lastName       = b.lastName || ""
   const fullName       = `${safe(firstName)} ${safe(lastName)}`
@@ -248,6 +248,12 @@ export function buildClientEmail(b, { organizer } = {}) {
     ${bundleBlock}
     ${homeInstallBlock}
     ${frameTvBlock}
+
+    ${smsConsentUrl ? `
+      ${sectionTitle("Optional text reminders")}
+      ${para("You can choose to receive appointment reminders by text. Your booking is already confirmed.", { top: 0 })}
+      ${buttons([{ href: smsConsentUrl, label: "Choose text reminders" }], { top: 12 })}
+    ` : ""}
 
     ${sectionTitle("Questions or changes?")}
     ${para(`Call or text us at <a href="${BRAND.tel}" style="color:#E50914;font-weight:700;text-decoration:none;">${BRAND.phone}</a>, or simply reply to this email.`, { top: 0 })}

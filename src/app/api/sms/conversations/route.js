@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isStaffRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, smsMode, recentOptOutNotice } from "@/app/lib/sms.js"
+import { ensureSmsTables, smsStatusFor, smsConsentBlocker, smsMode, recentOptOutNotice } from "@/app/lib/sms.js"
 import { toE164, sendingHours, customerPhoneOf, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { ensureCallTables, forwardNumber } from "@/app/lib/voice.js"
 
@@ -58,13 +58,14 @@ export async function GET(request) {
       `
       const calls = await sql`SELECT * FROM calls WHERE customer_phone = ${phone} ORDER BY created_at ASC`
       const st = (await smsStatusFor(sql, [phone])).get(phone)
+      const replyBlocker = st ? smsConsentBlocker(st, "reply") : "Not a valid US mobile number."
       return Response.json({
         ok: true, mode: smsMode(), hours: sendingHours(), phone,
         // Whether a reply can go as typed (see /api/sms/send).
         noticeIsRecent: await recentOptOutNotice(sql, phone, REPLY_NOTICE_DAYS),
         canCall: !!forwardNumber() && !!toE164(phone),
         booking: people.get(phone) || null,
-        consent: st ? { allowed: st.allowed, reason: st.reason } : { allowed: false, reason: "Not a valid US mobile number." },
+        consent: { allowed: !replyBlocker, reason: replyBlocker },
         messages: rows.map(shape),
         calls: calls.map(callShape),
       })

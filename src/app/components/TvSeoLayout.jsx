@@ -203,7 +203,7 @@ export function SeoCta({ heading, sub, footLinks,
           </a>
         </div>
         {footLinks && (
-          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">
+          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/75">
             {footLinks.map((l, i) => (
               <span key={l.href} className="flex items-center gap-3">
                 {i > 0 && <span aria-hidden="true">·</span>}

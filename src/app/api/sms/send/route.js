@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic"
 
 import { neon } from "@neondatabase/serverless"
 import { isStaffRequest, unauthorized } from "@/lib/adminSession"
-import { ensureSmsTables, smsStatusFor, sendSms, recordOptout, recentOptOutNotice, UNSUBSCRIBED } from "@/app/lib/sms.js"
+import { ensureSmsTables, smsStatusFor, smsReminderStatuses, smsConsentBlocker, sendSms, recordOptout, recentOptOutNotice, UNSUBSCRIBED } from "@/app/lib/sms.js"
 import { toE164, finalizeBody, replyBody, sendingHours, segments, partsLimit, REPLY_NOTICE_DAYS } from "@/app/lib/smsRules.js"
 import { GOOGLE_REVIEW_URL } from "@/app/lib/closeoutEmails.js"
 
@@ -47,26 +47,33 @@ export async function POST(request) {
     const sql = neon(process.env.DATABASE_URL)
     await ensureSmsTables(sql)
 
-    let to
+    let to, choice
     if (kind === "reply") {
       to = toE164(input?.phone)
       if (!to) return bad("A valid US mobile number is required.")
       body = replyBody(input?.body, await recentOptOutNotice(sql, to, REPLY_NOTICE_DAYS))
     } else {
-      const [b] = await sql`SELECT id, phone, status FROM bookings WHERE id = ${bookingId}`
+      const [b] = await sql`
+        SELECT id, phone, status, to_jsonb(b)->>'reminder_sms_choice' AS reminder_sms_choice
+        FROM bookings b WHERE id = ${bookingId}
+      `
       if (!b) return bad("Booking not found", 404)
       if (b.status === "cancelled") return bad("This booking is cancelled.", 409)
       if (kind === "review" && b.status !== "completed") return bad("The job has to be marked completed first.", 409)
       to = toE164(b.phone)
       if (!to) return bad("This booking has no valid US mobile number.", 409)
+      choice = b.reminder_sms_choice
     }
 
     const seg = segments(body), limit = partsLimit(kind)
     if (seg.parts > limit) {
       return bad(`Too long: this has to fit in ${limit === 1 ? "one text" : `${limit} texts`} and it would take ${seg.parts}${seg.encoding === "Unicode" ? " (an emoji or special character makes texts shorter)" : ""}.`)
     }
-    const st = (await smsStatusFor(sql, [to])).get(to)
-    if (!st.allowed) return bad(st.reason, 409, { code: "no_consent" })
+    const st = kind === "reminder"
+      ? (await smsReminderStatuses(sql, [{ id: bookingId, phone: to, choice }])).get(bookingId)
+      : (await smsStatusFor(sql, [to])).get(to)
+    const blocker = smsConsentBlocker(st, kind)
+    if (blocker) return bad(blocker, 409, { code: "no_consent" })
 
     // Already sent (or logged in dry-run)? Only again on purpose. Replies are
     // each different, so they don't ask.

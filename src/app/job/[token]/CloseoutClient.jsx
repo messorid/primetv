@@ -33,9 +33,9 @@ export default function CloseoutClient({ initial }) {
       <header className="bg-[#111] px-4 py-3.5">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <p className="text-lg font-extrabold tracking-tight text-white">
-            <span className="text-[#E50914]">Prime</span>TvNashville
+            <span className="text-brand-bright">Prime</span>TvNashville
           </p>
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/50">Job completion</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/75">Job completion</p>
         </div>
       </header>
 
@@ -50,8 +50,8 @@ export default function CloseoutClient({ initial }) {
           <SignoffForm view={view} onSigned={setView} />
         )}
 
-        <p className="pt-2 text-center text-sm text-black/50">
-          Questions? Call <a href="tel:+16156690251" className="font-semibold text-[#E50914]">(615) 669-0251</a>
+        <p className="pt-2 text-center text-sm text-muted">
+          Questions? Call <a href="tel:+16156690251" className="font-semibold text-brand-dark underline underline-offset-4">(615) 669-0251</a>
         </p>
       </main>
     </div>
@@ -62,7 +62,7 @@ function Card({ title, sub, children }) {
   return (
     <section className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm sm:p-5">
       {title && <h2 className="text-lg font-extrabold text-black">{title}</h2>}
-      {sub && <p className="mt-0.5 text-sm text-black/55">{sub}</p>}
+      {sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}
       <div className={title ? "mt-4" : ""}>{children}</div>
     </section>
   )
@@ -71,21 +71,21 @@ function Card({ title, sub, children }) {
 function Summary({ view }) {
   return (
     <Card>
-      <p className="text-xs font-bold uppercase tracking-widest text-[#E50914]">Job summary</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-brand-dark">Job summary</p>
       <h1 className="mt-1 text-2xl font-extrabold leading-tight text-black">{view.customerName || "Customer"}</h1>
       <dl className="mt-3 space-y-1.5 text-[15px]">
         <div className="flex gap-2">
-          <dt className="w-20 flex-none text-black/50">Date</dt>
+          <dt className="w-20 flex-none text-muted">Date</dt>
           <dd className="font-semibold text-black">{fmtDate(view.date) || "—"}</dd>
         </div>
         {view.installers.length > 0 && (
           <div className="flex gap-2">
-            <dt className="w-20 flex-none text-black/50">Installer</dt>
+            <dt className="w-20 flex-none text-muted">Installer</dt>
             <dd className="font-semibold text-black">{view.installers.join(", ")}</dd>
           </div>
         )}
       </dl>
-      <h2 className="mt-5 text-sm font-bold uppercase tracking-wide text-black/50">Work completed</h2>
+      <h2 className="mt-5 text-sm font-bold uppercase tracking-wide text-muted">Work completed</h2>
       <ul className="mt-2 space-y-2">
         {view.workItems.map((item, i) => (
           <li key={i} className="flex items-start gap-2.5 text-[15px] leading-snug text-black">
@@ -114,12 +114,12 @@ function SignedRecord({ view }) {
       <Card title="Details">
         <dl className="space-y-1.5 text-[15px]">
           <div className="flex gap-2">
-            <dt className="w-20 flex-none text-black/50">Tip</dt>
+            <dt className="w-20 flex-none text-muted">Tip</dt>
             <dd className="font-semibold text-black">{s.tip > 0 ? `${money(s.tip)}${s.tipMethod ? ` · ${s.tipMethod}` : ""}` : "No tip"}</dd>
           </div>
           {s.notes && (
             <div className="flex gap-2">
-              <dt className="w-20 flex-none text-black/50">Notes</dt>
+              <dt className="w-20 flex-none text-muted">Notes</dt>
               <dd className="whitespace-pre-line text-black">{s.notes}</dd>
             </div>
           )}
@@ -420,9 +420,9 @@ function SignaturePad({ onChange, error }) {
     <div id="signature" tabIndex={-1} className="focus:outline-none">
       <div className="mb-1.5 flex items-end justify-between">
         <p className="text-sm font-semibold text-black/85">
-          Your signature<span aria-hidden="true" className="text-[#E50914]"> *</span><span className="sr-only"> (required)</span>
+          Your signature<span aria-hidden="true" className="text-brand-dark"> *</span><span className="sr-only"> (required)</span>
         </p>
-        <button type="button" onClick={clear} className="min-h-[36px] rounded-full px-3 text-sm font-semibold text-[#E50914] hover:bg-red-50">
+        <button type="button" onClick={clear} className="min-h-[36px] rounded-full px-3 text-sm font-semibold text-brand-dark hover:bg-red-50">
           Clear
         </button>
       </div>
@@ -435,7 +435,7 @@ function SignaturePad({ onChange, error }) {
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onPointerLeave={up}
         />
         {empty && (
-          <p aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center text-base text-black/30">
+          <p aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center text-base text-muted">
             Sign here with your finger
           </p>
         )}

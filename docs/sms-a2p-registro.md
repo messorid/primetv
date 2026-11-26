@@ -136,3 +136,54 @@ PrimeTV: Hi [First Name], thanks for your message. We can move your [Service] to
   convierte el texto en Unicode, que se corta a 70 caracteres y cuesta ~50% más.
 - La review se pide igual a todos los clientes, sin filtrar por satisfechos y
   sin premios: Google y la FTC lo prohíben.
+
+## 5. Reservas creadas por la oficina
+
+Twilio llama `message_flow` al campo donde se explica cómo el cliente acepta
+los SMS. Antes de usar el enlace por correo para envíos en vivo, verifica el
+estado del registro en **Trust Hub → Registration → A2P Campaigns**.
+
+- Si es un borrador editable o Twilio permite corregirlo tras un rechazo,
+  conserva la descripción del formulario público y añade la del enlace por correo.
+- Si está en revisión, espera el resultado. Si aparece como **Verified**, Twilio
+  exige una campaña nueva para cambiar ese campo. Confirma con soporte el costo
+  y cómo migrar el número antes de retirar el registro vigente.
+
+[Estados y cambios de campaña en Twilio](https://www.twilio.com/docs/messaging/compliance/a2p-10dlc/troubleshooting-a2p-brands/troubleshooting-and-rectifying-a2p-campaigns)
+
+```
+When PrimeTV staff book an appointment for a customer and the customer asks to opt in by email, the booking confirmation email includes a private link to the optional SMS reminder form. The customer opens the link, enters the US mobile number they gave us for the booking, and checks an unchecked checkbox before selecting “Sign up for text reminders.” The form links to the SMS Terms and Privacy Policy. It offers appointment reminders only. The booking is complete regardless of the customer's choice. We store the phone number, booking reference, exact disclosure, timestamp, IP address and browser. A prior STOP stays in effect until the customer replies START.
+```
+
+Adjunta capturas de un correo de prueba y del formulario `/sms-opt-in`, sin
+datos de clientes ni enlaces privados. Consulta los requisitos de confirmación
+de alta al presentar el flujo. En la aplicación, el cliente ve la confirmación
+en pantalla y la oficina envía los recordatorios manualmente.
+
+### Si el cliente da permiso durante la llamada
+
+Twilio admite el permiso verbal explícito para recordatorios de citas. El
+equipo confirma el número móvil y pregunta por separado si el cliente quiere
+recibir recordatorios. La reserva se completa aunque el cliente diga que no.
+
+Guion para la llamada, después de confirmar el número.
+
+```
+Would you like PrimeTV to send appointment reminders by text to the mobile number you just confirmed? Text reminders are optional. Message frequency varies, and message and data rates may apply. Reply HELP for help or STOP to opt out. You can find our SMS Terms and Privacy Policy at primetvnashville.com/sms-terms and primetvnashville.com/privacy-policy. Is that a yes or a no?
+```
+
+Para registrar este método en Twilio, incluye el guion exacto, cómo se
+conserva la prueba del sí del cliente y cómo se confirma el alta. El registro
+debe permitir identificar el número, la cita, la fecha y hora, quién atendió
+y la evidencia de la respuesta. Describe el proceso que usa PrimeTV en
+realidad. El permiso verbal para recordatorios no cubre publicidad ni
+reactiva un número que dio de baja los mensajes.
+
+En **Admin → Bookings → New booking**, elige **Customer said yes on the call**
+y escribe la referencia de la evidencia. El panel guarda el permiso para esa
+cita. Registra **Customer declined** cuando el cliente rechace los SMS.
+Define `SMS_PHONE_CONSENT_LIVE=true` en producción solo después de que el
+registro de Twilio cubra el método telefónico y el equipo tenga listo el
+proceso de confirmación de alta que declaró en la campaña.
+
+[Guía de registro de Twilio](https://help.twilio.com/articles/11847054539547-A2P-10DLC-Campaign-Approval-Best-Practices)

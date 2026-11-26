@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { displayPhone } from "@/app/lib/smsRules"
+import { CONSENT_METHODS } from "@/app/lib/smsConfig"
 import { Dialog, ComposeFields, SENDER_KEY, SMS_MODES, fmtWhen } from "../SmsCompose"
 
 const fmtDay = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" })
@@ -129,7 +130,7 @@ export default function RemindersPage() {
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 {a.consent && !a.optedOut ? (
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">
-                    ✓ SMS consent · {a.consent.method === "booking_form" ? "booking form" : a.consent.method} · {fmtWhen(a.consent.givenAt)}
+                    ✓ SMS consent · {CONSENT_METHODS[a.consent.method] || a.consent.method} · {fmtWhen(a.consent.givenAt)}
                   </span>
                 ) : a.optedOut ? (
                   <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 font-semibold text-red-800">⛔ Opted out (STOP)</span>

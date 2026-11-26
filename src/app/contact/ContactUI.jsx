@@ -30,7 +30,6 @@ export default function ContactUI() {
       title: "Service Area",
       description: "Serving the greater Nashville area.",
       value: "Nashville, Tennessee",
-      href: "#", // Puede enlazar a Google Maps
       icon: (
         <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -68,35 +67,32 @@ export default function ContactUI() {
 
         {/* Contact Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {contactMethods.map((method, index) => (
-            <motion.div
-              key={method.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
-            >
-              <a 
+          {contactMethods.map(method => {
+            const Card = method.href ? "a" : "div"
+            return (
+              <Card
+                key={method.title}
                 href={method.href}
-                className="group flex flex-col items-center text-center p-8 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+                className={`group flex h-full flex-col items-center rounded-3xl border border-black/5 bg-white p-8 text-center shadow-sm ${method.href ? "transition-shadow hover:shadow-xl" : ""}`}
               >
-                <div className="size-14 rounded-full bg-[#E50914]/10 text-[#E50914] flex items-center justify-center mb-6 group-hover:bg-[#E50914] group-hover:text-white transition-colors duration-300">
+                <div aria-hidden="true" className="mb-6 flex size-14 items-center justify-center rounded-full bg-brand/10 text-brand-dark">
                   {method.icon}
                 </div>
                 
-                <h3 className="text-xl font-bold text-black mb-2">
+                <h2 className="mb-2 text-xl font-bold text-ink">
                   {method.title}
-                </h3>
+                </h2>
                 
                 <p className="text-sm text-black/60 mb-6">
                   {method.description}
                 </p>
                 
-                <span className="mt-auto font-semibold text-black group-hover:text-[#E50914] transition-colors">
+                <span className={`mt-auto max-w-full font-semibold text-ink [overflow-wrap:anywhere] ${method.href ? "underline underline-offset-4 group-hover:text-brand-dark" : ""}`}>
                   {method.value}
                 </span>
-              </a>
-            </motion.div>
-          ))}
+              </Card>
+            )
+          })}
         </div>
 
       </div>

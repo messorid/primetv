@@ -333,7 +333,7 @@ export default async function PlaysetModelPage({ params }) {
               Call (615) 669-0251
             </a>
           </div>
-          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/40">
+          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center gap-3 text-sm text-white/75">
             <Link href="/playset-installation-nashville" className="hover:text-white/70 transition">All Playsets</Link>
             <span>·</span>
             <Link href="/gazebo-installation-nashville" className="hover:text-white/70 transition">Gazebo Assembly</Link>

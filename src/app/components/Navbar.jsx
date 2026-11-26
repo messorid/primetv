@@ -43,6 +43,20 @@ export default function Navbar() {
   const [announcementVisible, setAnnouncementVisible] = useState(true)
   const dropdownRef = useRef(null)
   const installationsRef = useRef(null)
+  const mobileToggle = useRef(null)
+
+  function closeOnEscape(event) {
+    if (event.key !== "Escape") return
+    if (mobileOpen) {
+      setMobileOpen(false)
+      mobileToggle.current?.focus()
+    } else if (dropdownOpen || installationsOpen) {
+      const activeMenu = dropdownOpen ? dropdownRef : installationsRef
+      setDropdownOpen(false)
+      setInstallationsOpen(false)
+      activeMenu.current?.querySelector("button")?.focus()
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -121,7 +135,7 @@ export default function Navbar() {
       </AnimatePresence>
 
       {/* ── MAIN NAV ── */}
-      <header
+      <header onKeyDown={closeOnEscape}
         className={`fixed left-0 w-full z-50 transition-all duration-300 ${
           announcementVisible ? "top-[36px]" : "top-0"
         } ${
@@ -146,11 +160,13 @@ export default function Navbar() {
           </Link>
 
           {/* DESKTOP NAV */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav aria-label="Main navigation" className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) =>
               link.hasDropdown === "services" ? (
-                <div key={link.href} className="relative" ref={dropdownRef}>
+                <div key={link.href} className="relative" ref={dropdownRef}
+                  onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropdownOpen(false) }}>
                   <button
+                    type="button" aria-expanded={dropdownOpen} aria-controls={dropdownOpen ? "nav-tv-services" : undefined}
                     onClick={() => { setDropdownOpen((v) => !v); setInstallationsOpen(false) }}
                     className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname.startsWith("/services")
@@ -163,7 +179,7 @@ export default function Navbar() {
                   </button>
                   <AnimatePresence>
                     {dropdownOpen && (
-                      <motion.div
+                      <motion.div id="nav-tv-services"
                         initial={{ opacity: 0, y: 8, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.97 }}
@@ -182,8 +198,10 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : link.hasDropdown === "installations" ? (
-                <div key={link.href} className="relative" ref={installationsRef}>
+                <div key={link.href} className="relative" ref={installationsRef}
+                  onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInstallationsOpen(false) }}>
                   <button
+                    type="button" aria-expanded={installationsOpen} aria-controls={installationsOpen ? "nav-installations" : undefined}
                     onClick={() => { setInstallationsOpen((v) => !v); setDropdownOpen(false) }}
                     className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname.startsWith("/home-installation") || pathname.startsWith("/furniture") || pathname.startsWith("/picture") || pathname.startsWith("/wall-installation") || pathname.startsWith("/gazebo")
@@ -196,7 +214,7 @@ export default function Navbar() {
                   </button>
                   <AnimatePresence>
                     {installationsOpen && (
-                      <motion.div
+                      <motion.div id="nav-installations"
                         initial={{ opacity: 0, y: 8, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.97 }}
@@ -218,6 +236,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={pathname === link.href ? "page" : undefined}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     pathname === link.href
                       ? "text-brand-bright"
@@ -231,7 +250,7 @@ export default function Navbar() {
           </nav>
 
           {/* DESKTOP CTA */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          <div className="hidden xl:flex items-center gap-3 shrink-0">
             <a
               href="tel:+16156690251"
               className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition font-medium"
@@ -248,24 +267,33 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE TOGGLE */}
-          <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden text-white p-1.5 rounded-lg hover:bg-white/10 transition"
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="flex items-center gap-3 xl:hidden">
+            <Link href="/book" className="hidden min-h-11 items-center rounded-full bg-brand px-4 text-sm font-bold text-white hover:bg-brand-dark lg:inline-flex">
+              Book Now
+            </Link>
+            <button
+              ref={mobileToggle}
+              type="button"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="flex size-11 items-center justify-center rounded-lg text-white transition hover:bg-white/10"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              aria-controls={mobileOpen ? "mobile-navigation" : undefined}
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
         {/* ── MOBILE MENU ── */}
         <AnimatePresence>
           {mobileOpen && (
-            <motion.div
+            <motion.nav id="mobile-navigation" aria-label="Main navigation"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="md:hidden overflow-hidden bg-[#0a0a0a] border-t border-white/5"
+              className="max-h-[calc(100dvh-6.25rem)] overflow-y-auto overscroll-contain border-t border-white/5 bg-[#0a0a0a] max-lg:max-h-[calc(100dvh-11rem)] xl:hidden"
             >
               <div className="px-4 py-6 space-y-1">
                 {navLinks.map((link) =>
@@ -324,7 +352,7 @@ export default function Navbar() {
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </motion.nav>
           )}
         </AnimatePresence>
       </header>

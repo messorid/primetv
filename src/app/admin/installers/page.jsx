@@ -48,7 +48,7 @@ export default function InstallersPage() {
     <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold text-gray-900">Installers</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage your installation team</p>
+        <p className="text-sm text-gray-600 mt-0.5">Manage your installation team</p>
       </div>
 
       {/* Add form */}
@@ -57,7 +57,7 @@ export default function InstallersPage() {
         <form onSubmit={add} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-gray-500">Full Name *</label>
+              <label className="text-xs font-semibold text-gray-600">Full Name *</label>
               <input
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -66,18 +66,18 @@ export default function InstallersPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Phone</label>
+              <label className="text-xs font-semibold text-gray-600">Phone</label>
               <input
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 placeholder="(615) 000-0000"
                 className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
               />
-              <p className="mt-1 text-[11px] text-gray-400">{PHONE_HINT}</p>
+              <p className="mt-1 text-[11px] text-gray-600">{PHONE_HINT}</p>
             </div>
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-500">Email *</label>
+            <label className="text-xs font-semibold text-gray-600">Email *</label>
             <input
               type="email"
               value={form.email}
@@ -86,7 +86,7 @@ export default function InstallersPage() {
               className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
             />
           </div>
-          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+          {error && <p className="text-xs text-red-700 font-medium">{error}</p>}
           <button
             type="submit"
             disabled={saving}
@@ -106,9 +106,9 @@ export default function InstallersPage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-10 text-gray-400 text-sm">Loading…</p>
+          <p className="text-center py-10 text-gray-600 text-sm">Loading…</p>
         ) : installers.length === 0 ? (
-          <p className="text-center py-10 text-gray-400 text-sm">No installers yet.</p>
+          <p className="text-center py-10 text-gray-600 text-sm">No installers yet.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {installers.map(inst => (
@@ -125,26 +125,26 @@ export default function InstallersPage() {
                 ) : (
                 <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-none">
-                  <span className="text-[#E50914] font-bold text-sm">
+                  <span className="text-brand-dark font-bold text-sm">
                     {inst.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 text-sm">{inst.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-600 mt-0.5">
                     {inst.email}{inst.phone ? ` · ${inst.phone}` : ""}
                   </p>
                   <WhatsAppStatus installer={inst} />
                 </div>
                 <button
                   onClick={() => setEditingId(inst.id)}
-                  className="text-xs text-gray-500 hover:text-gray-900 transition font-medium"
+                  className="text-xs text-gray-600 hover:text-gray-900 transition font-medium"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => remove(inst.id)}
-                  className="text-xs text-gray-400 hover:text-red-500 transition font-medium"
+                  className="text-xs text-gray-600 hover:text-red-700 transition font-medium"
                 >
                   Remove
                 </button>
@@ -166,10 +166,10 @@ const PHONE_HINT = "US number: 10 digits. Any other country: start with + and it
 // the server from the saved phone (see installerNumber in lib/whatsapp.js).
 function WhatsAppStatus({ installer }) {
   if (installer.whatsappNumber) {
-    return <p className="text-[11px] text-emerald-600 mt-0.5">✓ WhatsApp job alerts to +{installer.whatsappNumber}</p>
+    return <p className="text-[11px] text-emerald-700 mt-0.5">✓ WhatsApp job alerts to +{installer.whatsappNumber}</p>
   }
   return (
-    <p className="text-[11px] text-amber-600 mt-0.5">
+    <p className="text-[11px] text-amber-800 mt-0.5">
       ⚠️ No WhatsApp job alerts: {installer.phone ? "this phone can't be reached. " : "no phone saved. "}{PHONE_HINT}
     </p>
   )
@@ -199,7 +199,7 @@ function InstallerEditForm({ installer, onSaved, onCancel }) {
 
   const field = (key, label, props = {}) => (
     <div>
-      <label className="text-xs font-semibold text-gray-500">{label}</label>
+      <label className="text-xs font-semibold text-gray-600">{label}</label>
       <input
         value={form[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
@@ -215,11 +215,11 @@ function InstallerEditForm({ installer, onSaved, onCancel }) {
         {field("name", "Full Name *")}
         <div>
           {field("phone", "Phone", { placeholder: "(615) 000-0000", inputMode: "tel" })}
-          <p className="mt-1 text-[11px] text-gray-400">{PHONE_HINT}</p>
+          <p className="mt-1 text-[11px] text-gray-600">{PHONE_HINT}</p>
         </div>
       </div>
       {field("email", "Email *", { type: "email" })}
-      {err && <p role="alert" className="text-xs text-red-500 font-medium">{err}</p>}
+      {err && <p role="alert" className="text-xs text-red-700 font-medium">{err}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={saving}
           className="flex-1 rounded-xl bg-[#E50914] text-white text-sm font-bold py-2.5 hover:bg-red-700 transition disabled:opacity-50">
@@ -276,25 +276,25 @@ function CrewPageLink({ installer }) {
     return (
       <div className="mt-2 pl-14">
         <button onClick={load} className="text-xs font-semibold text-blue-600 hover:underline">📋 Jobs page link</button>
-        {err && <p className="mt-1 text-[11px] text-red-500">{err}</p>}
+        {err && <p className="mt-1 text-[11px] text-red-700">{err}</p>}
       </div>
     )
   }
   return (
     <div className="mt-3 ml-14 rounded-xl border border-gray-200 bg-gray-50 p-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">📋 Jobs page</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">📋 Jobs page</p>
       <div className="flex flex-wrap gap-1.5">
         <a href={info.path} target="_blank" rel="noreferrer" className={linkBtn}>Open ↗</a>
         <button onClick={copy} className={linkBtn}>{typeof navigator !== "undefined" && navigator.share ? "Share link" : "Copy link"}</button>
         <button onClick={() => post("email")} disabled={!!busy || !installer.email} className={linkBtn}>
           {busy === "email" ? "Sending…" : "✉️ Email to installer"}
         </button>
-        <button onClick={() => post("rotate")} disabled={!!busy} className={`${linkBtn} text-gray-400`}>
+        <button onClick={() => post("rotate")} disabled={!!busy} className={`${linkBtn} text-gray-600`}>
           {busy === "rotate" ? "…" : "New link"}
         </button>
       </div>
-      {msg && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-600">{msg}</p>}
-      {err && <p role="alert" className="mt-2 text-[11px] text-red-500">{err}</p>}
+      {msg && <p role="status" className="mt-2 text-[11px] font-semibold text-emerald-700">{msg}</p>}
+      {err && <p role="alert" className="mt-2 text-[11px] text-red-700">{err}</p>}
     </div>
   )
 }

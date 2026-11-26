@@ -111,7 +111,7 @@ const jsonLd = {
                 <h3 className="text-xl font-bold text-black mb-2">{option.title}</h3>
                 <p className="text-gray-600 mb-4">{option.description}</p>
                 <div className="text-3xl font-extrabold text-[#e50914]">{option.price}</div>
-                <p className="mt-2 text-[11px] text-gray-400">Starting price — varies with difficulty &amp; mount type</p>
+                <p className="mt-2 text-xs text-muted">Starting price varies with difficulty and mount type.</p>
               </div>
             ))}
           </div>
@@ -132,4 +132,3 @@ const jsonLd = {
       </>
     )
   }
-  

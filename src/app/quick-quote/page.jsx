@@ -16,7 +16,7 @@ export default function QuickQuotePage() {
             ← Back to home
           </Link>
         </div>
-        <QuickQuoteForm />
+        <QuickQuoteForm titleAs="h1" />
       </div>
     </>
   )

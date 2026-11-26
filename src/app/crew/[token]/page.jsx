@@ -31,16 +31,16 @@ export default async function CrewPage({ params }) {
       <header className="bg-[#111] px-4 py-3.5">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <p className="text-lg font-extrabold tracking-tight text-white">
-            <span className="text-[#E50914]">Prime</span>TvNashville
+            <span className="text-brand-bright">Prime</span>TvNashville
           </p>
-          <p className="truncate text-xs font-semibold uppercase tracking-widest text-white/50">Crew · {page.name}</p>
+          <p className="truncate text-xs font-semibold uppercase tracking-widest text-white/75">Crew · {page.name}</p>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg space-y-6 px-4 pt-5">
         <div>
           <h1 className="text-2xl font-extrabold text-black">Hi {page.name.split(" ")[0]}</h1>
-          <p className="mt-0.5 text-sm text-black/55">{fmtDay(page.today, { weekday: "long", month: "long", day: "numeric" })}</p>
+          <p className="mt-0.5 text-sm text-muted">{fmtDay(page.today, { weekday: "long", month: "long", day: "numeric" })}</p>
         </div>
 
         <Section title={`Today (${page.todayJobs.length})`} accent>
@@ -59,8 +59,8 @@ export default async function CrewPage({ params }) {
           </Section>
         )}
 
-        <p className="pt-2 text-center text-sm text-black/50">
-          Questions? Call the office at <a href="tel:+16156690251" className="font-semibold text-[#E50914]">(615) 669-0251</a>
+        <p className="pt-2 text-center text-sm text-muted">
+          Questions? Call the office at <a href="tel:+16156690251" className="font-semibold text-brand-dark underline underline-offset-4">(615) 669-0251</a>
         </p>
       </main>
     </div>
@@ -70,15 +70,15 @@ export default async function CrewPage({ params }) {
 function Section({ title, hint, accent, children }) {
   return (
     <section>
-      <h2 className={`text-sm font-extrabold uppercase tracking-widest ${accent ? "text-[#E50914]" : "text-black/50"}`}>{title}</h2>
-      {hint && <p className="mt-0.5 text-xs text-black/40">{hint}</p>}
+      <h2 className={`text-sm font-extrabold uppercase tracking-widest ${accent ? "text-brand-dark" : "text-muted"}`}>{title}</h2>
+      {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
       <div className="mt-3 space-y-3">{children}</div>
     </section>
   )
 }
 
 function Empty({ children }) {
-  return <p className="rounded-2xl border border-dashed border-black/15 bg-white px-4 py-6 text-center text-sm text-black/40">{children}</p>
+  return <p className="rounded-2xl border border-dashed border-black/15 bg-white px-4 py-6 text-center text-sm text-muted">{children}</p>
 }
 
 function Job({ j, dayLabel, past }) {
@@ -87,7 +87,7 @@ function Job({ j, dayLabel, past }) {
     <article className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          {dayLabel && <p className="text-xs font-bold uppercase tracking-wide text-black/45">{dayLabel}</p>}
+          {dayLabel && <p className="text-xs font-bold uppercase tracking-wide text-muted">{dayLabel}</p>}
           <p className="text-lg font-extrabold leading-tight text-black">{j.time || "Flexible"}</p>
           <p className="mt-0.5 text-base font-semibold text-black">{j.customer || "Customer"}</p>
         </div>

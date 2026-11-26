@@ -12,7 +12,7 @@ export default function SmsTermsPage() {
     <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-ink">SMS Terms</h1>
-        <p className="mt-2 text-sm text-muted">Last updated: November 3, 2026</p>
+        <p className="mt-2 text-sm text-muted">Last updated November 26, 2026</p>
 
         <div className="mt-8 space-y-6 text-lg leading-relaxed text-body">
           <h2 className="pt-2 text-xl font-bold text-ink">What we send</h2>
@@ -28,8 +28,11 @@ export default function SmsTermsPage() {
 
           <h2 className="pt-2 text-xl font-bold text-ink">How you sign up</h2>
           <p>
-            You sign up by ticking the optional box when you book on our website, which reads: &ldquo;{SMS_CONSENT_TEXT}&rdquo;
-            Agreeing is never required to book.
+            When you book on our website, the optional SMS checkbox reads &ldquo;{SMS_CONSENT_TEXT}&rdquo;
+          </p>
+          <p>
+            When our office books for you, you can agree to appointment reminders during the call. If you ask to decide
+            later, we can include an optional sign-up link in your confirmation email. Your booking is complete either way.
           </p>
 
           <h2 className="pt-2 text-xl font-bold text-ink">How often</h2>

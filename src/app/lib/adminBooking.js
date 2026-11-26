@@ -12,6 +12,7 @@
 
 import { isValidEmail } from "./formValidation.js"
 import { formatUsPhone, isUsPhone } from "./usPhone.js"
+import { toE164 } from "./smsRules.js"
 
 const MODES = ["standard", "promo", "homeinstall"]
 
@@ -33,6 +34,18 @@ export function adminBookingFrom(body = {}) {
   if (missing.length) return { error: `Required: ${missing.join(", ")}` }
   if (!isUsPhone(body.phone)) return { error: "The phone must be a 10-digit US number" }
   if (!isValidEmail(text(body.email))) return { error: "That email address doesn't look right" }
+
+  const reminderSmsChoice = body.reminderSmsChoice ?? "none"
+  if (!["none", "phone", "declined", "email"].includes(reminderSmsChoice)) {
+    return { error: "Choose a valid text reminder preference" }
+  }
+  const reminderSmsProof = reminderSmsChoice === "phone" ? text(body.reminderSmsProof) : ""
+  if (reminderSmsChoice === "phone") {
+    if (!toE164(body.phone)) return { error: "Text reminders require a valid US mobile number" }
+    if (!reminderSmsProof || reminderSmsProof.length > 200) {
+      return { error: "Enter a reference for the customer's verbal consent (up to 200 characters)" }
+    }
+  }
 
   let jobTotal = null
   if (text(body.jobTotal) !== "") {
@@ -60,6 +73,8 @@ export function adminBookingFrom(body = {}) {
       cableConcealment: mode === "homeinstall" ? 0 : Math.max(0, Math.min(10, parseInt(body.cableConcealment) || 0)),
       jobDescription: mode === "homeinstall" ? text(body.jobDescription) || null : null,
       notes: text(body.notes) || null,
+      reminderSmsChoice,
+      reminderSmsProof,
       jobTotal,
     },
   }

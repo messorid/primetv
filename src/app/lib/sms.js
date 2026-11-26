@@ -98,11 +98,19 @@ export async function ensureSmsTables(sql) {
 
 // Whether a phone may be texted, and why not if it can't.
 export function consentState(consent, optout) {
-  if (!consent) return { allowed: false, reason: "No SMS consent: this customer didn't tick the SMS box when booking." }
-  if (optout && new Date(optout.opted_out_at) >= new Date(consent.given_at)) {
+  if (!consent) return { allowed: false, reason: "No SMS consent on file. The customer can opt in on the booking form or through their booking confirmation email." }
+  if (optout && (["booking_email", "booking_phone"].includes(consent.method) || new Date(optout.opted_out_at) >= new Date(consent.given_at))) {
     return { allowed: false, reason: `Opted out (STOP) on ${new Date(optout.opted_out_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Chicago" })}.` }
   }
   return { allowed: true, reason: null }
+}
+
+export function smsConsentBlocker(status, kind) {
+  if (!status.allowed) return status.reason
+  if (kind !== "reminder" && ["booking_email", "booking_phone"].includes(status.consent?.method)) {
+    return "This customer opted in to appointment reminders only."
+  }
+  return null
 }
 
 // The latest consent and any opt-out for each phone in the list.
@@ -112,7 +120,8 @@ export async function smsStatusFor(sql, phones) {
   if (!list.length) return out
   const consents = await sql`
     SELECT DISTINCT ON (phone) phone, method, given_at, recorded_by, note, consent_version
-    FROM sms_consents WHERE phone = ANY(${list}) ORDER BY phone, given_at DESC
+    FROM sms_consents WHERE phone = ANY(${list}) AND method <> 'booking_phone'
+    ORDER BY phone, given_at DESC
   `
   const optouts = await sql`SELECT phone, opted_out_at, source FROM sms_optouts WHERE phone = ANY(${list})`
   const c = new Map(consents.map(r => [r.phone, r]))
@@ -124,8 +133,38 @@ export async function smsStatusFor(sql, phones) {
   return out
 }
 
-export async function recordConsent(sql, { phone, method, consentText, consentVersion, givenAt, recordedBy, bookingId, ip, userAgent, note }) {
-  await sql`
+export function bookingReminderConsent(status, booking, consent, phoneLiveEnabled) {
+  if (booking.choice === "declined") {
+    return { ...status, consent: null, allowed: false, reason: "The customer declined texts for this appointment." }
+  }
+  if (!consent || consent.phone !== booking.phone) return status
+  const verbal = { ...status, consent, ...consentState(consent, status.optout) }
+  if (!verbal.allowed) return verbal
+  if (phoneLiveEnabled) return verbal
+  if (status.allowed) return status
+  return { ...verbal, allowed: false, reason: "Phone consent is recorded. Live sending needs the Twilio campaign to include phone opt-ins." }
+}
+
+// Permission from a booking call applies to that appointment and phone only.
+export async function smsReminderStatuses(sql, bookings) {
+  const byPhone = await smsStatusFor(sql, bookings.map(booking => booking.phone))
+  const phoneBookings = bookings.filter(booking => booking.choice === "phone" && booking.phone)
+  const rows = phoneBookings.length ? await sql`
+    SELECT DISTINCT ON (booking_id) booking_id, phone, method, given_at, recorded_by
+    FROM sms_consents
+    WHERE booking_id = ANY(${phoneBookings.map(booking => booking.id)}::uuid[]) AND method = 'booking_phone'
+    ORDER BY booking_id, given_at DESC
+  ` : []
+  const byBooking = new Map(rows.map(row => [row.booking_id, row]))
+  const phoneLiveEnabled = smsMode() !== "live" || process.env.SMS_PHONE_CONSENT_LIVE === "true"
+  return new Map(bookings.filter(booking => booking.phone).map(booking => [
+    booking.id,
+    bookingReminderConsent(byPhone.get(booking.phone), booking, byBooking.get(booking.id), phoneLiveEnabled),
+  ]))
+}
+
+export function recordConsent(sql, { phone, method, consentText, consentVersion, givenAt, recordedBy, bookingId, ip, userAgent, note }) {
+  return sql`
     INSERT INTO sms_consents (phone, method, consent_text, consent_version, given_at, recorded_by, booking_id, ip, user_agent, note)
     VALUES (${phone}, ${method}, ${consentText || null}, ${consentVersion || null}, ${givenAt || new Date().toISOString()},
             ${recordedBy || null}, ${bookingId || null}, ${ip || null}, ${userAgent || null}, ${note || null})

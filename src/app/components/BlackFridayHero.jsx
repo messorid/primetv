@@ -49,7 +49,7 @@ export default function BlackFridayHero({ children }) {
                 <p className="mt-2 text-xs font-semibold leading-snug text-white sm:text-sm">{BF_PROMO_TERMS.join(" · ")}</p>
               </div>
               <div className="rounded-2xl border border-white/25 bg-white/10 p-3.5 sm:p-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-bright sm:text-sm">Everything else</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-white sm:text-sm">Everything else</p>
                 <p className="mt-1 text-sm font-semibold leading-snug text-white sm:text-base">Any other service</p>
                 <p className="mt-1 text-[2rem] font-black leading-none text-white sm:text-5xl">{BF_DISCOUNT_PCT}% OFF</p>
                 <p className="mt-2 text-xs font-semibold leading-snug text-white sm:text-sm">
